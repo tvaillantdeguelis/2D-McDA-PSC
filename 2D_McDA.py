@@ -10,22 +10,23 @@ __status__     = "Prototype"
 
 import sys
 import os
+from datetime import datetime
 
 import numpy as np
+import matplotlib.pyplot as plt 
 
-from standard_outputs import print_time, print_elapsed_time
-from readers.calipso_reader import CALIOPReader, automatic_path_detection, split_granule_date, get_first_profileID_of_chunk, range_from_altitude
-from config import NB_PROF_OVERLAP
-from feature_detection import detect_features, separate_homogeneous_features, classify_homogeneous_features_with_psc_v2
-from merged_3channels_feature_mask import merged_feature_masks
-from calipso_constants import *
-from writers.hdf_writer import SDSData, write_hdf
-from datetime import datetime
-from calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
+from my_modules.standard_outputs import print_time, print_elapsed_time
+from my_modules.readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
+from my_modules.paths import split_granule_date
+from my_modules.calipso_constants import *
+from my_modules.writers.hdf_writer import SDSData, write_hdf
+from my_modules.calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
     nsf_from_V_domain_to_betap_domain, rms_from_P_domain_to_betap_domain, compute_shotnoise, \
     compute_backgroundnoise
 
-import matplotlib.pyplot as plt 
+from config import NB_PROF_OVERLAP
+from feature_detection import detect_features, separate_homogeneous_features, classify_homogeneous_features_with_psc_v2
+from merged_3channels_feature_mask import merged_feature_masks
 
 
 def get_start_end_indexes(prof_min, prof_max, nb_prof_slice, nb_prof_overlap):

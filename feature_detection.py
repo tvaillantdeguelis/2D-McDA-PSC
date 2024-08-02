@@ -12,11 +12,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import from_levels_and_colors
 import seaborn as sns
 
-sys.path.insert(0, './modules/')
-from standard_outputs import print_elapsed_time
+from my_modules.standard_outputs import print_elapsed_time
+from my_modules.calipso_constants import FILL_VALUE_FLOAT
+from my_modules.figuretools import setstyle, cm2in
+
 from config import *
-from calipso_constants import FILL_VALUE_FLOAT
-from figuretools import setstyle, cm2in
 
 
 def apply_threshold(k, ab_mol, feature, ab_signal, ab_sigma, where_FA=False):

@@ -16,12 +16,11 @@ import seaborn as sns
 import cartopy
 import cartopy.crs as ccrs
 
-from standard_outputs import print_time
-from readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon, \
-    split_granule_date
-from figuretools import setstyle, takecmap, cm2in, compute_bounds, lat_lon_dist_xaxis, \
+from my_modules.standard_outputs import print_time
+from my_modules.readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon
+from my_modules.figuretools import setstyle, takecmap, cm2in, compute_bounds, lat_lon_dist_xaxis, \
     CALIOPFigureMaker, remove_edges
-from geotools import neighbors, geo_distance, get_monotical_lon, granule_date_decomposition
+from my_modules.geotools import neighbors, geo_distance, get_monotical_lon, granule_date_decomposition
 
 FILL_VALUE_FLOAT = -9999.0
 
