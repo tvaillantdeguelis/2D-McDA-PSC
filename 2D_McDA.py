@@ -119,16 +119,16 @@ if __name__ == '__main__':
         TYPE_2D_McDA = sys.argv[11]
         OUT_FOLDER = sys.argv[12]
     else:
-        GRANULE_DATE = "2018-07-08T04-07-14ZN"
+        GRANULE_DATE = "2010-01-18T00-19-57ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         PREVIOUS_GRANULE = None
         NEXT_GRANULE = None
-        SLICE_START_END_TYPE = "profindex" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
-        SLICE_START = 0 # profindex or longitude
-        SLICE_END = 5000 # profindex or longitude
+        SLICE_START_END_TYPE = "longitude" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
+        SLICE_START = 170.68 # profindex or longitude
+        SLICE_END = 27.93 # profindex or longitude
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA = "V1.01"
+        VERSION_2D_McDA = "V1.0"
         TYPE_2D_McDA = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"    
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>

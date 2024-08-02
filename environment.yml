@@ -1,4 +1,4 @@
-name: 2D_McDA_V1.0.2
+name: 2D_McDA_PSC_v1.0
 channels:
   - conda-forge
 dependencies:
