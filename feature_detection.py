@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # coding: utf8
 
-from datetime import datetime
-import numpy as np
 import os
 import sys
+from datetime import datetime
+
+import numpy as np
 from numba import jit
 import matplotlib as mpl
 from matplotlib import cm, gridspec
