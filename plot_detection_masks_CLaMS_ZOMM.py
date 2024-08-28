@@ -15,6 +15,7 @@ from matplotlib.ticker import MultipleLocator, FixedLocator, LogLocator
 import seaborn as sns
 import cartopy
 import cartopy.crs as ccrs
+import cmocean
 
 from my_modules.standard_outputs import print_time
 from my_modules.readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon
@@ -227,41 +228,11 @@ class FigureMaker(CALIOPFigureMaker):
     
         # Plot figure
         ax0 = plt.subplot(gs0[0])
-        # palette = ["#000000",
-        #             '#000444', '#010846', '#030b48', '#050e4a', '#08104c', '#0b134f', '#0e1551', '#101753', '#131a55', '#151c57', '#171e59', '#1a215c', '#1c235e', '#1e2560', '#202862', '#222a65', '#242d67', '#262f69', '#28316b', '#2a346e', '#2c3670', '#2e3972', '#303b74', '#323e77', '#344079', '#36437b', '#37467d', '#394880', '#3b4b82', '#3d4d84', '#3f5087', '#415389', '#43558b', '#44588e', '#465b90', '#485d92', '#4a6095', '#4c6397', '#4e6599', '#4f689c', '#516b9e', '#536da1', '#5570a3', '#5773a5', '#5876a8', '#5a79aa', '#5c7bad', '#5e7eaf', '#6081b1', '#6284b4', '#6387b6', '#6589b9', '#678cbb', '#698fbe', '#6b92c0', '#6d95c3', '#6e98c5', '#709bc7', '#729eca', '#74a1cc', '#76a4cf', '#78a7d1', '#79a9d4', '#7bacd6', '#7dafd9', '#7fb2db', '#81b5de', '#83b8e0', '#85bbe3', '#86bee5', '#88c1e8', '#8ac4eb', '#8cc7ed', '#8ecbf0', '#90cef2', '#92d1f5', '#93d4f7', '#95d7fa', '#97dafc',
-        #             '#99ddff', '#a8e1f7', '#b6e4ef', '#c3e8e6', '#ceecde', '#d9efd5', '#e3f3cd', '#edf7c4', '#f6fbbb', '#ffffb2',
-        #             '#fffcb0', '#fff9ae', '#fef6ac', '#fef3aa', '#fdf1a8', '#fdeea6', '#fceba4', '#fce8a1', '#fbe59f', '#fbe29d', '#fae09b', '#fadd99', '#f9da97', '#f9d795', '#f8d493', '#f7d191', '#f7cf8f', '#f6cc8d', '#f6c98b', '#f5c689', '#f4c387', '#f4c085', '#f3be83', '#f2bb81', '#f1b87f', '#f1b57d', '#f0b27b', '#efaf79', '#eead77', '#eeaa76', '#eda774', '#eca472', '#eba170', '#ea9e6e', '#e99c6c', '#e9996a', '#e89668', '#e79366', '#e69064', '#e58d62', '#e48a61', '#e3875f', '#e2845d', '#e1825b', '#e07f59', '#df7c57', '#de7956', '#dd7654', '#dc7352', '#db7050', '#da6d4e', '#d96a4c', '#d8674b', '#d76449', '#d66047', '#d45d45', '#d35a44', '#d25742', '#d15440', '#d0503e', '#cf4d3d', '#ce493b', '#cc4639', '#cb4238', '#ca3e36', '#c93b34', '#c73633', '#c63231', '#c52e2f', '#c4292e', '#c2242c', '#c11e2b', '#c01629', '#be0d28',
-        #             '#bd0026', '#b31e2b', '#a82c30', '#9e3635', '#933d3a', '#88433f', '#7c4844', '#704c49', '#62504e', '#535353',
-        #             '#555555', '#575757', '#595959', '#5b5b5b', '#5d5d5d', '#5f5f5f', '#616161', '#636363', '#656565', '#676767', '#696969', '#6b6b6b', '#6d6d6d', '#6f6f6f', '#717171', '#737373', '#757575', '#777777', '#797979', '#7b7b7b', '#7d7d7d', '#7f7f7f', '#818181', '#848484', '#868686', '#888888', '#8a8a8a', '#8c8c8c', '#8e8e8e', '#909090', '#929292', '#949494', '#979797', '#999999', '#9b9b9b', '#9d9d9d', '#9f9f9f', '#a1a1a1', '#a4a4a4', '#a6a6a6', '#a8a8a8', '#aaaaaa', '#acacac', '#afafaf', '#b1b1b1', '#b3b3b3', '#b5b5b5', '#b8b8b8', '#bababa', '#bcbcbc', '#bebebe', '#c1c1c1', '#c3c3c3', '#c5c5c5', '#c7c7c7', '#cacaca', '#cccccc', '#cecece', '#d0d0d0', '#d3d3d3', '#d5d5d5', '#d7d7d7', '#dadada', '#dcdcdc', '#dedede', '#e0e0e0', '#e3e3e3', '#e5e5e5', '#e7e7e7', '#eaeaea', '#ececec', '#eeeeee', '#f1f1f1', '#f3f3f3', '#f6f6f6', '#f8f8f8', '#fafafa', '#fdfdfd', '#ffffff'
-        #             ]
-        # my_cmap = mpl.colors.ListedColormap(palette)
-        # b1 = np.logspace(-5, -3+np.log10(1.5), 85)
-        # b2 = np.logspace(-3+np.log10(1.5), -3+np.log10(6.5), 85)[1:]
-        # b3 = np.logspace(-3+np.log10(6.5), -1, 84)[1:]
-        # bounds = np.concatenate((b1, b2, b3))
-        # colors = my_cmap(np.arange(len(palette)))
-        # my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
-        palette_1 = ['#000355', '#020657', '#040959', '#060b5b', '#080e5e', '#0a1160', '#0c1462', '#0d1664', '#0f1966', '#111c68', '#131e6a', '#15216c', '#16236e', '#182670', '#1a2872', '#1c2b73', '#1d2d75', '#1f3077', '#213279', '#23357b', '#24377d', '#263a7f', '#283c81', '#2a3f83', '#2c4185', '#2d4487', '#2f4689', '#31498b', '#334b8d', '#354e8f', '#365091', '#385393', '#3a5595', '#3c5897', '#3e5a99', '#3f5d9b', '#41609d', '#43629f', '#4565a1', '#4767a3', '#486aa5', '#4a6ca7', '#4c6fa9', '#4e72ab', '#5074ad', '#5277af', '#547ab1', '#557cb3', '#587fb5', '#5a82b6', '#5c84b7', '#5f87b9', '#618aba', '#638dbb', '#668fbc', '#6892be', '#6a95bf', '#6d97c0', '#6f9ac1', '#729dc3', '#74a0c4', '#76a3c5', '#79a5c6', '#7ba8c8', '#7eabc9', '#80aeca', '#83b0cb', '#85b3cc', '#88b6cd', '#8bb9ce', '#8dbccf', '#90bed0', '#93c1d1', '#95c4d2', '#98c7d3', '#9acad4', '#9dccd5', '#a0cfd6', '#a2d2d7', '#a5d5d8', '#b0d7da', '#bad9db', '#c4dcdd', '#cededf', '#d8e0e0']
-        palette_2 = ['#e8e7c9', '#ecebb1', '#eff097', '#f0f57b', '#f1fa5c', '#f0ff33', '#f0ff33', '#f1fa30', '#f2f52d', '#f2f12b', '#f3ec28', '#f4e725', '#f5e222', '#f6dd1f', '#f7d81c', '#f7d31a', '#f8cd17', '#f9c814', '#fac312', '#fabe11', '#fab90f', '#fbb40e', '#fbae0c', '#fca90b', '#fca309', '#fd9e07', '#fd9806', '#fe9204', '#fe8c02', '#ff8500', '#ff7f00', '#ff7900', '#ff7200', '#ff6c00', '#ff6400', '#ff5d00', '#ff5500', '#ff4c00', '#ff4100', '#ff3600', '#ff2600', '#fb1f00', '#f61b00', '#f11701', '#ec1401', '#e71001', '#e10d01', '#dc0901', '#d70502', '#d20202', '#cc0002', '#c70002', '#c10003', '#bb0003', '#b60003', '#b00003', '#ab0004', '#a50004', '#a00004', '#9a0004', '#950004', '#900005', '#8a0005', '#850005', '#800004', '#7b0004', '#760003', '#710003', '#6b0002', '#660002', '#610002', '#5d0001', '#580001', '#530000', '#4e0000', '#490000', '#450000', '#400000', '#3b0000', '#370000', '#320000', '#2c0000', '#260000', '#1e0000', '#130000']
-        palette_3 = ['#000000', '#040404', '#090909', '#0d0d0d', '#101010', '#131313', '#161616', '#181818', '#1a1a1a', '#1d1d1d', '#1f1f1f', '#212121', '#242424', '#262626', '#292929', '#2b2b2b', '#2e2e2e', '#303030', '#333333', '#353535', '#383838', '#3b3b3b', '#3d3d3d', '#404040', '#434343', '#454545', '#484848', '#4b4b4b', '#4d4d4d', '#505050', '#535353', '#565656', '#595959', '#5b5b5b', '#5e5e5e', '#616161', '#646464', '#676767', '#6a6a6a', '#6d6d6d', '#707070', '#727272', '#757575', '#787878', '#7b7b7b', '#7e7e7e', '#818181', '#848484', '#878787', '#8a8a8a', '#8e8e8e', '#919191', '#949494', '#979797', '#9a9a9a', '#9d9d9d', '#a0a0a0', '#a3a3a3', '#a6a6a6', '#a9a9a9', '#adadad', '#b0b0b0', '#b3b3b3', '#b6b6b6', '#b9b9b9', '#bdbdbd', '#c0c0c0', '#c3c3c3', '#c6c6c6', '#cacaca', '#cdcdcd', '#d0d0d0', '#d3d3d3', '#d7d7d7', '#dadada', '#dddddd', '#e1e1e1', '#e4e4e4', '#e7e7e7', '#ebebeb', '#eeeeee', '#f1f1f1', '#f5f5f5', '#f8f8f8', '#fcfcfc', '#ffffff']
-        palette = palette_1 + palette_2 + palette_3
-        print("len(palette_1):", len(palette_1))
-        print("len(palette_2):", len(palette_2))
-        print("len(palette_3):", len(palette_3))
-        print("len(palette):", len(palette))
-        my_cmap = mpl.colors.ListedColormap(palette)
-        nb_color_minus5_minus4 = int(len(palette_1)*2/5)
-        b1 = np.linspace(1, 10, nb_color_minus5_minus4+1-1)*1e-5
-        nb_color_1_1_5_blue = int(len(palette_2)/(8.5-1.5)*(1.5-1.0))
-        b2 = np.linspace(1, 10, len(palette_1)-nb_color_minus5_minus4-nb_color_1_1_5_blue+1)[1:]*1e-4
-        b3 = np.linspace(1.0, 1.5, nb_color_1_1_5_blue+1)[1:]*1e-3
-        b4 = np.linspace(1.5, 8.5, len(palette_2)+1)[1:]*1e-3
-        nb_color_8_10_black = int(len(palette_2)/(8.5-1.5)*(10-8.5))
-        b5 = np.linspace(8.5, 10, nb_color_8_10_black+1)[1:]*1e-3
-        b6 = np.linspace(1, 10, len(palette_3)-nb_color_8_10_black+1-1)[1:]*1e-2
-        bounds = np.concatenate((b1, b2, b3, b4, b5, b6))
-        colors = my_cmap(np.arange(len(palette)))
-        my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
+        my_cmap = cmocean.cm.thermal
+        my_cmap.colorbar_extend = 'both'
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, atb2.T, cmap=my_cmap,
+                            norm=LogNorm(), rasterized=True)
+        plt.clim(1e-6, 1e-3)
 
         # Put negative values to 1e-9 so they don't appear transparent
         ab_signal[(ab_signal<0) & ~ab_signal.mask] = 1e-9
@@ -275,37 +246,18 @@ class FigureMaker(CALIOPFigureMaker):
         ax1 = plt.subplot(gs0[1])
         cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
         cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
-        # cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
-        # cbar.ax.tick_params(which='both', labelright=False)
-        # cbar_major_label = ['$10^{-5}$', '$10^{-4}$', '$10^{-3}$', '$10^{-2}$', '$10^{-1}$']
-        # for j, bound in enumerate(np.array((1e-5, 1e-4, 1e-3, 1e-2, 1e-1))):
-        #     cbar.ax.text(2, bound, cbar_major_label[j], va='center', fontsize=9)
-        # # cbar.ax.ticklabel_format(style="scientific", scilimits=(0, 0))
-        # minor_locators = np.concatenate((np.arange(2,10)*1e-5,
-        #                                     np.arange(2,10)*1e-4,
-        #                                     np.arange(2,10)*1e-3,
-        #                                     np.arange(2,10)*1e-2,
-        #                                     np.arange(2,10)*1e-1))
-        # cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_locators))
         cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
         cbar.ax.tick_params(which='both', labelright=False)
-        cbar_major_label = ['×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$', '×$10^{-2}$', '×$10^{-1}$']
-        c_bar_major_values = np.array((1e-5, 1e-4, 1e-3, 1e-2, 1e-1))
+        cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$']
+        c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3))
         for j, bound in enumerate(c_bar_major_values):
             cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
-        bounds = np.array([0.00001, 0.00005, 
-                            0.0001, 0.0005, 
-                            0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
-                            0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 
-                            0.1])
-        cbar.ax.yaxis.set_minor_locator(FixedLocator(bounds))
-        cbar_minor_label = ['1.0', '5.0',
-                            '1.0', '5.0',
-                            '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
-                            '1.0', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
-                            '1.0']
-        for j, bound in enumerate(bounds):
-            cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=4)
+        minor_locators = np.concatenate((np.arange(2,10)*1e-6,
+                                         np.arange(2,10)*1e-5,
+                                         np.arange(2,10)*1e-4,
+                                         np.arange(2,10)*1e-3))
+        cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_locators))
+
         # Save figure
         self.save_fig(filename)
         

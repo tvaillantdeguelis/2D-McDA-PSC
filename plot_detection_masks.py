@@ -23,6 +23,13 @@ FILL_VALUE_FLOAT = -9999.0
 
 
 class FigureMaker(CALIOPFigureMaker):
+    def __init__(self):
+        super().__init__()
+        self.fig_w = cm2in(17.7) # cm
+        self.fig_h = cm2in(6) # cm
+        self.axes_titlesize = 8
+        self.axes_title_pad = 1.14
+        self.clabelpad = 40
 
     def set_max_detect_level(self, max_detect_level):
         self.max_detect_level = max_detect_level
@@ -69,7 +76,7 @@ class FigureMaker(CALIOPFigureMaker):
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
         if step:
-            plt.title(f'{channel} (step {step})', weight='bold', y=1.35)
+            plt.title(f'{channel} (step {step})', weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         else:
             if channel == '532_par':
                 title = "2D-McDA-PSC\ 532\ nm\ parallel\ detection\ feature\ mask"
@@ -79,7 +86,7 @@ class FigureMaker(CALIOPFigureMaker):
                 title = "2D-McDA-PSC\ 1064\ nm\ detection\ feature\ mask"
             else:
                 raise ValueError(f"Unknown channel = {channel}")
-            plt.title(r'$\mathbf{%s}$' % title, y=1.35)
+            plt.title(r'$\mathbf{%s}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -89,7 +96,7 @@ class FigureMaker(CALIOPFigureMaker):
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
                          va='center', fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        cbar.set_label("Level of detection", labelpad=55)
+        cbar.set_label("Level of detection", labelpad=self.clabelpad)
        
         # Save figure
         if step:
@@ -134,7 +141,7 @@ class FigureMaker(CALIOPFigureMaker):
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
         title = "Composite\ best\ detection\ level"
-        plt.title(r'$\mathbf{%s}$' % title, y=1.35)
+        plt.title(r'$\mathbf{%s}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -144,7 +151,7 @@ class FigureMaker(CALIOPFigureMaker):
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
                          va='center', fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        cbar.set_label("Level of detection", labelpad=55)
+        cbar.set_label("Level of detection", labelpad=self.clabelpad)
        
         # Save figure
         filename = f"mask_best_detection"
@@ -192,7 +199,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=my_norm)
         plt.clim(1e-5, 1e-1)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, weight='bold', y=1.35)
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -256,7 +263,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap, norm=my_norm,
                             rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, weight='bold', y=1.35)
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         
         # Save figure
         self.save_fig(filename)
@@ -295,7 +302,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=LogNorm())
         plt.clim(1e-6, 1e-3)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, weight='bold', y=1.35)
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -336,7 +343,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=cm.viridis, norm=LogNorm())
         plt.clim(1, 50)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, weight='bold', y=1.35)
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -402,7 +409,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', fontsize=self.axes_titlesize, y=self.axes_title_pad)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -456,7 +463,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', fontsize=self.axes_titlesize, y=self.axes_title_pad)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -538,7 +545,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, new_mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', fontsize=self.axes_titlesize, y=self.axes_title_pad)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -591,7 +598,7 @@ class FigureMaker(CALIOPFigureMaker):
         acr_signal[(acr_signal<0) & ~acr_signal.mask] = 1e-9
         pc = plt.pcolormesh(self.pindexbins, self.altbins, acr_signal.T, cmap=my_cmap, norm=my_norm)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title("$\mathbf{Attenuated\ Color\ Ratio}\ \\frac{\\beta'_{1064}}{\\beta'_{532}}$", y=1.35)
+        plt.title("$\mathbf{Attenuated\ Color\ Ratio}\ \\frac{\\beta'_{1064}}{\\beta'_{532}}$", fontsize=self.axes_titlesize, y=self.axes_title_pad5)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -629,7 +636,7 @@ class FigureMaker(CALIOPFigureMaker):
         my_cmap = takecmap('extviridis')
         pc = plt.pcolormesh(self.pindexbins, self.altbins, nsf.T, cmap=my_cmap)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, y=1.35)
+        plt.title(title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -687,7 +694,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(f'PSC v2 Composition (draft code)', weight='bold', y=1.35)
+        plt.title(f'PSC v2 Composition (draft code)', weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -770,18 +777,19 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"
-    GRANULE_DATE = "2018-07-08T04-07-14ZN_lon_-52.83_-135.17"
-    VERSION_2D_McDA = "V1.01"
+    GRANULE_DATE = "2010-01-18T00-19-57ZN_lon_170.68_27.93"
+    VERSION_2D_McDA = "V1.0"
     TYPE_2D_McDA = "Prototype"
     SLICE_START_END_TYPE = 'longitude' # 'profindex' (of the 2D-McDA file) or 'longitude'
-    SLICE_START = -52.83 # profindex or longitude
-    SLICE_END = -135.17 # profindex or longitude
+    SLICE_START = 170.68 # profindex or longitude
+    SLICE_END = 27.93 # profindex or longitude
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5
     PLOT_ALL_STEPS = False
     INVERT_XAXIS = False
-    YMIN = 8
+    YMIN = 15
     YMAX = 30
+    BROWSE_IMAGE_ASPECT_RATIO = True
     FIGURES_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/figures/"
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     
@@ -906,6 +914,13 @@ if __name__ == '__main__':
     
     # Initialize instance of FigureMaker
     plot_fig = FigureMaker()
+    if BROWSE_IMAGE_ASPECT_RATIO:
+        plot_fig.fig_w = cm2in(16) # cm
+        plot_fig.fig_h = cm2in(8) # cm
+        plot_fig.adj_left = 0.08
+        plot_fig.adj_bottom = 0.11
+        plot_fig.adj_right = 0.87
+        plot_fig.adj_top = 0.81
     plot_fig.set_and_create_fig_folder(FIGURES_PATH, GRANULE_DATE, lon[prof_min], lon[prof_max])
     plot_fig.set_head_filename(GRANULE_DATE, lon[prof_min], lon[prof_max])
     plot_fig.set_edges_removal(EDGES_REMOVAL)

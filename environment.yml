@@ -21,12 +21,14 @@ dependencies:
   - brotlipy=0.7.0=py310h6acc77f_1003
   - bzip2=1.0.8=h7f98852_4
   - c-ares=1.18.1=h7f98852_0
-  - ca-certificates=2021.10.8=ha878542_0
+  - ca-certificates=2024.7.4=hbcca054_0
   - cartopy=0.20.2=py310he9c7799_3
-  - certifi=2021.10.8=py310hff52083_2
+  - certifi=2024.7.4=pyhd8ed1ab_0
   - cffi=1.15.0=py310h0fdd8cc_0
   - charset-normalizer=2.0.12=pyhd8ed1ab_0
   - click=8.0.3=py310hff52083_1
+  - cmocean=4.0.3=pyhd8ed1ab_0
+  - colorspacious=1.1.2=pyh24bf2e0_0
   - cryptography=36.0.1=py310h685ca39_0
   - cycler=0.11.0=pyhd8ed1ab_0
   - dataclasses=0.8=pyhc8e2a94_3
@@ -94,11 +96,12 @@ dependencies:
   - libev=4.33=h516909a_1
   - libevent=2.1.10=h9b69904_4
   - libffi=3.4.2=h7f98852_5
-  - libgcc-ng=11.2.0=h1d223b6_12
+  - libgcc=14.1.0=h77fa898_1
+  - libgcc-ng=14.1.0=h69a702a_1
   - libgfortran-ng=11.2.0=h69a702a_12
   - libgfortran5=11.2.0=h5c6108e_12
   - libglib=2.70.2=h174f98d_4
-  - libgomp=11.2.0=h1d223b6_12
+  - libgomp=14.1.0=h77fa898_1
   - libiconv=1.16=h516909a_0
   - libimagequant=2.17.0=h7f98852_1
   - liblapack=3.9.0=13_linux64_openblas
@@ -146,7 +149,7 @@ dependencies:
   - numba=0.55.1=py310hc55943c_0
   - numpy=1.21.6=py310h45f3432_0
   - openjpeg=2.4.0=hb52868f_1
-  - openssl=1.1.1o=h166bdaf_0
+  - openssl=1.1.1w=hd590300_0
   - packaging=21.3=pyhd8ed1ab_0
   - pandas=1.4.2=py310h769672d_0
   - pandoc=2.17.1.1=ha770c72_0
@@ -228,6 +231,7 @@ dependencies:
   - zlib=1.2.11=h36c2ea0_1013
   - zstd=1.5.2=ha95c52a_0
   - pip:
-    - cdsapi==0.5.1
-    - ecmwf-api-client==1.6.3
-    - tqdm==4.63.0
+      - cdsapi==0.5.1
+      - ecmwf-api-client==1.6.3
+      - tqdm==4.63.0
+prefix: /work_users/vaillant/mambaforge/envs/2D_McDA_PSC_v1.0
