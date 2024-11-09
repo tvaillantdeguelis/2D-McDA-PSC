@@ -44,7 +44,8 @@ class FigureMaker(CALIOPFigureMaker):
 
         # Labels
         clabels = ["No detection",] +\
-                  ["Detection level %d" % i for i in np.arange(self.max_detect_level)+1] 
+                  ["%d" % i for i in np.arange(self.max_detect_level)+1] 
+                #   ["Detection level %d" % i for i in np.arange(self.max_detect_level)+1] 
         if step:
             clabels = clabels + ["Spikes",]
             clabels = clabels + ["Potential detection",]
@@ -91,7 +92,7 @@ class FigureMaker(CALIOPFigureMaker):
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
         cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', drawedges=True)
-        fontsize_clabel = 5
+        fontsize_clabel = 8
         cbar.ax.tick_params(axis='y', which='both', right=False, labelright=False)
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
@@ -151,7 +152,7 @@ class FigureMaker(CALIOPFigureMaker):
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
                          va='center', fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        cbar.set_label("Level of detection", labelpad=self.clabelpad)
+        # cbar.set_label("Level of detection", labelpad=self.clabelpad)
        
         # Save figure
         filename = f"mask_best_detection"
@@ -777,19 +778,19 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"
-    GRANULE_DATE = "2010-01-18T00-19-57ZN_lon_170.68_27.93"
-    VERSION_2D_McDA = "V1.0"
+    GRANULE_DATE = "2008-07-17T19-15-43ZN_lon_75.00_-73.35"
+    VERSION_2D_McDA = "V1.01"
     TYPE_2D_McDA = "Prototype"
     SLICE_START_END_TYPE = 'longitude' # 'profindex' (of the 2D-McDA file) or 'longitude'
-    SLICE_START = 170.68 # profindex or longitude
-    SLICE_END = 27.93 # profindex or longitude
+    SLICE_START = 69.65 # profindex or longitude
+    SLICE_END = -73.31 # profindex or longitude
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5
     PLOT_ALL_STEPS = False
     INVERT_XAXIS = False
-    YMIN = 15
+    YMIN = 8
     YMAX = 30
-    BROWSE_IMAGE_ASPECT_RATIO = True
+    PLOT_ASPECT_RATIO = "spec" # "browse", "spec" or None
     FIGURES_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/figures/"
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     
@@ -914,13 +915,22 @@ if __name__ == '__main__':
     
     # Initialize instance of FigureMaker
     plot_fig = FigureMaker()
-    if BROWSE_IMAGE_ASPECT_RATIO:
+    if PLOT_ASPECT_RATIO == 'browse':
         plot_fig.fig_w = cm2in(16) # cm
         plot_fig.fig_h = cm2in(8) # cm
         plot_fig.adj_left = 0.08
         plot_fig.adj_bottom = 0.11
         plot_fig.adj_right = 0.87
         plot_fig.adj_top = 0.81
+    elif PLOT_ASPECT_RATIO == 'spec':
+        plot_fig.fig_w = cm2in(12) # cm
+        plot_fig.fig_h = cm2in(8) # cm
+        plot_fig.adj_left = 0.1
+        plot_fig.adj_bottom = 0.11
+        plot_fig.adj_right = 0.83
+        plot_fig.adj_top = 0.81
+        plot_fig.axes_title_pad = 1.15
+        plot_fig.clabelpad = 40
     plot_fig.set_and_create_fig_folder(FIGURES_PATH, GRANULE_DATE, lon[prof_min], lon[prof_max])
     plot_fig.set_head_filename(GRANULE_DATE, lon[prof_min], lon[prof_max])
     plot_fig.set_edges_removal(EDGES_REMOVAL)

@@ -124,7 +124,7 @@ class FigureMaker(CALIOPFigureMaker):
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
         if step:
-            plt.title(f'{channel} (step {step})', weight='bold', y=1.35)
+            plt.title(f'{channel} (step {step})', weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         else:
             if channel == '532_par':
                 title = "2D-McDA-PSC\ 532\ nm\ parallel\ detection\ feature\ mask"
@@ -134,7 +134,7 @@ class FigureMaker(CALIOPFigureMaker):
                 title = "2D-McDA-PSC\ 1064\ nm\ detection\ feature\ mask"
             else:
                 raise ValueError(f"Unknown channel = {channel}")
-            plt.title(r'$\mathbf{%s}$' % title, y=1.35)
+            plt.title(r'$\mathbf{%s}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -144,7 +144,7 @@ class FigureMaker(CALIOPFigureMaker):
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
                          va='center', fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        cbar.set_label("Level of detection", labelpad=55)
+        # cbar.set_label("Level of detection", labelpad=55)
        
         # Save figure
         if step:
@@ -225,39 +225,111 @@ class FigureMaker(CALIOPFigureMaker):
         # Create figure
         fig = plt.figure(figsize=(self.fig_w, self.fig_h))
         gs0 = gridspec.GridSpec(1, 2, width_ratios=[50, 1], wspace=0.1)
-    
+
+        # Colormap choice
+        colormap_style = 155
+
         # Plot figure
         ax0 = plt.subplot(gs0[0])
-        my_cmap = cmocean.cm.thermal
-        my_cmap.colorbar_extend = 'both'
-        pc = plt.pcolormesh(self.pindexbins, self.altbins, atb2.T, cmap=my_cmap,
-                            norm=LogNorm(), rasterized=True)
-        plt.clim(1e-6, 1e-3)
+        # my_cmap = cmocean.cm.thermal
+        # my_cmap.colorbar_extend = 'both'
+        if colormap_style in [55,]:
+            palette = ['#000000', '#060B54', '#262c72', '#3b4482', '#525d8f', '#69769a', '#808da5', '#9aa6a5', '#b6bea0',  
+                        '#eff097', '#f4e725', '#fd9708', '#ee3801', '#a70103', '#580001',
+                        '#2a0000', '#352929', '#4e4a4a', '#6d6b6b', '#8f8e8e', '#b2b2b2', '#d8d8d8', '#ffffff']
+            my_cmap = mpl.colors.ListedColormap(palette)
+            bounds = np.array([0.000001, 0.00001, 
+                                0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
+                                0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
+                                0.01, 0.02, 0.03, 0.04, 0.05])
+            colors = my_cmap(np.arange(len(palette)))
+            my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
+            cbar_edges = True
+        elif colormap_style in [155,]:
+            palette = ['#000000', '#01020e', '#02041c', '#03062a', '#040738', '#050946',
+                       '#060b54', '#0a0e57', '#0e1159', '#11145c', '#14175f', '#171a61', '#1a1d64', '#1c2067', '#1f236a', '#21266c', '#24296f', 
+                       '#262c72', '#282e73', '#2a3075', '#2c3276', '#2e3578', '#303779', '#32397b', '#343b7c', '#363d7e', '#37407f', '#394281', 
+                       '#3b4482', '#3d4683', '#3f4884', '#424b86', '#444d87', '#464f88', '#485189', '#4a548a', '#4c568b', '#4e588d', '#505b8e', 
+                       '#525d8f', '#545f90', '#566191', '#586492', '#5b6693', '#5d6894', '#5f6b95', '#616d96', '#636f97', '#657198', '#677499', 
+                       '#69769a', '#6b789b', '#6d7a9c', '#6f7c9d', '#717e9e', '#74809f', '#7682a0', '#7885a1', '#7a87a2', '#7c89a3', '#7e8ba4', 
+                       '#808da5', '#828fa5', '#8591a5', '#8794a5', '#8a96a5', '#8c98a5', '#8e9ba5', '#919da5', '#939fa5', '#95a1a5', '#98a4a5', 
+                       '#9aa6a5', '#9da8a5', '#9faaa4', '#a2aca4', '#a4afa3', '#a7b1a3', '#a9b3a2', '#acb5a2', '#afb7a1', '#b1baa1', '#b4bca0', 
+                       '#b6bea0', '#bbc29f', '#c1c79f', '#c6cb9e', '#cbd09d', '#d0d49c', '#d5d99c', '#dbde9b', '#e0e29a', '#e5e799', '#eaeb98',
+                       '#eff097', '#f0ef8f', '#f1ee86', '#f2ed7e', '#f2ed75', '#f3ec6c', '#f3eb62', '#f4ea58', '#f4e94e', '#f4e942', '#f4e835', 
+                       '#f4e725', '#f6e022', '#f7d920', '#f8d21d', '#f9cb1b', '#fac418', '#fbbc16', '#fcb513', '#fcae10', '#fda60e', '#fd9f0b', 
+                       '#fd9708', '#fc9007', '#fb8805', '#fa8104', '#f97903', '#f77102', '#f66902', '#f46101', '#f35801', '#f14e01', '#f04401', 
+                       '#ee3801', '#e73401', '#e13002', '#da2c02', '#d42802', '#cd2302', '#c71f03', '#c01a03', '#ba1503', '#b40f03', '#ad0803', 
+                       '#a70103', '#9f0104', '#980104', '#910104', '#890104', '#820004', '#7b0004', '#740004', '#6d0003', '#660003', '#5f0002', 
+                       '#580001', '#540101', '#4f0101', '#4b0201', '#460201', '#420301', '#3e0301', '#390301', '#350300', '#310300', '#2e0200',
+                       '#2a0000', '#2b0506', '#2b0a0b', '#2d0e10', '#2e1213', '#2f1517', '#30181a', '#311c1d', '#321f20', '#332223', '#342626', 
+                       '#352929', '#372c2c', '#3a2f2f', '#3c3232', '#3e3535', '#403838', '#433b3b', '#453e3e', '#474141', '#494444', '#4c4747',
+                       '#4e4a4a', '#514d4d', '#545050', '#565353', '#595656', '#5c5959', '#5f5c5c', '#625f5f', '#646262', '#676565', '#6a6868', 
+                       '#6d6b6b', '#706e6e', '#737171', '#767474', '#797878', '#7c7b7b', '#7f7e7e', '#828181', '#868484', '#898888', '#8c8b8b', 
+                       '#8f8e8e', '#929191', '#959494', '#989898', '#9c9b9b', '#9f9e9e', '#a2a1a1', '#a5a5a5', '#a8a8a8', '#acabab', '#afafaf', 
+                       '#b2b2b2', '#b5b5b5', '#b9b9b9', '#bcbcbc', '#c0c0c0', '#c3c3c3', '#c7c7c7', '#cacaca', '#cecece', '#d1d1d1', '#d4d4d4',
+                       '#d8d8d8', '#dfdfdf', '#e5e5e5', '#ececec', '#f2f2f2', '#f9f9f9',
+                       '#ffffff']
+            my_cmap = mpl.colors.ListedColormap(palette)
+            discrete_bounds = np.array([0.000001, 0.00001, 
+                                        0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
+                                        0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
+                                        0.01, 0.02, 0.03, 0.04, 0.05])
+            nb_colors_by_discrete_bin = 11
+            bounds = np.array(())
+            for i in range(discrete_bounds.size-1): # color of discrete bounds at the mid value of the range bin
+                bounds = np.append(bounds, np.linspace(discrete_bounds[i], discrete_bounds[i+1], nb_colors_by_discrete_bin+1)[:-1])
+            bounds = np.append(bounds, discrete_bounds[-1])
+            colors = my_cmap(np.arange(len(palette)))
+            my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
+            cbar_edges = False
 
         # Put negative values to 1e-9 so they don't appear transparent
         ab_signal[(ab_signal<0) & ~ab_signal.mask] = 1e-9
-        pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=my_norm)
-        plt.clim(1e-5, 1e-1)
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=my_norm, rasterized=True)
+        # plt.clim(1e-6, 1e-3)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(title, weight='bold', y=1.35)
-        plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        # plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
-        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
-        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
-        cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
-        cbar.ax.tick_params(which='both', labelright=False)
-        cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$']
-        c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3))
-        for j, bound in enumerate(c_bar_major_values):
-            cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
-        minor_locators = np.concatenate((np.arange(2,10)*1e-6,
-                                         np.arange(2,10)*1e-5,
-                                         np.arange(2,10)*1e-4,
-                                         np.arange(2,10)*1e-3))
-        cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_locators))
-
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=cbar_edges)
+        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=self.clabelpad)
+        if colormap_style in [55,]:
+            cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
+            cbar.ax.tick_params(which='both', labelright=False)
+            cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$', '×$10^{-2}$']
+            c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3, 1e-2))
+            for j, bound in enumerate(c_bar_major_values):
+                cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
+            cbar.ax.yaxis.set_minor_locator(FixedLocator(bounds))
+            cbar_minor_label = ['1.0',
+                                '1.0',
+                                '1.0', '2.0', '4.0', '6.0', '8.0',
+                                '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
+                                '1.0', '2.0', '3.0', '4.0', '5.0']
+            for j, bound in enumerate(bounds):
+                cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=4)
+        elif colormap_style in [155,]:
+            cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
+            cbar.ax.tick_params(which='both', labelright=False)
+            cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$', '×$10^{-2}$']
+            c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3, 1e-2))
+            for j, bound in enumerate(c_bar_major_values):
+                cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
+            minor_bounds = np.array([0.000001, 0.00001, 
+                                0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
+                                0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
+                                0.01, 0.02, 0.03, 0.04, 0.05])
+            cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_bounds))
+            cbar_minor_label = ['1.0',
+                                '1.0',
+                                '1.0', '2.0', '4.0', '6.0', '8.0',
+                                '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
+                                '1.0', '2.0', '3.0', '4.0', '5.0']
+            for j, bound in enumerate(minor_bounds):
+                cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=4)
+                
         # Save figure
         self.save_fig(filename)
         
@@ -816,8 +888,8 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/CLaMS_ZOMM/"
-    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = sys.argv[1] #"2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2011d176_0006_v1.nc"
-    VERSION_2D_McDA = "V1.01"
+    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = sys.argv[1] # "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2011d176_0006_v1.nc"
+    VERSION_2D_McDA = "V1.0"
     TYPE_2D_McDA = "Prototype"
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5
@@ -901,6 +973,15 @@ if __name__ == '__main__':
     
     # Initialize instance of FigureMaker
     plot_fig = FigureMaker()
+    plot_fig.fig_w = cm2in(16) # cm
+    plot_fig.fig_h = cm2in(8) # cm
+    plot_fig.adj_left = 0.08
+    plot_fig.adj_bottom = 0.11
+    plot_fig.adj_right = 0.87
+    plot_fig.adj_top = 0.81
+    plot_fig.axes_title_pad = 1.14
+    plot_fig.clabelpad = 40
+    plot_fig.axes_titlesize = 8
     plot_fig.fig_folder = FIGURES_PATH
     plot_fig.head_filename = FILENAME_2D_McDA_PSCs_ZOMM_CLAMS[:-3]
     plot_fig.set_edges_removal(EDGES_REMOVAL)
@@ -911,11 +992,11 @@ if __name__ == '__main__':
     # Plot signals
     if True:
         filename = "ab_532_par"
-        title = "$\mathbf{532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{532,\\parallel}$"
+        title = "$\mathbf{CLaMS-ZOMM\ 532\ nm\ Parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"], title, filename)
 
         filename = "ab_532_per"
-        title = "$\mathbf{532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        title = "$\mathbf{CLaMS-ZOMM\ 532\ nm\ Perpendicular}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
     if False:

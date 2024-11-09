@@ -4,7 +4,8 @@
 #SBATCH --mem=1000
 
 # Activer Python virtual environment
-mamba activate 2D_McDA_for_PSCs_env001
+source ~/.zshrc
+mamba activate 2D_McDA_PSC_v1.0
 
 # Run program
 ./plot_detection_masks_CLaMS_ZOMM.py $FILENAME_2D_McDA_PSCs_ZOMM_CLAMS

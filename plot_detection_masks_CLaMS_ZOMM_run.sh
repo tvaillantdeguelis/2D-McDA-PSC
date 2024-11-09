@@ -7,8 +7,8 @@ launch_plot () {
     jobname="plot_"$1
     echo -e "jobname=$jobname"
     sbatch --job-name=$jobname \
-            --error=./sbatch_out/${jobname}.e \
-            --output=./sbatch_out/${jobname}.o \
+            --error=./out/slurm/${jobname}.e \
+            --output=./out/slurm/${jobname}.o \
             --export=FILENAME_2D_McDA_PSCs_ZOMM_CLAMS="$FILENAME_2D_McDA_PSCs_ZOMM_CLAMS" plot_detection_masks_CLaMS_ZOMM.sbatch
 }
 
