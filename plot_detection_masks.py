@@ -43,8 +43,9 @@ class FigureMaker(CALIOPFigureMaker):
             mask = remove_edges(mask, self.edges_removal)
 
         # Labels
-        clabels = ["No detection",] +\
+        clabels = ["No\ndetect.",] +\
                   ["%d" % i for i in np.arange(self.max_detect_level)+1] 
+                #   ["No detection",] +\
                 #   ["Detection level %d" % i for i in np.arange(self.max_detect_level)+1] 
         if step:
             clabels = clabels + ["Spikes",]
@@ -75,7 +76,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         if step:
             plt.title(f'{channel} (step {step})', weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         else:
@@ -97,7 +98,10 @@ class FigureMaker(CALIOPFigureMaker):
         for j, lab in enumerate(clabels):
             cbar.ax.text(1.5, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), lab,
                          va='center', fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        cbar.set_label("Level of detection", labelpad=self.clabelpad)
+            if j == 3:
+                cbar.ax.text(4, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), 'Detection level',
+                             va='center', rotation=90, fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
+        # cbar.set_label("Level of detection", labelpad=self.clabelpad)
        
         # Save figure
         if step:
