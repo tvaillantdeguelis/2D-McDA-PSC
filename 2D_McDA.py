@@ -20,12 +20,13 @@ from my_modules.readers.calipso_reader import CALIOPReader, automatic_path_detec
 from my_modules.paths import split_granule_date
 from my_modules.calipso_constants import *
 from my_modules.writers.hdf_writer import SDSData, write_hdf
+from my_modules.writers.netcdf_writer import NetCDFVariable, write_netcdf
 from my_modules.calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
     nsf_from_V_domain_to_betap_domain, rms_from_P_domain_to_betap_domain, compute_shotnoise, \
     compute_backgroundnoise
 
 from config import NB_PROF_OVERLAP
-from feature_detection import detect_features, separate_homogeneous_features, classify_homogeneous_features_with_psc_v2
+from feature_detection import detect_features, neighbors
 from merged_3channels_feature_mask import merged_feature_masks
 
 
@@ -100,12 +101,482 @@ def compute_uncertainty(nb_bins_shift, mol_ab, rms, nsf):
     return ab_std, background_noise, shot_noise
 
 
+class DataVar():
+    def __init__(self, key, data):
+        self.key = key
+        self.data = data
+        self.fillvalue = None
+        self.units = ''
+        self.description = ''
+        self.dimensions = []
+        self.valid_range = ()
+
+
+def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='HDF', save_development_data=False):
+
+    # Create a dictionary of parameters to save
+    params = {}
+
+    key = 'Profile_ID'
+    params[key] = DataVar(key, data_dict_5kmx180m["Profile_ID"])
+    params[key].description = "Profile number from start of file"
+    # params[key].valid_range = (1, 228630)
+    params[key].dimensions = ['Profile_ID']
+
+    key = 'Profile_Time'
+    params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
+    params[key].units = "seconds...TAI"
+    # params[key].valid_range = (4.204e8, 1.072e9)
+    params[key].dimensions = ['Profile_ID']
+
+    key = 'Profile_UTC_Time'
+    params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
+    params[key].units = "UTC - yymmdd.ffffffff"
+    # params[key].valid_range = (60426.0, 261231.0)
+    params[key].dimensions = ['Profile_ID']
+
+    key = 'Latitude'
+    params[key] = DataVar(key, data_dict_5kmx180m["Latitude"])
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].units = "degrees"
+    # params[key].valid_range = (-90.0, 90.0)
+    params[key].dimensions = ['Profile_ID']
+
+    key = 'Longitude'
+    params[key] = DataVar(key, data_dict_5kmx180m["Longitude"])
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].units = "degrees"
+    # params[key].valid_range = (-90.0, 90.0)
+    params[key].dimensions = ['Profile_ID']
+    
+    key = 'Altitude'
+    params[key] = DataVar(key, data_dict_5kmx180m["Lidar_Data_Altitudes"])
+    params[key].units = "kilometer"
+    # params[key].valid_range = (-0.5, 30.1)
+    params[key].dimensions = ['Altitude']
+    
+    key = 'Parallel_Detection_Flags_532'
+    params[key] = DataVar(key, data_dict_2d_mcda["Parallel_Detection_Flags_532"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Perpendicular_Detection_Flags_532'
+    params[key] = DataVar(key, data_dict_2d_mcda["Perpendicular_Detection_Flags_532"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Detection_Flags_1064'
+    params[key] = DataVar(key, data_dict_2d_mcda["Detection_Flags_1064"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Composite_Detection_Flags'
+    params[key] = DataVar(key, data_dict_2d_mcda["Composite_Detection_Flags"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+    key = 'Parallel_Spikes_532'
+    params[key] = DataVar(key, data_dict_2d_mcda_dev["Parallel_Spikes_532"])
+    params[key].valid_range = (0, 1)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+    key = 'Perpendicular_Spikes_532'
+    params[key] = DataVar(key, data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+    params[key].valid_range = (0, 1)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Spikes_1064'
+    params[key] = DataVar(key, data_dict_2d_mcda_dev["Spikes_1064"])
+    params[key].valid_range = (0, 1)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Mask'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Classification'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
+    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+    params[key].valid_range = (0, 255)
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    # Parameters saved for development
+    if save_development_data:
+        key = 'Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Molecular_Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Parallel_Attenuated_Backscatter_532"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Noise_Scale_Factor_532_Parallel_AB_domain'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Noise_Scale_Factor_532_Parallel_AB_domain"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-0.5 sr-0.5"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Background_Noise_532_Parallel'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Background_Noise_532_Parallel"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Shot_Noise_532_Parallel'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Shot_Noise_532_Parallel"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Molecular_Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Perpendicular_Attenuated_Backscatter_532"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Noise_Scale_Factor_532_Perpendicular_AB_domain'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Noise_Scale_Factor_532_Perpendicular_AB_domain"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-0.5 sr-0.5"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Background_Noise_532_Perpendicular'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Background_Noise_532_Perpendicular"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Shot_Noise_532_Perpendicular'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Shot_Noise_532_Perpendicular"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Molecular_Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Noise_Scale_Factor_1064_AB_domain'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Noise_Scale_Factor_1064_AB_domain"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-0.5 sr-0.5"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Background_Noise_1064'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Background_Noise_1064"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Shot_Noise_1064'        
+        params[key] = DataVar(key, data_dict_5kmx180m["Shot_Noise_1064"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Step_532_par'
+        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Parallel_Detection_Flags_532_steps"].shape[0]))
+        params[key].fillvalue = FILL_VALUE_SHORT
+        params[key].dimensions = ['Step_532_par']
+
+        key = 'Step_532_per'
+        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Perpendicular_Detection_Flags_532_steps"].shape[0]))
+        params[key].fillvalue = FILL_VALUE_SHORT
+        params[key].dimensions = ['Step_532_per']
+
+        key = 'Step_1064'
+        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Detection_Flags_1064_steps"].shape[0]))
+        params[key].fillvalue = FILL_VALUE_SHORT
+        params[key].dimensions = ['Step_1064']
+
+        key = 'Parallel_Detection_Flags_532_steps'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Parallel_Detection_Flags_532_steps"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Step_532_par', 'Profile_ID', 'Altitude']
+    
+        key = 'Perpendicular_Detection_Flags_532_steps'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Perpendicular_Detection_Flags_532_steps"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Step_532_per', 'Profile_ID', 'Altitude']
+    
+        key = 'Detection_Flags_1064_steps'
+        params[key] = DataVar(key,  data_dict_2d_mcda_dev["Detection_Flags_1064_steps"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Step_1064', 'Profile_ID', 'Altitude']
+    
+        key = 'Parallel_Attenuated_Backscatter_532_steps'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Parallel_Attenuated_Backscatter_532_steps"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Step_532_par', 'Profile_ID', 'Altitude']
+    
+        key = 'Perpendicular_Attenuated_Backscatter_532_steps'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Perpendicular_Attenuated_Backscatter_532_steps"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Step_532_per', 'Profile_ID', 'Altitude']
+    
+        key = 'Attenuated_Backscatter_1064_steps'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Attenuated_Backscatter_1064_steps"])
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Step_1064', 'Profile_ID', 'Altitude']
+    
+    # Filename
+    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None) and (SLICE_START_END_TYPE == 'profindex'):
+        filename_end = '' # nothing, it is the whole file
+    else:
+        filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
+    filename = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA}-{VERSION_2D_McDA.replace('.', '-')}." \
+                f"{GRANULE_DATE}{filename_end}"
+    
+    if filetype == 'HDF':
+        hdf_params = {}
+        for key, datavar in params.items():
+            hdf_params[key] = SDSData(key, datavar.data, datavar.fillvalue)
+            hdf_params[key].description = datavar.description
+            hdf_params[key].units = datavar.units
+            hdf_params[key].dim_labels = datavar.dimensions
+        write_hdf(outdata_folder+"/"+filename+".hdf", hdf_params)
+    elif filetype == 'netCDF':
+        dim_keys = ['Profile_ID', 'Altitude', 'Step_532_par', 'Step_532_per', 'Step_1064']
+        nc_params = []
+        nc_dims = []
+        for key, datavar in params.items():
+            if key in dim_keys:
+                nc_dim = NetCDFVariable(key, datavar.data)
+                nc_dim.long_name = datavar.description
+                nc_dim.fillvalue = datavar.fillvalue # might need to check if None if error
+                nc_dim.units = datavar.units
+                nc_dim.dimensions = datavar.dimensions
+                nc_dims.append(nc_dim)
+            else:
+                nc_param = NetCDFVariable(key, datavar.data)
+                nc_param.long_name = datavar.description
+                nc_param.fillvalue = datavar.fillvalue # might need to check if None if error
+                nc_param.units = datavar.units
+                nc_param.dimensions = datavar.dimensions
+                nc_params.append(nc_param)
+        write_netcdf(outdata_folder+"/"+filename+".nc", nc_dims, nc_params)
+
+
+def separate_homogeneous_chunks(mask_composite, mask_par532, mask_per532, mask_1064, separation_type):
+    """Separate detected feature into homogeneous part based on the detection levels of the 3
+    detection channel"""
+
+    if separation_type == "channel": # separate by channel
+        mask_homogeneous = np.ma.zeros(mask_composite.shape)
+        # mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 1] =  # 1: Clear air
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == 8)] = 2 # 2: 532 par only
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == 16)] = 3 # 3: 532 per only
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == 32)] = 4 # 4: 1064 only
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+16))] = 5 # 5: 532 par + 532 per
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+32))] = 6 # 6: 532 par + 1064
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == (16+32))] = 7 # 7: 532 per + 1064
+        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
+                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+16+32))] = 8 # 8: 532 par + 532 per + 1064
+        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 3] = 9
+        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 5] = 10
+        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 7] = 11
+
+    elif separation_type == "best_detection_level": # separate by best detestion level
+        # Best detection level mask
+        detection_level_masks = []
+        for i in np.arange(5) + 1:
+            detection_level_masks.append((mask_par532 == i) + (mask_per532 == i) + (mask_1064 == i))
+
+        # Initialization
+        mask_homogeneous = np.ma.zeros(mask_par532.shape)
+
+        for i in np.arange(5, 0, -1):
+            mask_homogeneous[detection_level_masks[i-1]] = i
+
+    elif separation_type == "all_levels_and_channels": # separate every levels and channels combination
+        # Remove flags not in [1,2,3,4,5] like surface = 254, etc.
+        mask_par532[mask_par532 > 5] = 0
+        mask_per532[mask_per532 > 5] = 0
+        mask_1064[mask_1064 > 5] = 0
+
+        mask_homogeneous = mask_par532 + 10*mask_per532 + 100*mask_1064
+
+
+    return mask_homogeneous
+
+
+def mask_where_spikes(data, spikes_par, spikes_per):
+    
+    data[spikes_par == 1] = np.ma.masked
+    data[spikes_per == 1] = np.ma.masked
+    
+    return data
+
+
+def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab_1064, sr_532, separation_type):
+
+    # Initialization
+    mask_shape = mask_homogeneous.shape
+    seen_pixels = np.zeros(mask_shape, dtype=bool)
+    ab_532_par_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    ab_532_per_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    ab_1064_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    sr_532_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+
+    if separation_type == "channel":
+        mask_values = np.arange(7)+2 # 2 to 8
+    elif separation_type == "best_detection_level": 
+        mask_values = np.arange(5)+1 # 1 to 5
+    elif separation_type == "all_levels_and_channels": 
+        mask_values = np.arange(1000)+1
+
+    for i in np.arange(mask_shape[0]):
+        for j in np.arange(mask_shape[1]):
+            if separation_type == "pixel":
+                ab_532_par_mean = np.copy(ab_532_par)
+                ab_532_per_mean = np.copy(ab_532_per)
+                ab_1064_mean = np.copy(ab_1064)
+                sr_532_mean = np.copy(sr_532)
+            else:
+                if not seen_pixels[i, j]:
+                    if mask_homogeneous[i, j] in mask_values: 
+                        # Count neighbors
+                        accessible_pixels = [(i, j)]
+                        pattern_pixels = np.zeros(mask_shape, dtype=bool)
+                        pattern_pixels[i, j] = True
+                        while (len(accessible_pixels) != 0):
+                            p = accessible_pixels[0] # 1st pixel of the list
+                            accessible_pixels = accessible_pixels[1:] # Remove 1st
+                            if not seen_pixels[p]:
+                                seen_pixels[p] = True # We note that we see this pixel
+                                v = neighbors(mask_shape, p) # Get pixel neighbors
+                                # Look for neighbors
+                                for voisin in v:
+                                    c1 = not seen_pixels[voisin]
+                                    c2 = mask_homogeneous[voisin] == mask_homogeneous[i, j]
+                                    if c1 and c2:
+                                        accessible_pixels.append(voisin)
+                                        pattern_pixels[voisin] = True
+                        
+                        # Compute mean 532 TAB
+                        sr_532_mean_feature = np.ma.mean(sr_532[pattern_pixels])
+                        sr_532_mean[pattern_pixels] = sr_532_mean_feature
+
+                        # Compute mean 532_par AB
+                        ab_532_par_mean_feature = np.ma.mean(ab_532_par[pattern_pixels])
+                        ab_532_par_mean[pattern_pixels] = ab_532_par_mean_feature
+
+                        # Compute mean 532_per AB
+                        ab_532_per_mean_feature = np.ma.mean(ab_532_per[pattern_pixels])
+                        ab_532_per_mean[pattern_pixels] = ab_532_per_mean_feature
+
+                        # Compute mean 1064 AB
+                        ab_1064_mean_feature = np.ma.mean(ab_1064[pattern_pixels])
+                        ab_1064_mean[pattern_pixels] = ab_1064_mean_feature
+
+                        # If masked replace by fill value
+                        try:
+                            if ab_532_per_mean_feature.mask:
+                                ab_532_per_mean_feature = FILL_VALUE_FLOAT
+                        except:
+                            pass
+                        try:
+                            if sr_532_mean_feature.mask:
+                                sr_532_mean_feature = FILL_VALUE_FLOAT
+                        except:
+                            pass
+
+
+    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
+
+
+def classify_homogeneous_chunks_with_psc_v2(ab_532_per_mean, sr_532_mean):
+
+    # Initialization
+    psc_mask = np.zeros(ab_532_per_mean.shape)
+
+    # Classification
+    atb_per_thresh = 2.5e-6
+    atb_per_enhanced_nat_thresh = 2e-5
+    sr_532_thresh = 1.5
+    sr_532_enhanced_nat_thresh = 2
+    sr_532_ice_thresh = 3
+    sr_532_wave_ice_thresh = 50
+    psc_mask[(ab_532_per_mean < atb_per_thresh) & (sr_532_mean >= sr_532_thresh)] = 1 # STS
+    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_wave_ice_thresh)] = 6 # Wave ice
+    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_ice_thresh) & (sr_532_mean < sr_532_wave_ice_thresh)] = 4 # Ice
+    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 2 # NAT
+    psc_mask[(ab_532_per_mean >= atb_per_enhanced_nat_thresh) & (sr_532_mean >= sr_532_enhanced_nat_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 5 # Enhanced NAT
+
+    return psc_mask
+
+
 if __name__ == '__main__':
     tic_main_program = print_time()
     
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
-    if len(sys.argv) > 1:
+    if False: #len(sys.argv) > 1:
         GRANULE_DATE = sys.argv[1]
         VERSION_CAL_LID_L1 = sys.argv[2]
         TYPE_CAL_LID_L1 = sys.argv[3]
@@ -119,18 +590,19 @@ if __name__ == '__main__':
         TYPE_2D_McDA = sys.argv[11]
         OUT_FOLDER = sys.argv[12]
     else:
-        GRANULE_DATE = "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         PREVIOUS_GRANULE = None
         NEXT_GRANULE = None
         SLICE_START_END_TYPE = "longitude" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
-        SLICE_START = 75.00 # profindex or longitude
-        SLICE_END = -73.35 # profindex or longitude
+        SLICE_START = 5.95 # profindex or longitude
+        SLICE_END = -150.07 # profindex or longitude
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA = "V1.01"
+        VERSION_2D_McDA = "V1.2.0"
         TYPE_2D_McDA = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"    
+        OUT_FILETYPE = 'HDF' # 'HDF' or 'netCDF'
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 
@@ -585,7 +1057,7 @@ if __name__ == '__main__':
 
     if True:
         if SEPARATION_TYPE == "pixel":
-            data_dict_2d_mcda["homogeneous_feature_mask"] = np.ma.ones(data_dict_2d_mcda["Parallel_Detection_Flags_532"].shape) # not used
+            data_dict_2d_mcda["homogeneous_chunks_mask"] = np.ma.ones(data_dict_2d_mcda["Parallel_Detection_Flags_532"].shape) # not used
         else:
             # **************************************
             # *** Separated homogeneous features ***
@@ -594,8 +1066,8 @@ if __name__ == '__main__':
 
             tic_algo = print_time()
         
-            data_dict_2d_mcda["homogeneous_feature_mask"] = \
-                    separate_homogeneous_features(data_dict_2d_mcda["Composite_Detection_Flags"],
+            data_dict_2d_mcda["homogeneous_chunks_mask"] = \
+                    separate_homogeneous_chunks(data_dict_2d_mcda["Composite_Detection_Flags"],
                                                 data_dict_2d_mcda["Parallel_Detection_Flags_532"],
                                                 data_dict_2d_mcda["Perpendicular_Detection_Flags_532"],
                                                 data_dict_2d_mcda["Detection_Flags_1064"],
@@ -611,287 +1083,35 @@ if __name__ == '__main__':
 
         tic_algo = print_time()
 
-        data_dict_2d_mcda["homogeneous_feature_classification"], \
-        data_dict_2d_mcda["homogeneous_feature_mean_ab_532_per"], \
-        data_dict_2d_mcda["homogeneous_feature_mean_asr_532"] = \
-            classify_homogeneous_features_with_psc_v2(data_dict_2d_mcda["homogeneous_feature_mask"], 
-                                                      data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"],
-                                                      data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
-                                                      data_dict_2d_mcda_dev["Parallel_Spikes_532"],
-                                                      data_dict_2d_mcda_dev["Perpendicular_Spikes_532"],
-                                                      separation_type=SEPARATION_TYPE)
+        # Mask where spikes
+        ab_532_par = mask_where_spikes(data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], 
+                                       data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+        ab_532_per = mask_where_spikes(data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], 
+                                       data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+        ab_1064 = mask_where_spikes(data_dict_5kmx180m["Attenuated_Backscatter_1064"], 
+                                    data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+        sr_532 = mask_where_spikes(data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"], 
+                                   data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+
+        data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"] = \
+            average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
+                                            ab_532_par, ab_532_per, ab_1064, sr_532,
+                                            separation_type=SEPARATION_TYPE)
+        
+        data_dict_2d_mcda["homogeneous_chunks_classification"] = \
+            classify_homogeneous_chunks_with_psc_v2(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"],
+                                                    data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
         
         print_elapsed_time(tic_algo)
 
 
-    # *****************************
-    # *** Save data in HDF file ***
+    # *****************
+    # *** Save data ***
     print("\n\n############################################################\n"\
-          "*****Save data in HDF file...*****")
-    
-        # Create a dictionary of parameters to save in HDF file
-    params = {}
-    
-    # Add prof_ID to params
-    params['prof_ID'] = SDSData('Profile_ID', data_dict_5kmx180m["Profile_ID"])
-    params['prof_ID'].description = "Profile number from start of file"
-    # params['prof_ID'].valid_range = (1, 228630)
-    params['prof_ID'].dim_labels = ['Profile_ID']
-
-    # Add prof_time to params
-    params['prof_time'] = SDSData('Profile_Time', data_dict_5kmx180m["Profile_Time"])
-    params['prof_time'].units = "seconds...TAI"
-    # params['prof_time'].valid_range = (4.204e8, 1.072e9)
-    params['prof_time'].dim_labels = ['Profile_ID']
-
-    # Add prof_UTC_time to params
-    params['prof_UTC_time'] = SDSData('Profile_UTC_Time', data_dict_5kmx180m["Profile_UTC_Time"])
-    params['prof_UTC_time'].units = "UTC - yymmdd.ffffffff"
-    # params['prof_UTC_time'].valid_range = (60426.0, 261231.0)
-    params['prof_UTC_time'].dim_labels = ['Profile_ID']
-
-    # Add lat to params
-    params['lat'] = SDSData('Latitude', data_dict_5kmx180m["Latitude"], FILL_VALUE_FLOAT)
-    params['lat'].units = "degrees"
-    # params['lat'].valid_range = (-90.0, 90.0)
-    params['lat'].dim_labels = ['Profile_ID']
-
-    # Add lon to params
-    params['lon'] = SDSData('Longitude', data_dict_5kmx180m["Longitude"], FILL_VALUE_FLOAT)
-    params['lon'].units = "degrees"
-    # params['lon'].valid_range = (-90.0, 90.0)
-    params['lon'].dim_labels = ['Profile_ID']
-    
-    # Add alt to params
-    params['alt'] = SDSData('Altitude', data_dict_5kmx180m["Lidar_Data_Altitudes"])
-    params['alt'].units = "kilometer"
-    # params['alt'].valid_range = (-0.5, 30.1)
-    params['alt'].dim_labels = ['Altitude']
-    
-    # Add feature_mask_532_par to params
-    params['feature_mask_532_par'] = SDSData('Parallel_Detection_Flags_532',
-                                             data_dict_2d_mcda["Parallel_Detection_Flags_532"])
-    params['feature_mask_532_par'].valid_range = (0, 255)
-    params['feature_mask_532_par'].dim_labels = ['Profile_ID', 'Altitude']
-
-    # Add feature_mask_532_per to params
-    params['feature_mask_532_per'] = SDSData('Perpendicular_Detection_Flags_532',
-                                             data_dict_2d_mcda["Perpendicular_Detection_Flags_532"])
-    params['feature_mask_532_per'].valid_range = (0, 255)
-    params['feature_mask_532_per'].dim_labels = ['Profile_ID', 'Altitude']
-
-    # Add feature_mask_1064 to params
-    params['feature_mask_1064'] = SDSData('Detection_Flags_1064',
-                                          data_dict_2d_mcda["Detection_Flags_1064"])
-    params['feature_mask_1064'].valid_range = (0, 255)
-    params['feature_mask_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-    # Add feature_mask_merged to params
-    params['feature_mask_merged'] = SDSData('Composite_Detection_Flags',
-                                            data_dict_2d_mcda["Composite_Detection_Flags"])
-    params['feature_mask_merged'].valid_range = (0, 255)
-    params['feature_mask_merged'].dim_labels = ['Profile_ID', 'Altitude']
-    
-    # Add spikes array
-    params['parallel_spikes_532'] = SDSData('Parallel_Spikes_532',
-                                            data_dict_2d_mcda_dev["Parallel_Spikes_532"])
-    params['parallel_spikes_532'].valid_range = (0, 1)
-    params['parallel_spikes_532'].dim_labels = ['Profile_ID', 'Altitude']
-    
-    params['perpendicular_spikes_532'] = SDSData('Perpendicular_Spikes_532',
-                                                 data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
-    params['perpendicular_spikes_532'].valid_range = (0, 1)
-    params['perpendicular_spikes_532'].dim_labels = ['Profile_ID', 'Altitude']
-
-    params['spikes_1064'] = SDSData('Spikes_1064',
-                                    data_dict_2d_mcda_dev["Spikes_1064"])
-    params['spikes_1064'].valid_range = (0, 1)
-    params['spikes_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-    if True:
-        # Add homogeneous_feature_mask to params
-        params['homogeneous_feature_mask'] = SDSData('Homogeneous_Feature_Mask',
-                                                data_dict_2d_mcda["homogeneous_feature_mask"])
-        params['homogeneous_feature_mask'].valid_range = (0, 255)
-        params['homogeneous_feature_mask'].dim_labels = ['Profile_ID', 'Altitude']
-
-    if True:
-        # Add homogeneous_feature_mask to params
-        params['homogeneous_feature_classification'] = SDSData('Homogeneous_Feature_Classification',
-                                                data_dict_2d_mcda["homogeneous_feature_classification"])
-        params['homogeneous_feature_classification'].valid_range = (0, 255)
-        params['homogeneous_feature_classification'].dim_labels = ['Profile_ID', 'Altitude']
-
-        # Add homogeneous_feature_mask to params
-        params['homogeneous_feature_mean_ab_532_per'] = SDSData('Homogeneous_Feature_Mean_Perpendicular_Attenuated_Backscatter_532',
-                                                data_dict_2d_mcda["homogeneous_feature_mean_ab_532_per"])
-        params['homogeneous_feature_mean_ab_532_per'].valid_range = (0, 255)
-        params['homogeneous_feature_mean_ab_532_per'].dim_labels = ['Profile_ID', 'Altitude']
-
-        # Add homogeneous_feature_mask to params
-        params['homogeneous_feature_mean_asr_532'] = SDSData('Homogeneous_Feature_Mean_Attenuated_Scattering_Ratio_532',
-                                                data_dict_2d_mcda["homogeneous_feature_mean_asr_532"])
-        params['homogeneous_feature_mean_asr_532'].valid_range = (0, 255)
-        params['homogeneous_feature_mean_asr_532'].dim_labels = ['Profile_ID', 'Altitude']
-    
-
-    # Parameters saved for development
-    if SAVE_DEVELOPMENT_DATA:
-        
-        # Add Parallel_Attenuated_Backscatter_532 to params
-        params['Parallel_Attenuated_Backscatter_532'] =\
-            SDSData('Parallel_Attenuated_Backscatter_532',
-                    data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], FILL_VALUE_FLOAT)
-        params['Parallel_Attenuated_Backscatter_532'].units = "km-1 sr-1"
-        params['Parallel_Attenuated_Backscatter_532'].dim_labels = ['Profile_ID', 'Altitude']
-    
-        # Add Perpendicular_Attenuated_Backscatter_532 to params
-        params['Perpendicular_Attenuated_Backscatter_532'] =\
-            SDSData('Perpendicular_Attenuated_Backscatter_532',
-                    data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], FILL_VALUE_FLOAT)
-        params['Perpendicular_Attenuated_Backscatter_532'].units = "km-1 sr-1"
-        params['Perpendicular_Attenuated_Backscatter_532'].dim_labels = ['Profile_ID', 'Altitude']
-    
-        # Add Attenuated_Backscatter_1064 to params
-        params['Attenuated_Backscatter_1064'] =\
-            SDSData('Attenuated_Backscatter_1064',
-                    data_dict_5kmx180m["Attenuated_Backscatter_1064"], FILL_VALUE_FLOAT)
-        params['Attenuated_Backscatter_1064'].units = "km-1 sr-1"
-        params['Attenuated_Backscatter_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-        # Add uncertainties 532 par
-        params['Molecular_Parallel_Attenuated_Backscatter_532'] =\
-            SDSData('Molecular_Parallel_Attenuated_Backscatter_532',
-                    data_dict_5kmx180m["Molecular_Parallel_Attenuated_Backscatter_532"], FILL_VALUE_FLOAT)
-        params['Molecular_Parallel_Attenuated_Backscatter_532'].units = "km-1 sr-1"
-        params['Molecular_Parallel_Attenuated_Backscatter_532'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Noise_Scale_Factor_532_Parallel_AB_domain'] =\
-            SDSData('Noise_Scale_Factor_532_Parallel_AB_domain',
-                    data_dict_5kmx180m["Noise_Scale_Factor_532_Parallel_AB_domain"], FILL_VALUE_FLOAT)
-        params['Noise_Scale_Factor_532_Parallel_AB_domain'].units = "km-0.5 sr-0.5"
-        params['Noise_Scale_Factor_532_Parallel_AB_domain'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel'] =\
-            SDSData('Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel',
-                    data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel"], FILL_VALUE_FLOAT)
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel'].units = "km-1 sr-1"
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Background_Noise_532_Parallel'] =\
-            SDSData('Background_Noise_532_Parallel',
-                    data_dict_5kmx180m["Background_Noise_532_Parallel"], FILL_VALUE_FLOAT)
-        params['Background_Noise_532_Parallel'].units = "km-1 sr-1"
-        params['Background_Noise_532_Parallel'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Shot_Noise_532_Parallel'] =\
-            SDSData('Shot_Noise_532_Parallel',
-                    data_dict_5kmx180m["Shot_Noise_532_Parallel"], FILL_VALUE_FLOAT)
-        params['Shot_Noise_532_Parallel'].units = "km-1 sr-1"
-        params['Shot_Noise_532_Parallel'].dim_labels = ['Profile_ID', 'Altitude']
-
-        # Add uncertainties 532 per
-        params['Molecular_Perpendicular_Attenuated_Backscatter_532'] =\
-            SDSData('Molecular_Perpendicular_Attenuated_Backscatter_532',
-                    data_dict_5kmx180m["Molecular_Perpendicular_Attenuated_Backscatter_532"], FILL_VALUE_FLOAT)
-        params['Molecular_Perpendicular_Attenuated_Backscatter_532'].units = "km-1 sr-1"
-        params['Molecular_Perpendicular_Attenuated_Backscatter_532'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Noise_Scale_Factor_532_Perpendicular_AB_domain'] =\
-            SDSData('Noise_Scale_Factor_532_Perpendicular_AB_domain',
-                    data_dict_5kmx180m["Noise_Scale_Factor_532_Perpendicular_AB_domain"], FILL_VALUE_FLOAT)
-        params['Noise_Scale_Factor_532_Perpendicular_AB_domain'].units = "km-0.5 sr-0.5"
-        params['Noise_Scale_Factor_532_Perpendicular_AB_domain'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular'] =\
-            SDSData('Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular',
-                    data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular"], FILL_VALUE_FLOAT)
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular'].units = "km-1 sr-1"
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Background_Noise_532_Perpendicular'] =\
-            SDSData('Background_Noise_532_Perpendicular',
-                    data_dict_5kmx180m["Background_Noise_532_Perpendicular"], FILL_VALUE_FLOAT)
-        params['Background_Noise_532_Perpendicular'].units = "km-1 sr-1"
-        params['Background_Noise_532_Perpendicular'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Shot_Noise_532_Perpendicular'] =\
-            SDSData('Shot_Noise_532_Perpendicular',
-                    data_dict_5kmx180m["Shot_Noise_532_Perpendicular"], FILL_VALUE_FLOAT)
-        params['Shot_Noise_532_Perpendicular'].units = "km-1 sr-1"
-        params['Shot_Noise_532_Perpendicular'].dim_labels = ['Profile_ID', 'Altitude']
-
-        # Add uncertainties 1064
-        params['Molecular_Attenuated_Backscatter_1064'] =\
-            SDSData('Molecular_Attenuated_Backscatter_1064',
-                    data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"], FILL_VALUE_FLOAT)
-        params['Molecular_Attenuated_Backscatter_1064'].units = "km-1 sr-1"
-        params['Molecular_Attenuated_Backscatter_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Noise_Scale_Factor_1064_AB_domain'] =\
-            SDSData('Noise_Scale_Factor_1064_AB_domain',
-                    data_dict_5kmx180m["Noise_Scale_Factor_1064_AB_domain"], FILL_VALUE_FLOAT)
-        params['Noise_Scale_Factor_1064_AB_domain'].units = "km-0.5 sr-0.5"
-        params['Noise_Scale_Factor_1064_AB_domain'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064'] =\
-            SDSData('Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064',
-                    data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064"], FILL_VALUE_FLOAT)
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064'].units = "km-1 sr-1"
-        params['Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Background_Noise_1064'] =\
-            SDSData('Background_Noise_1064',
-                    data_dict_5kmx180m["Background_Noise_1064"], FILL_VALUE_FLOAT)
-        params['Background_Noise_1064'].units = "km-1 sr-1"
-        params['Background_Noise_1064'].dim_labels = ['Profile_ID', 'Altitude']
-
-        params['Shot_Noise_1064'] =\
-            SDSData('Shot_Noise_1064',
-                    data_dict_5kmx180m["Shot_Noise_1064"], FILL_VALUE_FLOAT)
-        params['Shot_Noise_1064'].units = "km-1 sr-1"
-        params['Shot_Noise_1064'].dim_labels = ['Profile_ID', 'Altitude']
-    
-        # Add feature_mask_532_par_steps to params
-        params['feature_mask_532_par_steps'] =\
-            SDSData('Parallel_Detection_Flags_532_steps',
-                    data_dict_2d_mcda_dev["Parallel_Detection_Flags_532_steps"])
-        params['feature_mask_532_par_steps'].valid_range = (0, 255)
-        params['feature_mask_532_par_steps'].dim_labels = ['Step_532_par', 'Profile_ID', 'Altitude']
-    
-        # Add feature_mask_532_per_steps to params
-        params['feature_mask_532_per_steps'] =\
-            SDSData('Perpendicular_Detection_Flags_532_steps',
-                    data_dict_2d_mcda_dev["Perpendicular_Detection_Flags_532_steps"])
-        params['feature_mask_532_per_steps'].valid_range = (0, 255)
-        params['feature_mask_532_per_steps'].dim_labels = ['Step_532_per', 'Profile_ID', 'Altitude']
-    
-        # Add feature_mask_1064_steps to params
-        params['feature_mask_1064_steps'] =\
-            SDSData('Detection_Flags_1064_steps', data_dict_2d_mcda_dev["Detection_Flags_1064_steps"])
-        params['feature_mask_1064_steps'].valid_range = (0, 255)
-        params['feature_mask_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
-    
-        # Add Parallel_Attenuated_Backscatter_532_steps to params
-        params['Parallel_Attenuated_Backscatter_532_steps'] =\
-            SDSData('Parallel_Attenuated_Backscatter_532_steps',
-                    data_dict_2d_mcda_dev["Parallel_Attenuated_Backscatter_532_steps"], FILL_VALUE_FLOAT)
-        params['Parallel_Attenuated_Backscatter_532_steps'].units = "km-1 sr-1"
-        params['Parallel_Attenuated_Backscatter_532_steps'].dim_labels = ['Step_532_par', 'Profile_ID', 'Altitude']
-    
-        # Add Perpendicular_Attenuated_Backscatter_532_steps to params
-        params['Perpendicular_Attenuated_Backscatter_532_steps'] =\
-            SDSData('Perpendicular_Attenuated_Backscatter_532_steps',
-                    data_dict_2d_mcda_dev["Perpendicular_Attenuated_Backscatter_532_steps"], FILL_VALUE_FLOAT)
-        params['Perpendicular_Attenuated_Backscatter_532_steps'].units = "km-1 sr-1"
-        params['Perpendicular_Attenuated_Backscatter_532_steps'].dim_labels = ['Step_532_per', 'Profile_ID', 'Altitude']
-    
-        # Add Attenuated_Backscatter_1064_steps to params
-        params['Attenuated_Backscatter_1064_steps'] =\
-            SDSData('Attenuated_Backscatter_1064_steps',
-                    data_dict_2d_mcda_dev["Attenuated_Backscatter_1064_steps"], FILL_VALUE_FLOAT)
-        params['Attenuated_Backscatter_1064_steps'].units = "km-1 sr-1"
-        params['Attenuated_Backscatter_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
+          "*****Save data...*****")
     
     # Create folder to store output data
     granule_date_dict = split_granule_date(GRANULE_DATE)
@@ -901,16 +1121,9 @@ if __name__ == '__main__':
                                                                   f"{granule_date_dict['day']:02d}")
     os.makedirs(outdata_folder, exist_ok=True)
     
-    # Write in HDF file
-    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None) and (SLICE_START_END_TYPE == 'profindex'):
-        filename_end = '' # nothing, it is the whole file
-    else:
-        filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
-        
-    filename = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA}-{VERSION_2D_McDA.replace('.', '-')}." \
-               f"{GRANULE_DATE}{filename_end}.hdf"
-    write_hdf(outdata_folder+"/"+filename, params)
-    
+    # Save the data
+    save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype=OUT_FILETYPE, save_development_data=SAVE_DEVELOPMENT_DATA)
+
     
     print_time(tic_main_program)
     

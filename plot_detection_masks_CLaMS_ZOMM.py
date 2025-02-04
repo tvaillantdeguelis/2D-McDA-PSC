@@ -16,6 +16,7 @@ import seaborn as sns
 import cartopy
 import cartopy.crs as ccrs
 import cmocean
+import cmlidar
 
 from my_modules.standard_outputs import print_time
 from my_modules.readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon
@@ -33,7 +34,7 @@ class FigureMaker(CALIOPFigureMaker):
         self.fig_h = cm2in(6) # cm
         self.axes_titlesize = 8
         self.axes_title_pad = 1.12
-        self.clabelpad = 40
+        self.clabelpad = 50
 
     def set_max_detect_level(self, max_detect_level):
         self.max_detect_level = max_detect_level
@@ -122,19 +123,19 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         if step:
             plt.title(f'{channel} (step {step})', weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         else:
             if channel == '532_par':
-                title = "2D-McDA-PSC\ 532\ nm\ parallel\ detection\ feature\ mask"
+                title = "2D-McDA-PSC 532 nm parallel detection feature mask"
             elif channel == '532_per':
-                title = "2D-McDA-PSC\ 532\ nm\ perpendicular\ detection\ feature\ mask"
+                title = "2D-McDA-PSC 532 nm perpendicular detection feature mask"
             elif channel == '1064':
-                title = "2D-McDA-PSC\ 1064\ nm\ detection\ feature\ mask"
+                title = "2D-McDA-PSC 1064 nm detection feature mask"
             else:
                 raise ValueError(f"Unknown channel = {channel}")
-            plt.title(r'$\mathbf{%s}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
+            plt.title(title, fontweight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -187,7 +188,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         title = "Composite\ best\ detection\ level"
         plt.title(r'$\mathbf{%s}$' % title, y=1.35)
 
@@ -209,11 +210,28 @@ class FigureMaker(CALIOPFigureMaker):
         plt.close(fig)
 
 
+    def backscatter_cbar_labels(self, cbar):
+        cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
+        cbar.ax.tick_params(which='both', labelright=False)
+        minor_bounds = cmlidar.cm.BACKSCATTER_DISCRETE_BOUNDS
+        cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_bounds))
+        cbar_minor_label = ['1.0',
+                            '1.0', '3.0', '6.0',
+                            '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '8.0',
+                            '1.0', '1.5', '2.0', '3.0', '5.0']
+        for j, bound in enumerate(minor_bounds):
+            cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=6)
+        cbar_major_label = ['$\mathbf{×10^{-5}}$', '$\mathbf{×10^{-4}}$', '$\mathbf{×10^{-3}}$', '$\mathbf{×10^{-2}}$']
+        c_bar_major_values = np.array((1e-5, 1e-4, 1e-3, 1e-2))
+        for j, bound in enumerate(c_bar_major_values):
+            cbar.ax.text(3.5, bound, cbar_major_label[j], va='center', fontsize=8)
+
+
     def plot_ab_signal(self, ab_signal, title, filename):
         # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
         
         # Mask where fill_value
-        ab_signal = np.ma.masked_where(ab_signal == FILL_VALUE_FLOAT, ab_signal)
+        # ab_signal = np.ma.masked_where(ab_signal == 0, ab_signal)
     
         # Remove edges
         if self.edges_removal != 0: # to avoid error with "-0"
@@ -226,110 +244,114 @@ class FigureMaker(CALIOPFigureMaker):
         fig = plt.figure(figsize=(self.fig_w, self.fig_h))
         gs0 = gridspec.GridSpec(1, 2, width_ratios=[50, 1], wspace=0.1)
 
-        # Colormap choice
-        colormap_style = 155
-
         # Plot figure
         ax0 = plt.subplot(gs0[0])
         # my_cmap = cmocean.cm.thermal
+        # my_cmap = takecmap("extthermal")
         # my_cmap.colorbar_extend = 'both'
-        if colormap_style in [55,]:
-            palette = ['#000000', '#060B54', '#262c72', '#3b4482', '#525d8f', '#69769a', '#808da5', '#9aa6a5', '#b6bea0',  
-                        '#eff097', '#f4e725', '#fd9708', '#ee3801', '#a70103', '#580001',
-                        '#2a0000', '#352929', '#4e4a4a', '#6d6b6b', '#8f8e8e', '#b2b2b2', '#d8d8d8', '#ffffff']
-            my_cmap = mpl.colors.ListedColormap(palette)
-            bounds = np.array([0.000001, 0.00001, 
-                                0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
-                                0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
-                                0.01, 0.02, 0.03, 0.04, 0.05])
-            colors = my_cmap(np.arange(len(palette)))
-            my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
-            cbar_edges = True
-        elif colormap_style in [155,]:
-            palette = ['#000000', '#01020e', '#02041c', '#03062a', '#040738', '#050946',
-                       '#060b54', '#0a0e57', '#0e1159', '#11145c', '#14175f', '#171a61', '#1a1d64', '#1c2067', '#1f236a', '#21266c', '#24296f', 
-                       '#262c72', '#282e73', '#2a3075', '#2c3276', '#2e3578', '#303779', '#32397b', '#343b7c', '#363d7e', '#37407f', '#394281', 
-                       '#3b4482', '#3d4683', '#3f4884', '#424b86', '#444d87', '#464f88', '#485189', '#4a548a', '#4c568b', '#4e588d', '#505b8e', 
-                       '#525d8f', '#545f90', '#566191', '#586492', '#5b6693', '#5d6894', '#5f6b95', '#616d96', '#636f97', '#657198', '#677499', 
-                       '#69769a', '#6b789b', '#6d7a9c', '#6f7c9d', '#717e9e', '#74809f', '#7682a0', '#7885a1', '#7a87a2', '#7c89a3', '#7e8ba4', 
-                       '#808da5', '#828fa5', '#8591a5', '#8794a5', '#8a96a5', '#8c98a5', '#8e9ba5', '#919da5', '#939fa5', '#95a1a5', '#98a4a5', 
-                       '#9aa6a5', '#9da8a5', '#9faaa4', '#a2aca4', '#a4afa3', '#a7b1a3', '#a9b3a2', '#acb5a2', '#afb7a1', '#b1baa1', '#b4bca0', 
-                       '#b6bea0', '#bbc29f', '#c1c79f', '#c6cb9e', '#cbd09d', '#d0d49c', '#d5d99c', '#dbde9b', '#e0e29a', '#e5e799', '#eaeb98',
-                       '#eff097', '#f0ef8f', '#f1ee86', '#f2ed7e', '#f2ed75', '#f3ec6c', '#f3eb62', '#f4ea58', '#f4e94e', '#f4e942', '#f4e835', 
-                       '#f4e725', '#f6e022', '#f7d920', '#f8d21d', '#f9cb1b', '#fac418', '#fbbc16', '#fcb513', '#fcae10', '#fda60e', '#fd9f0b', 
-                       '#fd9708', '#fc9007', '#fb8805', '#fa8104', '#f97903', '#f77102', '#f66902', '#f46101', '#f35801', '#f14e01', '#f04401', 
-                       '#ee3801', '#e73401', '#e13002', '#da2c02', '#d42802', '#cd2302', '#c71f03', '#c01a03', '#ba1503', '#b40f03', '#ad0803', 
-                       '#a70103', '#9f0104', '#980104', '#910104', '#890104', '#820004', '#7b0004', '#740004', '#6d0003', '#660003', '#5f0002', 
-                       '#580001', '#540101', '#4f0101', '#4b0201', '#460201', '#420301', '#3e0301', '#390301', '#350300', '#310300', '#2e0200',
-                       '#2a0000', '#2b0506', '#2b0a0b', '#2d0e10', '#2e1213', '#2f1517', '#30181a', '#311c1d', '#321f20', '#332223', '#342626', 
-                       '#352929', '#372c2c', '#3a2f2f', '#3c3232', '#3e3535', '#403838', '#433b3b', '#453e3e', '#474141', '#494444', '#4c4747',
-                       '#4e4a4a', '#514d4d', '#545050', '#565353', '#595656', '#5c5959', '#5f5c5c', '#625f5f', '#646262', '#676565', '#6a6868', 
-                       '#6d6b6b', '#706e6e', '#737171', '#767474', '#797878', '#7c7b7b', '#7f7e7e', '#828181', '#868484', '#898888', '#8c8b8b', 
-                       '#8f8e8e', '#929191', '#959494', '#989898', '#9c9b9b', '#9f9e9e', '#a2a1a1', '#a5a5a5', '#a8a8a8', '#acabab', '#afafaf', 
-                       '#b2b2b2', '#b5b5b5', '#b9b9b9', '#bcbcbc', '#c0c0c0', '#c3c3c3', '#c7c7c7', '#cacaca', '#cecece', '#d1d1d1', '#d4d4d4',
-                       '#d8d8d8', '#dfdfdf', '#e5e5e5', '#ececec', '#f2f2f2', '#f9f9f9',
-                       '#ffffff']
-            my_cmap = mpl.colors.ListedColormap(palette)
-            discrete_bounds = np.array([0.000001, 0.00001, 
-                                        0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
-                                        0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
-                                        0.01, 0.02, 0.03, 0.04, 0.05])
-            nb_colors_by_discrete_bin = 11
-            bounds = np.array(())
-            for i in range(discrete_bounds.size-1): # color of discrete bounds at the mid value of the range bin
-                bounds = np.append(bounds, np.linspace(discrete_bounds[i], discrete_bounds[i+1], nb_colors_by_discrete_bin+1)[:-1])
-            bounds = np.append(bounds, discrete_bounds[-1])
-            colors = my_cmap(np.arange(len(palette)))
-            my_cmap, my_norm = from_levels_and_colors(bounds, colors, extend='both')
-            cbar_edges = False
+        # my_norm = mpl.colors.LogNorm()
+        my_cmap = "backscatter_continuous"
+        my_norm = cmlidar.cm.backscatter_continuous_norm
 
         # Put negative values to 1e-9 so they don't appear transparent
         ab_signal[(ab_signal<0) & ~ab_signal.mask] = 1e-9
         pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=my_norm, rasterized=True)
-        # plt.clim(1e-6, 1e-3)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        # plt.clim(1e-5, 2e-3)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
         # plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
-        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=cbar_edges)
-        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=self.clabelpad)
-        if colormap_style in [55,]:
-            cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
-            cbar.ax.tick_params(which='both', labelright=False)
-            cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$', '×$10^{-2}$']
-            c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3, 1e-2))
-            for j, bound in enumerate(c_bar_major_values):
-                cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
-            cbar.ax.yaxis.set_minor_locator(FixedLocator(bounds))
-            cbar_minor_label = ['1.0',
-                                '1.0',
-                                '1.0', '2.0', '4.0', '6.0', '8.0',
-                                '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
-                                '1.0', '2.0', '3.0', '4.0', '5.0']
-            for j, bound in enumerate(bounds):
-                cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=4)
-        elif colormap_style in [155,]:
-            cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
-            cbar.ax.tick_params(which='both', labelright=False)
-            cbar_major_label = ['×$10^{-6}$', '×$10^{-5}$', '×$10^{-4}$', '×$10^{-3}$', '×$10^{-2}$']
-            c_bar_major_values = np.array((1e-6, 1e-5, 1e-4, 1e-3, 1e-2))
-            for j, bound in enumerate(c_bar_major_values):
-                cbar.ax.text(3.2, bound, cbar_major_label[j], va='center', fontsize=self.ytick_labelsize)
-            minor_bounds = np.array([0.000001, 0.00001, 
-                                0.0001, 0.0002, 0.0004, 0.0006, 0.0008,
-                                0.001, 0.0015, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009, 
-                                0.01, 0.02, 0.03, 0.04, 0.05])
-            cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_bounds))
-            cbar_minor_label = ['1.0',
-                                '1.0',
-                                '1.0', '2.0', '4.0', '6.0', '8.0',
-                                '1.0', '1.5', '2.0', '3.0', '4.0', '5.0', '6.0', '7.0', '8.0', '9.0',
-                                '1.0', '2.0', '3.0', '4.0', '5.0']
-            for j, bound in enumerate(minor_bounds):
-                cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=4)
-                
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both')
+        self.backscatter_cbar_labels(cbar)
+        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=self.clabelpad)
+
+        # Save figure
+        self.save_fig(filename)
+        
+        # Close figure
+        plt.close(fig)
+
+
+    def plot_h2o(self, h2o, title, filename):
+        
+        # Mask where fill_value
+        h2o = np.ma.masked_where(h2o == 0, h2o)
+    
+        # # Remove edges
+        # if self.edges_removal != 0: # to avoid error with "-0"
+        #     h2o = remove_edges(h2o, self.edges_removal)
+    
+        # Figure style
+        setstyle("ticks_nogrid")
+    
+        # Create figure
+        fig = plt.figure(figsize=(self.fig_w, self.fig_h))
+        gs0 = gridspec.GridSpec(1, 2, width_ratios=[50, 1], wspace=0.1)
+
+        # Plot figure
+        ax0 = plt.subplot(gs0[0])
+        # ax0.set_facecolor('0.5')
+        my_cmap = cm.viridis_r
+        # my_cmap = cmocean.cm.thermal
+        # my_cmap = takecmap("extthermal")
+        # my_cmap.colorbar_extend = 'both'
+
+        # Put negative values to 1e-9 so they don't appear transparent
+        # h2o[(h2o<0) & ~h2o.mask] = 1e-9
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, h2o.T, cmap=my_cmap, vmin=0, vmax=8, rasterized=True)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
+        plt.title(title, fontweight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        # plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
+        
+        # Plot colorbar
+        ax1 = plt.subplot(gs0[1])
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='max')
+        cbar.set_label(label="ppmv")
+
+        # Save figure
+        self.save_fig(filename)
+        
+        # Close figure
+        plt.close(fig)
+
+
+    def plot_hno3(self, hno3, title, filename):
+        
+        # Mask where fill_value
+        hno3 = np.ma.masked_where(hno3 == 0, hno3)
+    
+        # # Remove edges
+        # if self.edges_removal != 0: # to avoid error with "-0"
+        #     hno3 = remove_edges(hno3, self.edges_removal)
+    
+        # Figure style
+        setstyle("ticks_nogrid")
+    
+        # Create figure
+        fig = plt.figure(figsize=(self.fig_w, self.fig_h))
+        gs0 = gridspec.GridSpec(1, 2, width_ratios=[50, 1], wspace=0.1)
+
+        # Plot figure
+        ax0 = plt.subplot(gs0[0])
+        # ax0.set_facecolor('0.5')
+        my_cmap = cmocean.cm.thermal_r
+        # my_cmap = takecmap("extthermal")
+        # my_cmap.colorbar_extend = 'both'
+
+        # Put negative values to 1e-9 so they don't appear transparent
+        # hno3[(hno3<0) & ~hno3.mask] = 1e-9
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, hno3.T, cmap=my_cmap, vmin=0, vmax=15, rasterized=True)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
+        plt.title(title, fontweight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        # plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
+        
+        # Plot colorbar
+        ax1 = plt.subplot(gs0[1])
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='max')
+        cbar.set_label(label="ppbv")
+
         # Save figure
         self.save_fig(filename)
         
@@ -373,7 +395,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap, norm=my_norm,
                             rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(title, weight='bold', y=1.35)
         
         # Save figure
@@ -412,7 +434,7 @@ class FigureMaker(CALIOPFigureMaker):
         # my_cmap.colorbar_extend = 'both'
         pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=LogNorm())
         plt.clim(1e-6, 1e-3)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(title, weight='bold', y=1.35)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
@@ -453,7 +475,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=cm.viridis, norm=LogNorm())
         plt.clim(1, 50)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(title, weight='bold', y=1.35)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
@@ -519,8 +541,8 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
+        plt.title('2D-McDA-PSC composite detection feature mask', fontweight='bold', y=1.35)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -573,8 +595,8 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
+        plt.title('2D-McDA-PSC composite detection feature mask', fontweight='bold', y=1.35)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -626,10 +648,10 @@ class FigureMaker(CALIOPFigureMaker):
                    '532 par only',
                    '532 per only',
                    '1064 only',
-                   '532 par + 532 per',
-                   '532 par + 1064',
-                   '532 per + 1064',
-                   '532 par + 532 per + 1064']
+                   '532 par\n+ 532 per',
+                   '532 par\n+ 1064',
+                   '532 per\n+ 1064',
+                   '532 par\n+ 532 per\n+ 1064']
     
         # Colormap
         palette = ([1.0,           1.0,      1.0], # 1: Clear air
@@ -655,8 +677,8 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, new_mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
-        plt.title(r'$\mathbf{2D-McDA-PSC\ composite\ detection\ feature\ mask}$', y=1.35)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
+        plt.title('2D-McDA-PSC composite detection feature mask', fontweight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
     
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -708,7 +730,7 @@ class FigureMaker(CALIOPFigureMaker):
         # Put negative values to 1e-9 so they don't appear transparent
         acr_signal[(acr_signal<0) & ~acr_signal.mask] = 1e-9
         pc = plt.pcolormesh(self.pindexbins, self.altbins, acr_signal.T, cmap=my_cmap, norm=my_norm)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title("$\mathbf{Attenuated\ Color\ Ratio}\ \\frac{\\beta'_{1064}}{\\beta'_{532}}$", y=1.35)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
@@ -746,7 +768,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0.set_facecolor((0.75, 0.75, 0.75))
         my_cmap = takecmap('extviridis')
         pc = plt.pcolormesh(self.pindexbins, self.altbins, nsf.T, cmap=my_cmap)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(title, y=1.35)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
@@ -804,7 +826,7 @@ class FigureMaker(CALIOPFigureMaker):
         ax0 = plt.subplot(gs0[0])
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
-        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=False)
         plt.title(f'PSC v2 Composition (draft code)', weight='bold', y=1.35)
 
         # Plot colorbar
@@ -888,7 +910,7 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/CLaMS_ZOMM/"
-    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = sys.argv[1] # "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2011d176_0006_v1.nc"
+    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2010d018_0000.nc" # sys.argv[1] # "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2011d176_0006_v1.nc"
     VERSION_2D_McDA = "V1.0"
     TYPE_2D_McDA = "Prototype"
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
@@ -921,9 +943,15 @@ if __name__ == '__main__':
         "Altitude",
         "Parallel_Detection_Flags_532",
         "Perpendicular_Detection_Flags_532",
+        "Detection_Flags_1064",
         "Parallel_Attenuated_Backscatter_532",
-        "Perpendicular_Attenuated_Backscatter_532"
-
+        "Perpendicular_Attenuated_Backscatter_532",
+        "Attenuated_Backscatter_1064",
+        "Composite_Detection_Flags",
+        "H2O",
+        "HNO3",
+        "H2OC_ICE",
+        "HNO3C_NAT"
     ]
     for key in cal_2d_mcda_keys:
         data_dict_cal_2d_mcda[key] = cal_2d_mcda.get_data(key)
@@ -933,8 +961,10 @@ if __name__ == '__main__':
         cal_2d_mcda_steps_keys = [
             "Parallel_Detection_Flags_532_steps",
             "Perpendicular_Detection_Flags_532_steps",
+            "Detection_Flags_1064_steps",
             "Parallel_Attenuated_Backscatter_532_steps",
-            "Perpendicular_Attenuated_Backscatter_532_steps"
+            "Perpendicular_Attenuated_Backscatter_532_steps",
+            "Attenuated_Backscatter_1064_steps"
         ]
         for key in cal_2d_mcda_steps_keys:
             data_dict_cal_2d_mcda_steps[key] = cal_2d_mcda.get_data(key)
@@ -979,7 +1009,7 @@ if __name__ == '__main__':
     plot_fig.adj_bottom = 0.11
     plot_fig.adj_right = 0.87
     plot_fig.adj_top = 0.81
-    plot_fig.axes_title_pad = 1.14
+    plot_fig.axes_title_pad = 1.15
     plot_fig.clabelpad = 40
     plot_fig.axes_titlesize = 8
     plot_fig.fig_folder = FIGURES_PATH
@@ -992,18 +1022,34 @@ if __name__ == '__main__':
     # Plot signals
     if True:
         filename = "ab_532_par"
-        title = "$\mathbf{CLaMS-ZOMM\ 532\ nm\ Parallel}$"
+        title = "CLaMS-ZOMM 532 nm Parallel Backscatter $\mathit{\\beta_{532,\\parallel}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"], title, filename)
 
         filename = "ab_532_per"
-        title = "$\mathbf{CLaMS-ZOMM\ 532\ nm\ Perpendicular}$"
+        title = "CLaMS-ZOMM 532 nm Perpendicular Backscatter $\mathit{\\beta_{532,\\bot}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
-    if False:
         filename = "ab_1064"
-        title = "$\mathbf{1064\ nm\ Attenuated\ Backscatter}\ \\beta'_{1064}$"
+        title = "1064 nm Backscatter $\mathit{\\beta_{1064}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Attenuated_Backscatter_1064"], title, filename)
 
+        filename = "h2o"
+        title = "$\mathbf{H_{2}O}$ vapor"
+        plot_fig.plot_h2o(data_dict_cal_2d_mcda["H2O"]*1e6, title, filename) # in ppmv
+
+        filename = "h2oc_ice"
+        title = "$\mathbf{H_{2}O}$ condensed ice"
+        plot_fig.plot_h2o(data_dict_cal_2d_mcda["H2OC_ICE"]*1e6, title, filename) # in ppmv
+
+        filename = "hno3"
+        title = "$\mathbf{HNO_{3}}$ vapor"
+        plot_fig.plot_hno3(data_dict_cal_2d_mcda["HNO3"]*1e9, title, filename) # in ppmv
+
+        filename = "hno3c_nat"
+        title = "$\mathbf{HNO_{3}}$ condensed NAT"
+        plot_fig.plot_hno3(data_dict_cal_2d_mcda["HNO3C_NAT"]*1e9, title, filename) # in ppmv
+
+    if False:
         filename = "mol_ab_532_par"
         title = "$\mathbf{532\ nm\ Molecular\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{m,532,\\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"], title, filename)
@@ -1086,26 +1132,27 @@ if __name__ == '__main__':
     # Plot the 3 channel masks
     plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Parallel_Detection_Flags_532"], '532_par')
     plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Perpendicular_Detection_Flags_532"], '532_per')
+    plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Detection_Flags_1064"], '1064')
 
-    # # Plot the composite masks
+    # Plot the composite masks
     # plot_fig.plot_composite_mask(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
     # plot_fig.plot_composite_mask_strong_weak(mask_weak_strong)
-    # plot_fig.plot_composite_mask_channel(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
+    plot_fig.plot_composite_mask_channel(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
     # plot_fig.plot_best_detection_mask(best_detection_level_mask)
-    # if True:
-    #     plot_fig.plot_psc_composition(data_dict_cal_2d_mcda["Homogeneous_Feature_Classification"])
+    if False:
+        plot_fig.plot_psc_composition(data_dict_cal_2d_mcda["Homogeneous_Feature_Classification"])
 
-    #     filename = "homogeneous_feature_separation_in_4_colors"
-    #     title = "$\mathbf{Homogeneous\ Features\ (4\ colors)}$"
-    #     plot_fig.plot_hom_4_colors(data_dict_cal_2d_mcda["Homogeneous_Feature_Mask"], title, filename)
+        filename = "homogeneous_feature_separation_in_4_colors"
+        title = "$\mathbf{Homogeneous\ Features\ (4\ colors)}$"
+        plot_fig.plot_hom_4_colors(data_dict_cal_2d_mcda["Homogeneous_Feature_Mask"], title, filename)
 
-    #     filename = "homogeneous_feature_mean_ab_532_per"
-    #     title = "$\mathbf{Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\perp}\\rangle$"
-    #     plot_fig.plot_hom_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Feature_Mean_Perpendicular_Attenuated_Backscatter_532"], title, filename)
+        filename = "homogeneous_feature_mean_ab_532_per"
+        title = "$\mathbf{Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\perp}\\rangle$"
+        plot_fig.plot_hom_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Feature_Mean_Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
-    #     filename = "homogeneous_feature_mean_asr_532"
-    #     title = "$\mathbf{Mean\ Attenuated\ 532\ nm\ Scattering\ Ratio}\ \\langle R'_{532}\\rangle$"
-    #     plot_fig.plot_hom_asr_signal(data_dict_cal_2d_mcda["Homogeneous_Feature_Mean_Attenuated_Scattering_Ratio_532"], title, filename)
+        filename = "homogeneous_feature_mean_asr_532"
+        title = "$\mathbf{Mean\ Attenuated\ 532\ nm\ Scattering\ Ratio}\ \\langle R'_{532}\\rangle$"
+        plot_fig.plot_hom_asr_signal(data_dict_cal_2d_mcda["Homogeneous_Feature_Mean_Attenuated_Scattering_Ratio_532"], title, filename)
 
     # Plot every steps
     if PLOT_ALL_STEPS:

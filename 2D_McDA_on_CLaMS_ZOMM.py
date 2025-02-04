@@ -13,12 +13,13 @@ import sys
 import numpy as np
 from datetime import datetime
 
-from readers.netcdf_reader import NetCDFReader
-from standard_outputs import print_time, print_elapsed_time
+from my_modules.readers.netcdf_reader import NetCDFReader
+from my_modules.standard_outputs import print_time, print_elapsed_time
 from config import NB_PROF_OVERLAP
 from feature_detection import detect_features
-from calipso_constants import *
-from writers.hdf_writer import SDSData, write_hdf
+from my_modules.calipso_constants import *
+from my_modules.writers.hdf_writer import SDSData, write_hdf
+from merged_3channels_feature_mask import merged_feature_masks
 
 
 if __name__ == '__main__':
@@ -35,7 +36,7 @@ if __name__ == '__main__':
         OUT_FOLDER = sys.argv[6]
         CNF = float(sys.argv[7])
     else:
-        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2010d018_0001_v1.nc"
+        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2011d176_0000.nc"
         ZOMM_CLAMS_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/in/CLaMS_ZOMM/"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         VERSION_2D_McDA = "V1.01"
@@ -73,6 +74,11 @@ if __name__ == '__main__':
         model_b1064_err = data_reader.get_data('MODEL_B1064_ERR')[:, :].T
         model_b532_ray_par = data_reader.get_data('MODEL_B532_RAY_PAR')[:, :].T
         model_b532_ray_per = data_reader.get_data('MODEL_B532_RAY_PER')[:, :].T
+        model_b1064_ray = data_reader.get_data('MODEL_B1064_RAY')[:, :].T
+        model_h2o = data_reader.get_data('MODEL_H2O')[:, :].T
+        model_hno3 = data_reader.get_data('MODEL_HNO3')[:, :].T
+        model_h2oc_ice = data_reader.get_data('MODEL_H2OC_ICE')[:, :].T
+        model_hno3c_nat = data_reader.get_data('MODEL_HNO3C_NAT')[:, :].T
 
     print_elapsed_time(tic)
 
@@ -103,6 +109,23 @@ if __name__ == '__main__':
     data_dict_2d_mcda_dev["Perpendicular_Spikes_532"] =\
         detect_features(model_b532_per, model_b532_ray_per, CNF*np.sqrt(model_b532_ray_per), '532_per')
 
+    # Feature detection at 1064 nm
+    data_dict_2d_mcda["Detection_Flags_1064"], \
+    data_dict_2d_mcda_dev["Detection_Flags_1064_steps"], \
+    data_dict_2d_mcda_dev["Attenuated_Backscatter_1064_steps"], \
+    data_dict_2d_mcda_dev["Spikes_1064"] =\
+        detect_features(model_b1064, model_b1064_ray, CNF*np.sqrt(model_b1064_ray), '1064')
+    
+
+    # *******************************************
+    # *** Merged 3 channels feature detection ***
+    print("\n\n*****Merged 3 channels feature detection...*****")
+
+    data_dict_2d_mcda["Composite_Detection_Flags"] = \
+        merged_feature_masks(data_dict_2d_mcda["Parallel_Detection_Flags_532"],
+                                data_dict_2d_mcda["Perpendicular_Detection_Flags_532"],
+                                data_dict_2d_mcda["Detection_Flags_1064"])
+    
 
     # *****************************
     # *** Save data in HDF file ***
@@ -143,11 +166,11 @@ if __name__ == '__main__':
     params['feature_mask_532_per'].valid_range = (0, 255)
     params['feature_mask_532_per'].dim_labels = ['Profile_ID', 'Altitude']
 
-    # # Add feature_mask_1064 to params
-    # params['feature_mask_1064'] = SDSData('Detection_Flags_1064',
-    #                                       data_dict_2d_mcda["Detection_Flags_1064"])
-    # params['feature_mask_1064'].valid_range = (0, 255)
-    # params['feature_mask_1064'].dim_labels = ['Profile_ID', 'Altitude']
+    # Add feature_mask_1064 to params
+    params['feature_mask_1064'] = SDSData('Detection_Flags_1064',
+                                          data_dict_2d_mcda["Detection_Flags_1064"])
+    params['feature_mask_1064'].valid_range = (0, 255)
+    params['feature_mask_1064'].dim_labels = ['Profile_ID', 'Altitude']
 
     # Add signals to params
     params['model_b532_par'] =\
@@ -155,12 +178,48 @@ if __name__ == '__main__':
     params['model_b532_par'].valid_range = (0, 255)
     params['model_b532_par'].dim_labels = ['Profile_ID', 'Altitude']
 
-    # Add feature_mask_532_per_steps to params
+    # Add signals to params
     params['model_b532_per'] =\
         SDSData('Perpendicular_Attenuated_Backscatter_532', model_b532_per)
     params['model_b532_per'].valid_range = (0, 255)
     params['model_b532_per'].dim_labels = ['Profile_ID', 'Altitude']
     
+    # Add signals to params
+    params['model_b1064'] =\
+        SDSData('Attenuated_Backscatter_1064', model_b1064)
+    params['model_b1064'].valid_range = (0, 255)
+    params['model_b1064'].dim_labels = ['Profile_ID', 'Altitude']
+
+    # Add to params
+    params['composite_detection_flags'] =\
+        SDSData('Composite_Detection_Flags', data_dict_2d_mcda["Composite_Detection_Flags"])
+    params['composite_detection_flags'].valid_range = (0, 255)
+    params['composite_detection_flags'].dim_labels = ['Profile_ID', 'Altitude']
+
+    # Add signals to params
+    params['model_h2o'] =\
+        SDSData('H2O', model_h2o)
+    params['model_h2o'].valid_range = (0, 255)
+    params['model_h2o'].dim_labels = ['Profile_ID', 'Altitude']
+
+    # Add signals to params
+    params['model_hno3'] =\
+        SDSData('HNO3', model_hno3)
+    params['model_hno3'].valid_range = (0, 255)
+    params['model_hno3'].dim_labels = ['Profile_ID', 'Altitude']
+
+    # Add signals to params
+    params['model_h2oc_ice'] =\
+        SDSData('H2OC_ICE', model_h2oc_ice)
+    params['model_h2oc_ice'].valid_range = (0, 255)
+    params['model_h2oc_ice'].dim_labels = ['Profile_ID', 'Altitude']
+
+    # Add signals to params
+    params['model_hno3c_nat'] =\
+        SDSData('HNO3C_NAT', model_hno3c_nat)
+    params['model_hno3c_nat'].valid_range = (0, 255)
+    params['model_hno3c_nat'].dim_labels = ['Profile_ID', 'Altitude']
+
     # Parameters saved for development
     if SAVE_DEVELOPMENT_DATA:
     
@@ -178,11 +237,11 @@ if __name__ == '__main__':
         params['feature_mask_532_per_steps'].valid_range = (0, 255)
         params['feature_mask_532_per_steps'].dim_labels = ['Step_532_per', 'Profile_ID', 'Altitude']
     
-        # # Add feature_mask_1064_steps to params
-        # params['feature_mask_1064_steps'] =\
-        #     SDSData('Detection_Flags_1064_steps', data_dict_2d_mcda_dev["Detection_Flags_1064_steps"])
-        # params['feature_mask_1064_steps'].valid_range = (0, 255)
-        # params['feature_mask_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
+        # Add feature_mask_1064_steps to params
+        params['feature_mask_1064_steps'] =\
+            SDSData('Detection_Flags_1064_steps', data_dict_2d_mcda_dev["Detection_Flags_1064_steps"])
+        params['feature_mask_1064_steps'].valid_range = (0, 255)
+        params['feature_mask_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
     
         # Add Parallel_Attenuated_Backscatter_532_steps to params
         params['Parallel_Attenuated_Backscatter_532_steps'] =\
@@ -198,12 +257,12 @@ if __name__ == '__main__':
         params['Perpendicular_Attenuated_Backscatter_532_steps'].units = "km-1 sr-1"
         params['Perpendicular_Attenuated_Backscatter_532_steps'].dim_labels = ['Step_532_per', 'Profile_ID', 'Altitude']
     
-        # # Add Attenuated_Backscatter_1064_steps to params
-        # params['Attenuated_Backscatter_1064_steps'] =\
-        #     SDSData('Attenuated_Backscatter_1064_steps',
-        #             data_dict_2d_mcda_dev["Attenuated_Backscatter_1064_steps"], FILL_VALUE_FLOAT)
-        # params['Attenuated_Backscatter_1064_steps'].units = "km-1 sr-1"
-        # params['Attenuated_Backscatter_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
+        # Add Attenuated_Backscatter_1064_steps to params
+        params['Attenuated_Backscatter_1064_steps'] =\
+            SDSData('Attenuated_Backscatter_1064_steps',
+                    data_dict_2d_mcda_dev["Attenuated_Backscatter_1064_steps"], FILL_VALUE_FLOAT)
+        params['Attenuated_Backscatter_1064_steps'].units = "km-1 sr-1"
+        params['Attenuated_Backscatter_1064_steps'].dim_labels = ['Step_1064', 'Profile_ID', 'Altitude']
     
 
     # Write in HDF file       

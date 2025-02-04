@@ -302,7 +302,7 @@ def flag_isolated_spikes(n, feature):
     return new_feature, spikes
 
 
-def remove_detect_from_ab(ab_signal, feature):
+def mask_detected_from_ab(ab_signal, feature):
     """Remove detected pixel from the AB signal"""
 
     # Mask where not "nothing"
@@ -421,7 +421,7 @@ def gaussian_line_window(width_window, gauss_sigma, ab_signal, feature, ab_sigma
     # Initialization
     nb_prof = ab_signal.shape[0]
     nb_alt = ab_signal.shape[1]
-    ab2 = np.ma.copy(ab_signal)
+    ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab_signal) # mask where not "nothing"
     ab2 = ab2.filled(FILL_VALUE_FLOAT) # fill mask value to use jit
     new_ab = np.ma.ones(ab_signal.shape)*FILL_VALUE_FLOAT
     new_ab = new_ab.filled(FILL_VALUE_FLOAT)
@@ -453,7 +453,7 @@ def gaussian_2d_window(width_window, horizontal_gauss_sigma, ab_signal, feature,
     # Initialization
     nb_prof = ab_signal.shape[0]
     nb_alt = ab_signal.shape[1]
-    ab2 = np.ma.copy(ab_signal)
+    ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab_signal) # mask where not "nothing"
     ab2 = ab2.filled(FILL_VALUE_FLOAT) # fill mask value to use jit
     new_ab = np.ma.ones(ab_signal.shape)*FILL_VALUE_FLOAT
     new_ab = new_ab.filled(FILL_VALUE_FLOAT)
@@ -531,137 +531,122 @@ def plot_mask(mask):
     plt.show()
 
 
-def separate_homogeneous_features(mask_composite, mask_par532, mask_per532, mask_1064, separation_type):
-    """Separate detected feature into homogeneous part based on the detection levels of the 3
-    detection channel"""
+def get_last_key(dict):
 
-    if separation_type == "channel": # separate by channel
-        mask_homogeneous = np.ma.zeros(mask_composite.shape)
-        # mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 1] =  # 1: Clear air
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == 8)] = 2 # 2: 532 par only
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == 16)] = 3 # 3: 532 per only
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == 32)] = 4 # 4: 1064 only
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+16))] = 5 # 5: 532 par + 532 per
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+32))] = 6 # 6: 532 par + 1064
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == (16+32))] = 7 # 7: 532 per + 1064
-        mask_homogeneous[(np.bitwise_and(mask_composite, int('000111', 2)) == 2) &\
-                    (np.bitwise_and(mask_composite, int('111000', 2)) == (8+16+32))] = 8 # 8: 532 par + 532 per + 1064
-        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 3] = 9
-        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 5] = 10
-        mask_homogeneous[ np.bitwise_and(mask_composite, int('000111', 2)) == 7] = 11
+    last_key = next(reversed(dict))
 
-    elif separation_type == "best_detection_level": # separate by best detestion level
-        # Best detection level mask
-        detection_level_masks = []
-        for i in np.arange(5) + 1:
-            detection_level_masks.append((mask_par532 == i) + (mask_per532 == i) + (mask_1064 == i))
-
-        # Initialization
-        mask_homogeneous = np.ma.zeros(mask_par532.shape)
-
-        for i in np.arange(5, 0, -1):
-            mask_homogeneous[detection_level_masks[i-1]] = i
-
-    elif separation_type == "all_levels_and_channels": # separate every levels and channels combination
-        # Remove flags not in [1,2,3,4,5] like surface = 254, etc.
-        mask_par532[mask_par532 > 5] = 0
-        mask_per532[mask_per532 > 5] = 0
-        mask_1064[mask_1064 > 5] = 0
-
-        mask_homogeneous = mask_par532 + 10*mask_per532 + 100*mask_1064
+    return last_key
 
 
-    return mask_homogeneous
+def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_dict, step):
+    """Process a single detection level."""
 
-
-def classify_homogeneous_features_with_psc_v2(mask_homogeneous, ab_532_per, sr_532, par_spikes, per_spikes, separation_type):
+    print(f"\t=> Detection level {level}:")
 
     # Initialization
-    mask_shape = mask_homogeneous.shape
-    psc_mask = np.zeros(mask_shape)
-    seen_pixels = np.zeros(mask_shape, dtype=bool)
-    ab_532_per_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
-    sr_532_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    tic = datetime.now()
+    k, n, s, a = get_feature_detection_coef(channel, level - 1)
+    spikes = None
 
-    # Mask where spikes
-    ab_532_per[par_spikes == 1] = np.ma.masked
-    ab_532_per[per_spikes == 1] = np.ma.masked
-    sr_532[par_spikes == 1] = np.ma.masked
-    sr_532[per_spikes == 1] = np.ma.masked
+    # Apply Averaging Window: Smooth the 2D data signal by applying an averaging window.
+    if a:
+        # Filter spikes before averaging the signal
+        k = 1000 # threshold
+        n = 5 # max number of connected pixels
+        feature_dict, ab_dict, spikes, step = filter_spikes(feature_dict, ab_dict, ab_mol, ab_sigma, step, k, n)
+
+        # Mask Previously Detected Features: Mask features detected during previous detection levels from the AB signal.
+        print("\t\t- Apply a gaussian horizontal line window averaging...", end='')
+        ab_dict[step := step+1], ab_sigma = gaussian_line_window(a[0], a[1], ab_dict[get_last_key(ab_dict)],
+                                                    feature_dict[get_last_key(feature_dict)], ab_sigma)
+        tic = print_elapsed_time(tic)
     
-    if separation_type == "channel":
-        mask_values = np.arange(7)+2 # 2 to 8
-    elif separation_type == "best_detection_level": 
-        mask_values = np.arange(5)+1 # 1 to 5
-    elif separation_type == "all_levels_and_channels": 
-        mask_values = np.arange(1000)+1
+    # Threshold Application: Apply a threshold to the smoothed signal to generate a binary mask, distinguishing regions above and below the threshold.
+    print("\t\t- Apply threshold...", end='')
+    feature_dict[step := step+1] = apply_threshold(k, ab_mol, feature_dict[get_last_key(feature_dict)], ab_dict[get_last_key(ab_dict)], ab_sigma)
+    tic = print_elapsed_time(tic)
 
-    for i in np.arange(mask_shape[0]):
-        for j in np.arange(mask_shape[1]):
-            if separation_type == "pixel":
-                ab_532_per_mean = np.copy(ab_532_per)
-                sr_532_mean = np.copy(sr_532)
-            else:
-                if not seen_pixels[i, j]:
-                    if mask_homogeneous[i, j] in mask_values: 
-                        # Count neighbors
-                        accessible_pixels = [(i, j)]
-                        pattern_pixels = np.zeros(mask_shape, dtype=bool)
-                        pattern_pixels[i, j] = True
-                        while (len(accessible_pixels) != 0):
-                            p = accessible_pixels[0] # 1st pixel of the list
-                            accessible_pixels = accessible_pixels[1:] # Remove 1st
-                            if not seen_pixels[p]:
-                                seen_pixels[p] = True # We note that we see this pixel
-                                v = neighbors(mask_shape, p) # Get pixel neighbors
-                                # Look for neighbors
-                                for voisin in v:
-                                    c1 = not seen_pixels[voisin]
-                                    c2 = mask_homogeneous[voisin] == mask_homogeneous[i, j]
-                                    if c1 and c2:
-                                        accessible_pixels.append(voisin)
-                                        pattern_pixels[voisin] = True
-                        
-                        # Compute mean 532 TAB
-                        sr_532_mean_feature = np.ma.mean(sr_532[pattern_pixels])
-                        sr_532_mean[pattern_pixels] = sr_532_mean_feature
+    # Smooth Binary Mask: Apply a smoothing window to the binary mask to improve feature continuity.
+    if s:
+        print("\t\t- Windowing on the 'maybe' pixels...", end='')
+        feature_dict[step := step+1] = apply_window(s[0], s[1], feature_dict[get_last_key(feature_dict)], level)
+        tic = print_elapsed_time(tic)
 
-                        # Compute mean 532_per AB
-                        ab_532_per_mean_feature = np.ma.mean(ab_532_per[pattern_pixels])
-                        ab_532_per_mean[pattern_pixels] = ab_532_per_mean_feature
-        
-                        # If masked replace by fill value
-                        try:
-                            if ab_532_per_mean_feature.mask:
-                                ab_532_per_mean_feature = FILL_VALUE_FLOAT
-                        except:
-                            pass
-                        try:
-                            if sr_532_mean_feature.mask:
-                                sr_532_mean_feature = FILL_VALUE_FLOAT
-                        except:
-                            pass
+    # Filter Small Features: Remove regions in the smoothed binary mask that contain fewer connected pixels than the specified minimum threshold.
+    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels meet neighbors number limit condition...", end='')
+    feature_dict[step := step+1] = replace_maybe(n, feature_dict[get_last_key(feature_dict)], level)
+    tic = print_elapsed_time(tic)
 
-    # Classification
-    atb_per_thresh = 2.5e-6
-    atb_per_enhanced_nat_thresh = 2e-5
-    sr_532_thresh = 1.5
-    sr_532_enhanced_nat_thresh = 2
-    sr_532_ice_thresh = 3
-    sr_532_wave_ice_thresh = 50
-    psc_mask[(ab_532_per_mean < atb_per_thresh) & (sr_532_mean >= sr_532_thresh)] = 1 # STS
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_wave_ice_thresh)] = 6 # Wave ice
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_ice_thresh) & (sr_532_mean < sr_532_wave_ice_thresh)] = 4 # Ice
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 2 # NAT
-    psc_mask[(ab_532_per_mean >= atb_per_enhanced_nat_thresh) & (sr_532_mean >= sr_532_enhanced_nat_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 5 # Enhanced NAT
+    # Remove detected pixel from AB
+    print("\t=> Remove detected pixel from AB...", end='')
+    ab_dict[step := step+1] = mask_detected_from_ab(ab_dict[get_last_key(ab_dict)], feature_dict[get_last_key(feature_dict)])
+    tic = print_elapsed_time(tic)
 
-    return psc_mask, ab_532_per_mean, sr_532_mean
+    return feature_dict, ab_dict, spikes, step
+
+
+def filter_spikes(feature_dict, ab_dict, ab_mol, ab_sigma, step, k, n):
+    """Remove signal spikes consisting of small clusters of less than n connected pixels
+    where the signal is above the threshold defined with k."""
+
+    print("\t=> Remove spikes:")
+
+    # Initialization
+    tic = datetime.now()
+
+    # Apply threshold to get the 'maybe' pixels
+    print("\t\t- Apply threshold...", end='')
+    feature_dict[step := step+1] = apply_threshold(k, ab_mol, feature_dict[get_last_key(feature_dict)], ab_dict[get_last_key(ab_dict)], ab_sigma)
+    tic = print_elapsed_time(tic)
+
+    # Get isolated spikes
+    print("\t\t- Get isolated spikes...", end='')
+    feature_dict[step := step+1], spikes = flag_isolated_spikes(n, feature_dict[get_last_key(feature_dict)])
+    tic = print_elapsed_time(tic)
+
+    # Mask isolated spike signal in AB
+    print("\t\t- Mask isolated spike signal in AB...", end='')
+    ab_dict[step := step+1] = mask_spikes_in_ab(ab_dict[get_last_key(ab_dict)], feature_dict[get_last_key(feature_dict)])
+    tic = print_elapsed_time(tic)
+
+    # Remove spike flags from mask
+    print("\t\t- Remove spike flags from mask...", end='')
+    feature_dict[step := step+1] = release_flag_spikes(feature_dict[get_last_key(feature_dict)])
+    tic = print_elapsed_time(tic)
+
+    return feature_dict, ab_dict, spikes, step
+
+
+def transform_feature_and_ab_dicts_to_arrays(feature_dict, ab_dict, step):
+
+    print("\t=> Transform feature and ab_signal dictionaries to 3D arrays...", end='')
+    
+    # Initialization
+    tic = datetime.now()
+    array_shape_0 = ab_dict[get_last_key(ab_dict)].shape[0]
+    array_shape_1 = ab_dict[get_last_key(ab_dict)].shape[1]
+    feature_array_steps = np.ma.zeros((step+1, array_shape_0, array_shape_1), dtype=np.uint8)
+    ab_array_steps = np.ma.ones((step+1, array_shape_0, array_shape_1))*FILL_VALUE_FLOAT
+
+    # Transform dictionaries to arrays
+    for i_step in np.arange(step+1):
+        try: # Test if feature_dict has a i_step
+            feature_dict[i_step]
+        except: # If not go directly to next step
+            continue
+        feature_array_steps[i_step, :, :] = feature_dict[i_step]
+
+    for i_step in np.arange(step+1):
+        try: # Test if ab_dict has a i_step
+            ab_dict[i_step]
+        except: # If not go directly to next step
+            continue   
+        ab_array_steps[i_step, :, :] = ab_dict[i_step]
+
+    # Show elapsed time
+    tic = print_elapsed_time(tic)
+
+    return feature_array_steps, ab_array_steps
 
 
 # **********************************************************************
@@ -670,8 +655,12 @@ def classify_homogeneous_features_with_psc_v2(mask_homogeneous, ab_532_per, sr_5
 def detect_features(ab_signal, ab_mol, ab_sigma, channel):
     """Detect features in AB signal of lidar channel"""
 
+    # Initialization
     tic_function = datetime.now()
-    tic = np.copy(tic_function)
+    NB_DETECTION_LEVELS = 5
+    ab_dict = {0: np.ma.copy(ab_signal)}
+    feature_dict = {0: np.ma.zeros(ab_signal.shape, dtype=np.uint8)}
+    step = 0
 
     # Print channel
     print(f"\n\t***{channel}***")
@@ -679,379 +668,13 @@ def detect_features(ab_signal, ab_mol, ab_sigma, channel):
     # Get feature detection parameters
     params = FeatureDetectionParameters(channel)
 
-    # Initialization
-    feature_dict = {}
-    ab_dict = {}
-    step = 0
-    ab_dict[step] = np.ma.copy(ab_signal)
-    last_ab = step
-    feature_dict[step] = np.ma.zeros(ab_signal.shape, dtype=np.uint8)
-    last_feature = step
-    flag_detection_level = 1 # incremented after each detection level: 1, 2,...
-    last_strong_level    = 4 # for strong/weak figure
-    last_weak_level      = 5 # for strong/weak figure
-    if channel == '1064':
-        last_strong_level -= 1
-        last_weak_level -= 1
-
-
-    #--------------------------------------------------------------------------
-    ###########################
-    #### Detection level 1 ####
-    print("\t=> Detection level 1:")
-
-    # Get detection coefficients
-    k, n, s, a = get_feature_detection_coef(channel, flag_detection_level - 1)
-
-    #####################################################################
-    #### Apply threshold to get very high echo (likely PMT artifact) ####
-    print("\t\t- Apply threshold to get very high echo (likely PMT artifact)...", end='')
-    step += 1
-    feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-    last_feature = step
-
-    # print("k =", k)
-    # print("n =", n)
-    # print("s =", s)
-    # print("a =", a)
-    # plot_mask(feature_dict[step])
-    
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Replace 'maybe' by 'detected' ####
-    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels meet neighbors number "
-            "limit condition...", end='')
-    step += 1
-    feature_dict[step] = replace_maybe(n, feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-    #--------------------------------------------------------------------------
-
-
-    #--------------------------------------------------------------------------
-    ###########################
-    #### Detection level 2 ####
-    print("\t=> Detection level 2:")
-
-    # Increase flag_detection_level
-    flag_detection_level += 1
-
-    # Get detection coefficients
-    k, n, s, a = get_feature_detection_coef(channel, flag_detection_level - 1)
-
-    ###################################################
-    #### Apply threshold to get the 'maybe' pixels ####
-    print("\t\t- Apply threshold...", end='')
-    step += 1
-    feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Replace 'maybe' by 'detected' ####
-    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels "\
-          "meet neighbors number limit condition...", end='')
-    step += 1
-    feature_dict[step] = replace_maybe(n, feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-    #--------------------------------------------------------------------------
-
-
-    #--------------------------------------------------------------------------
-    ###########################
-    #### Detection level 3 ####
-    print("\t=> Detection level 3:")
-
-    # Increase flag_detection_level
-    flag_detection_level += 1
-
-    # Get detection coefficients
-    k, n, s, a = get_feature_detection_coef(channel, flag_detection_level - 1)
-
-    ###################################################
-    #### Apply threshold to get the 'maybe' pixels ####
-    print("\t\t- Apply threshold...", end='')
-    step += 1
-    feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #########################################
-    #### Windowing on the 'maybe' pixels ####
-    print("\t\t- Windowing on the 'maybe' pixels...", end='')
-    step += 1
-    feature_dict[step] = apply_window(s[0], s[1], feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Replace 'maybe' by 'detected' ####
-    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels "\
-          "meet neighbors number limit condition...", end='')
-    step += 1
-    feature_dict[step] = replace_maybe(n, feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-    #--------------------------------------------------------------------------
-
-
-    #--------------------------------------------------------------------------
-    ###########################
-    #### Detection level 4 ####
-    print("\t=> Detection level 4:")
-
-    # Increase flag_detection_level
-    flag_detection_level += 1
-
-    # Get detection coefficients
-    k, n, s, a = get_feature_detection_coef(channel, flag_detection_level - 1)
-
-    ###################################################
-    #### Apply threshold to get the 'maybe' pixels ####
-    print("\t\t- Apply threshold...", end='')
-    step += 1
-    feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #########################################
-    #### Windowing on the 'maybe' pixels ####
-    print("\t\t- Windowing on the 'maybe' pixels...", end='')
-    step += 1
-    feature_dict[step] = apply_window(s[0], s[1], feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Replace 'maybe' by 'detected' ####
-    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels "\
-          "meet neighbors number limit condition...", end='')
-    step += 1
-    feature_dict[step] = replace_maybe(n, feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Remove detected pixel from AB ####
-    print("\t=> Remove detected pixel from AB...", end='')
-    step += 1
-    ab_dict[step] = remove_detect_from_ab(ab_dict[last_ab], feature_dict[last_feature])
-    last_ab = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-    #--------------------------------------------------------------------------
-
-
-    if channel == '532_per' or channel == '532_par' or channel == '1064':
-        #--------------------------------------------------------------------------
-        ###########################
-        #### Remove spikes ####
-        print("\t=> Remove spikes:")
-        
-        k = 20
-        n = 5
-
-
-        ###################################################
-        #### Apply threshold to get the 'maybe' pixels ####
-        print("\t\t- Apply threshold...", end='')
-
-        step += 1
-        feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-        last_feature = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-
-
-        #############################
-        #### Get isolated spikes ####
-        print("\t\t- Get isolated spikes...", end='')
-        step += 1
-        feature_dict[step], spikes = flag_isolated_spikes(n, feature_dict[last_feature])
-        last_feature = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-
-
-        ##########################################
-        #### Mask isolated spike signal in AB ####
-        print("\t=> Mask isolated spike signal in AB...", end='')
-        step += 1
-        ab_dict[step] = mask_spikes_in_ab(ab_dict[last_ab], feature_dict[last_feature])
-        last_ab = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-
-
-        ######################################
-        #### Remove spike flags from mask ####
-        print("\t=> Remove spike flags from mask...", end='')
-        step += 1
-        feature_dict[step] = release_flag_spikes(feature_dict[last_feature])
-        last_feature = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-        #--------------------------------------------------------------------------
-
-
-    #--------------------------------------------------------------------------
-    ###########################
-    #### Detection level 5 ####
-    print("\t=> Detection level 5:")
-
-    # Increase flag_detection_level
-    flag_detection_level += 1
-
-    # Get detection coefficients
-    k, n, s, a = get_feature_detection_coef(channel, flag_detection_level - 1)
-
-
-    #######################################
-    #### Remove detected pixel from AB ####
-    print("\t=> Remove detected pixel from AB...", end='')
-    step += 1
-    ab_dict[step] = remove_detect_from_ab(ab_dict[last_ab], feature_dict[last_feature])
-    last_ab = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    if channel == '532_per' or channel == '532_par' or channel == '1064':
-        ###############################################
-        #### Apply a 2-D gaussian window averaging ####
-        print("\t\t- Apply a 2-D gaussian window averaging...", end='')
-        step += 1
-        ab_dict[step], ab_sigma = gaussian_2d_window(a[0], a[1], ab_dict[last_ab],
-                                                    feature_dict[last_feature], ab_sigma)
-        last_ab = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-
-    else:
-        ###########################################################
-        #### Apply a gaussian horizontal line window averaging ####
-        print("\t\t- Apply a gaussian horizontal line window averaging...", end='')
-        step += 1
-        ab_dict[step], ab_sigma = gaussian_line_window(a[0], a[1], ab_dict[last_ab],
-                                                    feature_dict[last_feature], ab_sigma)
-        last_ab = step
-
-        # Show elapsed time
-        tic = print_elapsed_time(tic)
-
-
-    ###################################################
-    #### Apply threshold to get the 'maybe' pixels ####
-    print("\t\t- Apply threshold...", end='')
-    step += 1
-    feature_dict[step] = apply_threshold(k, ab_mol, feature_dict[last_feature], ab_dict[last_ab], ab_sigma)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #########################################
-    #### Windowing on the 'maybe' pixels ####
-    print("\t\t- Windowing on the 'maybe' pixels...", end='')
-    step += 1
-    feature_dict[step] = apply_window(s[0], s[1], feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    #######################################
-    #### Replace 'maybe' by 'detected' ####
-    print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels "\
-          "meet neighbors number limit condition...", end='')
-    step += 1
-    feature_dict[step] = replace_maybe(n, feature_dict[last_feature], flag_detection_level)
-    last_feature = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-    #--------------------------------------------------------------------------
-
-
-    #########################################
-    #### Remove detected pixel from AB ####
-    print("\t=> Remove detected pixel from AB...", end='')
-    step += 1
-    ab_dict[step] = remove_detect_from_ab(ab_dict[last_ab], feature_dict[last_feature])
-    last_ab = step
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
-
-    ###################################################################
-    #### Transform feature and ab_signal dictionaries to 3D arrays ####
-    print("\t=> Transform feature and ab_signal dictionaries to 3D arrays...", end='')
-    # Initialization
-    feature_array_steps = np.ma.zeros((step+1, ab_signal.shape[0], ab_signal.shape[1]), dtype=np.uint8)
-    ab_array_steps = np.ma.ones((step+1, ab_signal.shape[0], ab_signal.shape[1]))*FILL_VALUE_FLOAT
-
-    # Transform dictionaries to arrays
-    for i_step in np.arange(step+1):
-        # Test if feature_dict has a i_step
-        try:
-            feature_dict[i_step]
-        # If not go directly to next step
-        except:
-            continue
-        feature_array_steps[i_step, :, :] = feature_dict[i_step]
-
-    for i_step in np.arange(step+1):
-        # Test if ab_dict has a i_step
-        try:
-            ab_dict[i_step]
-        # If not go directly to next step
-        except:
-            continue   
-        ab_array_steps[i_step, :, :] = ab_dict[i_step]
-
-    # Show elapsed time
-    tic = print_elapsed_time(tic)
-
+    # Process detection levels
+    for level in range(1, NB_DETECTION_LEVELS+1):
+        feature_dict, ab_dict, spikes, step = process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_dict, step)
+
+    # Transform feature and ab_signal dictionaries to 3D arrays
+    feature_array_steps, ab_array_steps = transform_feature_and_ab_dicts_to_arrays(feature_dict, ab_dict, step)
 
     print(f'\t(Elapsed time: {datetime.now() - tic_function})')
 
-    return feature_dict[last_feature], feature_array_steps, ab_array_steps, spikes
+    return feature_dict[get_last_key(feature_dict)], feature_array_steps, ab_array_steps, spikes
