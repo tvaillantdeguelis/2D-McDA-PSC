@@ -36,7 +36,7 @@ if __name__ == '__main__':
         OUT_FOLDER = sys.argv[6]
         CNF = float(sys.argv[7])
     else:
-        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2011d176_0000.nc"
+        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2010d018_0000.nc"
         ZOMM_CLAMS_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/in/CLaMS_ZOMM/"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         VERSION_2D_McDA = "V1.01"

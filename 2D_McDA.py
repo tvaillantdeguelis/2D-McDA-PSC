@@ -331,17 +331,17 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Step_532_par'
-        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Parallel_Detection_Flags_532_steps"].shape[0]))
+        params[key] = DataVar(key, np.ma.arange(data_dict_2d_mcda_dev["Parallel_Detection_Flags_532_steps"].shape[0], dtype=np.int32))
         params[key].fillvalue = FILL_VALUE_SHORT
         params[key].dimensions = ['Step_532_par']
 
         key = 'Step_532_per'
-        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Perpendicular_Detection_Flags_532_steps"].shape[0]))
+        params[key] = DataVar(key, np.ma.arange(data_dict_2d_mcda_dev["Perpendicular_Detection_Flags_532_steps"].shape[0], dtype=np.int32))
         params[key].fillvalue = FILL_VALUE_SHORT
         params[key].dimensions = ['Step_532_per']
 
         key = 'Step_1064'
-        params[key] = DataVar(key, np.arange(data_dict_2d_mcda_dev["Detection_Flags_1064_steps"].shape[0]))
+        params[key] = DataVar(key, np.ma.arange(data_dict_2d_mcda_dev["Detection_Flags_1064_steps"].shape[0], dtype=np.int32))
         params[key].fillvalue = FILL_VALUE_SHORT
         params[key].dimensions = ['Step_1064']
 
@@ -590,15 +590,15 @@ if __name__ == '__main__':
         TYPE_2D_McDA = sys.argv[11]
         OUT_FOLDER = sys.argv[12]
     else:
-        GRANULE_DATE = "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2010-01-18T01-58-53ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         PREVIOUS_GRANULE = None
         NEXT_GRANULE = None
         SLICE_START_END_TYPE = "longitude" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
-        SLICE_START = 5.95 # profindex or longitude
-        SLICE_END = -150.07 # profindex or longitude
-        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
+        SLICE_START = 145.98 # profindex or longitude
+        SLICE_END = 4.00 # profindex or longitude
+        SAVE_DEVELOPMENT_DATA = True # if True save step by step data
         VERSION_2D_McDA = "V1.2.0"
         TYPE_2D_McDA = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"    

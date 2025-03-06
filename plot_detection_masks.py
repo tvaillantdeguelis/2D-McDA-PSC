@@ -810,15 +810,15 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"
-    GRANULE_DATE = "2011-06-25T00-11-52ZN_lon_5.95_-150.07"
+    GRANULE_DATE = "2010-01-18T01-58-53ZN_lon_145.98_4.00" # "2011-06-25T00-11-52ZN_lon_5.95_-150.07"
     VERSION_2D_McDA = "V1.2.0"
     TYPE_2D_McDA = "Prototype"
     SLICE_START_END_TYPE = 'longitude' # 'profindex' (of the 2D-McDA file) or 'longitude'
-    SLICE_START = 5.95 # profindex or longitude
-    SLICE_END = -150.07 # profindex or longitude
+    SLICE_START = 140.02 # profindex or longitude
+    SLICE_END = 6.00 # profindex or longitude
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5
-    PLOT_ALL_STEPS = False
+    PLOT_ALL_STEPS = True
     INVERT_XAXIS = False
     YMIN = 8
     YMAX = 30
