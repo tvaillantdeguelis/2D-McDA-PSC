@@ -131,22 +131,40 @@ def get_feature_detection_coef(channel, level):
        coded yet)"""
 
     if channel == '532_par':
-        k = [  50,   10,        5,       2,        2]
-        n = [   5,   10,       20,      50,     1000]
-        s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
-        a = [None, None,     None,    None,  (29, 11)]
+        k = [  50,   10,        5,       2,       5]
+        n = [   5,   10,       20,      50,    1000]
+        s = [None, None,   (5, 5),  (3, 9), (9, 21)]
+        a = [None, None,     None,    None,  (11, 5)]
 
     elif channel == '532_per':
-        k = [ 500,   50,       20,       2,        2]
-        n = [   5,   50,      100,      50,     1000]
-        s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
-        a = [None, None,     None,    None, (29, 11)]
+        k = [ 500,   50,       20,       2,       5]
+        n = [   5,   50,      100,       5,    1000]
+        s = [None, None,   (5, 5),  (3, 9), (9, 21)]
+        a = [None, None,     None,    None,  (11, 5)]
 
     elif channel == '1064':
-        k = [  50,   10,        5,       1,        1]
-        n = [   5,   10,       20,      50,     1000]
-        s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
-        a = [None, None,     None,    None, (29, 11)]
+        k = [  50,   10,        5,       1,       5]
+        n = [   5,   10,       20,      50,    1000]
+        s = [None, None,   (5, 5),  (3, 9), (9, 21)]
+        a = [None, None,     None,    None,  (11, 5)]
+
+    # if channel == '532_par':
+    #     k = [  50,   10,        5,       2,        2]
+    #     n = [   5,   10,       20,      50,     1000]
+    #     s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
+    #     a = [None, None,     None,    None,  (29, 11)]
+
+    # elif channel == '532_per':
+    #     k = [ 500,   50,       20,       2,        2]
+    #     n = [   5,   50,      100,      50,     1000]
+    #     s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
+    #     a = [None, None,     None,    None, (29, 11)]
+
+    # elif channel == '1064':
+    #     k = [  50,   10,        5,       1,        1]
+    #     n = [   5,   10,       20,      50,     1000]
+    #     s = [None, None,   (5, 5),  (3, 9),  (9, 21)]
+    #     a = [None, None,     None,    None, (29, 11)]
 
     else:
         sys.exit(f"Unrecognized channel: {channel}")

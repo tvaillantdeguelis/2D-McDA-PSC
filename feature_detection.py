@@ -421,7 +421,8 @@ def gaussian_line_window(width_window, gauss_sigma, ab_signal, feature, ab_sigma
     # Initialization
     nb_prof = ab_signal.shape[0]
     nb_alt = ab_signal.shape[1]
-    ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab_signal) # mask where not "nothing"
+    ab2 = np.ma.copy(ab_signal)
+    # ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab2) # mask where not "nothing"
     ab2 = ab2.filled(FILL_VALUE_FLOAT) # fill mask value to use jit
     new_ab = np.ma.ones(ab_signal.shape)*FILL_VALUE_FLOAT
     new_ab = new_ab.filled(FILL_VALUE_FLOAT)
@@ -551,13 +552,16 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
     # Apply Averaging Window: Smooth the 2D data signal by applying an averaging window.
     if a:
         # Filter spikes before averaging the signal
-        k = 1000 # threshold
+        k = 20 # threshold
         n = 5 # max number of connected pixels
         feature_dict, ab_dict, spikes, step = filter_spikes(feature_dict, ab_dict, ab_mol, ab_sigma, step, k, n)
 
         # Mask Previously Detected Features: Mask features detected during previous detection levels from the AB signal.
-        print("\t\t- Apply a gaussian horizontal line window averaging...", end='')
-        ab_dict[step := step+1], ab_sigma = gaussian_line_window(a[0], a[1], ab_dict[get_last_key(ab_dict)],
+        # print("\t\t- Apply a gaussian horizontal line window averaging...", end='')
+        # ab_dict[step := step+1], ab_sigma = gaussian_line_window(a[0], a[1], ab_dict[get_last_key(ab_dict)],
+        #                                             feature_dict[get_last_key(feature_dict)], ab_sigma)
+        print("\t\t- Apply a 2D gaussian window averaging...", end='')
+        ab_dict[step := step+1], ab_sigma = gaussian_2d_window(a[0], a[1], ab_dict[get_last_key(ab_dict)],
                                                     feature_dict[get_last_key(feature_dict)], ab_sigma)
         tic = print_elapsed_time(tic)
     
