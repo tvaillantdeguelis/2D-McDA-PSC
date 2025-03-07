@@ -564,6 +564,12 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
         print("\t\t- Apply a 2D gaussian window averaging...", end='')
         ab_dict[step := step+1], ab_sigma = gaussian_2d_window(a[0], a[1], ab_dict[get_last_key(ab_dict)],
                                                     feature_dict[get_last_key(feature_dict)], ab_sigma)
+        tic = print_elapsed_time(tic)
+    
+    # Threshold Application: Apply a threshold to the smoothed signal to generate a binary mask, distinguishing regions above and below the threshold.
+    print("\t\t- Apply threshold...", end='')
+    feature_dict[step := step+1] = apply_threshold(k, ab_mol, feature_dict[get_last_key(feature_dict)], ab_dict[get_last_key(ab_dict)], ab_sigma)
+    if a:
         plt.figure(figsize=(8,5))
         plt.subplot(311)
         plt.pcolormesh(ab_sigma.T)
@@ -576,11 +582,6 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
         plt.colorbar()
         plt.savefig('test.png')
         stop
-        tic = print_elapsed_time(tic)
-    
-    # Threshold Application: Apply a threshold to the smoothed signal to generate a binary mask, distinguishing regions above and below the threshold.
-    print("\t\t- Apply threshold...", end='')
-    feature_dict[step := step+1] = apply_threshold(k, ab_mol, feature_dict[get_last_key(feature_dict)], ab_dict[get_last_key(ab_dict)], ab_sigma)
     tic = print_elapsed_time(tic)
 
     # Smooth Binary Mask: Apply a smoothing window to the binary mask to improve feature continuity.
