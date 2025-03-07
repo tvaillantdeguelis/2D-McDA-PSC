@@ -454,7 +454,8 @@ def gaussian_2d_window(width_window, horizontal_gauss_sigma, ab_signal, feature,
     # Initialization
     nb_prof = ab_signal.shape[0]
     nb_alt = ab_signal.shape[1]
-    ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab_signal) # mask where not "nothing"
+    ab2 = np.ma.copy(ab_signal)
+    # ab2 = np.ma.masked_where(feature != FLAG_NOTHING, ab_signal) # mask where not "nothing"
     ab2 = ab2.filled(FILL_VALUE_FLOAT) # fill mask value to use jit
     new_ab = np.ma.ones(ab_signal.shape)*FILL_VALUE_FLOAT
     new_ab = new_ab.filled(FILL_VALUE_FLOAT)
