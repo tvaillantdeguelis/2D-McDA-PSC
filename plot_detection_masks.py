@@ -102,7 +102,7 @@ class FigureMaker(CALIOPFigureMaker):
             if j == 3:
                 cbar.ax.text(4, 1/(float(colorbins.size-1)*2) + j/float(colorbins.size-1), 'Detection level',
                              va='center', rotation=90, fontsize=fontsize_clabel, transform=cbar.ax.transAxes)
-        # cbar.set_label("Level of detection", labelpad=self.clabelpad)
+        cbar.set_label("Level of detection", labelpad=self.clabelpad)
        
         # Save figure
         if step:
@@ -223,30 +223,35 @@ class FigureMaker(CALIOPFigureMaker):
         ab_signal[(ab_signal<0) & ~ab_signal.mask] = 1e-9
         # pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=my_norm)
         # plt.clim(1e-5, 1e-1)
-        pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap="backscatter_continuous", norm=cmlidar.cm.backscatter_continuous_norm)
+        # pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap="backscatter_continuous", norm=cmlidar.cm.backscatter_continuous_norm)
+        # self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
+        # plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        # plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
+        my_cmap = takecmap('extthermal')
+        my_cmap.colorbar_extend = 'both'
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, ab_signal.T, cmap=my_cmap, norm=LogNorm(), rasterized=True)
+        plt.clim(1e-6, 1e-2)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
-        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
-        plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
-        # cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
-        # cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
+        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
         # cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
         # cbar.ax.tick_params(which='both', labelright=False)
-        # cbar_major_label = ['$10^{-5}$', '$10^{-4}$', '$10^{-3}$', '$10^{-2}$', '$10^{-1}$']
-        # for j, bound in enumerate(np.array((1e-5, 1e-4, 1e-3, 1e-2, 1e-1))):
+        # cbar_major_label = ['$10^{-5}$', '$10^{-4}$', '$10^{-3}$', '$10^{-2}$']
+        # for j, bound in enumerate(np.array((1e-5, 1e-4, 1e-3, 1e-2))):
         #     cbar.ax.text(2, bound, cbar_major_label[j], va='center', fontsize=9)
         # # cbar.ax.ticklabel_format(style="scientific", scilimits=(0, 0))
-        # minor_locators = np.concatenate((np.arange(2,10)*1e-5,
-        #                                     np.arange(2,10)*1e-4,
-        #                                     np.arange(2,10)*1e-3,
-        #                                     np.arange(2,10)*1e-2,
-        #                                     np.arange(2,10)*1e-1))
+        # minor_locators = np.concatenate((np.arange(2,10)*1e-6,
+        #                                  np.arange(2,10)*1e-5,
+        #                                  np.arange(2,10)*1e-4,
+        #                                  np.arange(2,10)*1e-3,
+        #                                  np.arange(2,10)*1e-2))
         # cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_locators))
-        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both')
-        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=45)
-        self.backscatter_cbar_labels(cbar)
+        # cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both')
+        # cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=45)
+        # self.backscatter_cbar_labels(cbar)
 
         # Save figure
         self.save_fig(filename)
