@@ -575,7 +575,7 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
         plt.pcolormesh(ab_sigma.T)
         plt.colorbar()
         plt.subplot(312)
-        plt.pcolormesh(ab_dict[get_last_key(ab_dict)].T)
+        plt.pcolormesh(ab_mol.T)
         plt.colorbar()
         plt.subplot(313)
         plt.pcolormesh(feature_dict[get_last_key(feature_dict)].T)
