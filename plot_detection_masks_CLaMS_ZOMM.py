@@ -910,8 +910,8 @@ if __name__ == '__main__':
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/CLaMS_ZOMM/"
-    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2010d018_0000.nc" # 
-    VERSION_2D_McDA = "V1.0"
+    FILENAME_2D_McDA_PSCs_ZOMM_CLAMS = "2D_McDA_PSCs-PSC_ZOMM_CLAMS_BKS_2011d176_0000.nc" # 
+    VERSION_2D_McDA = "V1.2.0"
     TYPE_2D_McDA = "Prototype"
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5

@@ -553,9 +553,9 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
     # Apply Averaging Window: Smooth the 2D data signal by applying an averaging window.
     if a:
         # Filter spikes before averaging the signal
-        k = 20 # threshold
-        n = 5 # max number of connected pixels
-        feature_dict, ab_dict, spikes, step = filter_spikes(feature_dict, ab_dict, ab_mol, ab_sigma, step, k, n)
+        k_spikes = 20 # threshold
+        n_spikes = 5 # max number of connected pixels
+        feature_dict, ab_dict, spikes, step = filter_spikes(feature_dict, ab_dict, ab_mol, ab_sigma, step, k_spikes, n_spikes)
 
         # Mask Previously Detected Features: Mask features detected during previous detection levels from the AB signal.
         # print("\t\t- Apply a gaussian horizontal line window averaging...", end='')
@@ -569,23 +569,6 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
     # Threshold Application: Apply a threshold to the smoothed signal to generate a binary mask, distinguishing regions above and below the threshold.
     print("\t\t- Apply threshold...", end='')
     feature_dict[step := step+1] = apply_threshold(k, ab_mol, feature_dict[get_last_key(feature_dict)], ab_dict[get_last_key(ab_dict)], ab_sigma)
-    if a:
-        print('k=',k)
-        plt.figure(figsize=(16,10))
-        plt.subplot(411)
-        plt.pcolormesh(ab_sigma.T)
-        plt.colorbar()
-        plt.subplot(412)
-        plt.pcolormesh(ab_mol.T)
-        plt.colorbar()
-        plt.subplot(413)
-        plt.pcolormesh(feature_dict[get_last_key(feature_dict)].T)
-        plt.colorbar()
-        plt.subplot(414)
-        plt.pcolormesh(ab_dict[get_last_key(ab_dict)].T)
-        plt.colorbar()
-        plt.savefig('test.png')
-        stop
     tic = print_elapsed_time(tic)
 
     # Smooth Binary Mask: Apply a smoothing window to the binary mask to improve feature continuity.

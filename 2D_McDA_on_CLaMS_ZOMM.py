@@ -15,7 +15,6 @@ from datetime import datetime
 
 from my_modules.readers.netcdf_reader import NetCDFReader
 from my_modules.standard_outputs import print_time, print_elapsed_time
-from config import NB_PROF_OVERLAP
 from feature_detection import detect_features
 from my_modules.calipso_constants import *
 from my_modules.writers.hdf_writer import SDSData, write_hdf
@@ -36,12 +35,12 @@ if __name__ == '__main__':
         OUT_FOLDER = sys.argv[6]
         CNF = float(sys.argv[7])
     else:
-        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2010d018_0000.nc"
+        ZOMM_CLAMS_FILENAME = "PSC_ZOMM_CLAMS_BKS_2011d176_0000.nc"
         ZOMM_CLAMS_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/in/CLaMS_ZOMM/"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA = "V1.01"
+        VERSION_2D_McDA = "V1.2.0"
         TYPE_2D_McDA = "Prototype"
-        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/CLaMS_ZOMM/"    
+        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/CLaMS_ZOMM/"
         CNF = 0.00442 # CALIOP noise factor (see Sect. 3.1 in Tritscher et al., 2019), value from Lamont Poole computations
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
@@ -83,7 +82,6 @@ if __name__ == '__main__':
     print_elapsed_time(tic)
 
     
-
     # *************************
     # *** Feature detection ***
     print("\n\n*****Feature detection...*****")
