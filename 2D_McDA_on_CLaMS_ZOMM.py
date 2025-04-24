@@ -13,11 +13,11 @@ import sys
 import numpy as np
 from datetime import datetime
 
-from my_modules.readers.netcdf_reader import NetCDFReader
-from my_modules.standard_outputs import print_time, print_elapsed_time
+from readers.netcdf_reader import NetCDFReader
+from standard_outputs import print_time, print_elapsed_time
 from feature_detection import detect_features
-from my_modules.calipso_constants import *
-from my_modules.writers.hdf_writer import SDSData, write_hdf
+from calipso_constants import *
+from writers.hdf_writer import SDSData, write_hdf
 from merged_3channels_feature_mask import merged_feature_masks
 
 

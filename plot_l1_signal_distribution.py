@@ -7,10 +7,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib import cm, gridspec
 
-from my_modules.standard_outputs import print_time, print_elapsed_time
-from my_modules.readers.calipso_reader import CALIOPReader
-from my_modules.calipso_calculator import compute_par_ab532
-from my_modules.figuretools import setstyle
+from standard_outputs import print_time, print_elapsed_time
+from readers.calipso_reader import CALIOPReader
+from calipso_calculator import compute_par_ab532
+from figuretools import setstyle
 
 if __name__ == '__main__':
     tic_main_program = print_time()

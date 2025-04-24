@@ -15,13 +15,13 @@ from datetime import datetime
 import numpy as np
 import matplotlib.pyplot as plt 
 
-from my_modules.standard_outputs import print_time, print_elapsed_time
-from my_modules.readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
-from my_modules.paths import split_granule_date
-from my_modules.calipso_constants import *
-from my_modules.writers.hdf_writer import SDSData, write_hdf
-from my_modules.writers.netcdf_writer import NetCDFVariable, write_netcdf
-from my_modules.calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
+from standard_outputs import print_time, print_elapsed_time
+from readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
+from paths import split_granule_date
+from calipso_constants import *
+from writers.hdf_writer import SDSData, write_hdf
+from writers.netcdf_writer import NetCDFVariable, write_netcdf
+from calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
     nsf_from_V_domain_to_betap_domain, rms_from_P_domain_to_betap_domain, compute_shotnoise, \
     compute_backgroundnoise
 

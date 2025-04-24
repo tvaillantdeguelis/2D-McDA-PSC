@@ -14,12 +14,12 @@ import os
 import cmlidar
 import seaborn as sns
 
-from my_modules.standard_outputs import print_time
-from my_modules.readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon
-from my_modules.paths import split_granule_date
-from my_modules.figuretools import setstyle, takecmap, cm2in, compute_bounds, lat_lon_dist_xaxis, \
+from standard_outputs import print_time
+from readers.calipso_reader import CALIPSOReader, get_prof_min_max_indexes_from_lon
+from paths import split_granule_date
+from figuretools import setstyle, takecmap, cm2in, compute_bounds, lat_lon_dist_xaxis, \
     CALIOPFigureMaker, remove_edges
-from my_modules.geotools import neighbors
+from geotools import neighbors
 
 FILL_VALUE_FLOAT = -9999.0
 
