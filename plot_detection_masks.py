@@ -260,7 +260,52 @@ class FigureMaker(CALIOPFigureMaker):
         # Close figure
         plt.close(fig)
 
+    
+    def plot_sr532_signal(self, sr_signal, title, filename):
+        # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
+        
+        # Mask where fill_value
+        sr_signal = np.ma.masked_where(sr_signal == FILL_VALUE_FLOAT, sr_signal)
+    
+        # Remove edges
+        if self.edges_removal != 0: # to avoid error with "-0"
+            sr_signal = remove_edges(sr_signal, self.edges_removal)
+    
+        # Figure style
+        setstyle("ticks_nogrid")
+    
+        # Create figure
+        fig = plt.figure(figsize=(self.fig_w, self.fig_h))
+        gs0 = gridspec.GridSpec(1, 2, width_ratios=[50, 1], wspace=0.1)
+    
+        # Plot figure
+        ax0 = plt.subplot(gs0[0])
+        ax0.set_facecolor('0.5')
 
+        # Put negative values to 1e-9 so they don't appear transparent
+        # sr_signal[(sr_signal<0) & ~sr_signal.mask] = 1e-9
+        plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        my_cmap = takecmap('extthermal')
+        my_cmap.colorbar_extend = 'both'
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=my_cmap, norm=LogNorm(), rasterized=True)
+        plt.clim(1, 50)
+        self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
+        
+        # Plot colorbar
+        ax1 = plt.subplot(gs0[1])
+        cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
+        cbar.set_label(label="$R'$", labelpad=45)
+        cbar.ax.yaxis.set_major_locator(FixedLocator(np.array((1, 10, 50))))
+        cbar.ax.set_yticklabels(['1', '10', '50'])
+
+        # Save figure
+        self.save_fig(filename)
+        
+        # Close figure
+        plt.close(fig)
+
+
+        
     def plot_hom_4_colors(self, mask, title, filename):
         # Remove edges
         if self.edges_removal != 0: # to avoid error with "-0"
@@ -379,7 +424,9 @@ class FigureMaker(CALIOPFigureMaker):
     
         # Plot figure
         ax0 = plt.subplot(gs0[0])
-        pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=cm.viridis, norm=LogNorm())
+        my_cmap = takecmap('extthermal')
+        my_cmap.colorbar_extend = 'both'
+        pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=my_cmap, norm=LogNorm())
         plt.clim(1, 50)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
         plt.title(title, weight='bold', fontsize=self.axes_titlesize, y=self.axes_title_pad)
@@ -784,16 +831,16 @@ class FigureMaker(CALIOPFigureMaker):
         sr532 = sr532.compressed()        
         per532 = per532.compressed()
         
-        plot_fig.adj_left = 0.08
+        plot_fig.adj_left = 0.12
         plot_fig.adj_bottom = 0.11
-        plot_fig.adj_right = 0.95
+        plot_fig.adj_right = 0.97
         plot_fig.adj_top = 0.9
 
         plt.figure(figsize=(7, 5))
         ax = plt.subplot(111)
         hb = ax.hexbin(sr532, per532, gridsize=50, xscale='log', yscale='log', 
                        extent=(np.log10(1.1), np.log10(60), np.log10(1e-6), np.log10(2.5e-3)), 
-                       cmap=takecmap('thermal'), mincnt=1)
+                       cmap=cm.viridis, mincnt=1)#, vmax=100)
         ax.set_xlim(1.1, 60)
         ax.set_ylim(1e-6, 2.5e-3)
         custom_ticks = [1.1, 2, 5, 10, 20, 50]
@@ -948,7 +995,8 @@ if __name__ == '__main__':
          "Perpendicular_Attenuated_Backscatter_532",
          "Attenuated_Backscatter_1064",
          "Molecular_Parallel_Attenuated_Backscatter_532",
-         "Molecular_Perpendicular_Attenuated_Backscatter_532"]
+         "Molecular_Perpendicular_Attenuated_Backscatter_532",
+         "Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"]
     for key in cal_2d_mcda_keys:
         data_dict_cal_2d_mcda[key] = cal_2d_mcda.get_data(key, SLICE_START, SLICE_END, SLICE_START_END_TYPE)
 
@@ -1167,6 +1215,15 @@ if __name__ == '__main__':
         title = "$\mathbf{Mean\ Attenuated\ 532\ nm\ Scattering\ Ratio}\ \\langle R'_{532}\\rangle$"
         plot_fig.plot_hom_asr_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"], title, filename)
 
+    if False:
+        # SR532 
+        sr532 = (data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])/(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"])
+        feature_5km_180m_sr532_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, sr532)
+        filename = "feature_5km_180m_sr532"
+        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
+        plot_fig.plot_sr532_signal(feature_5km_180m_sr532_signal, title, filename)
+
+
     # Plot signal distribution
     if True:
         alt_idx_above_15km = np.where(data_dict_cal_2d_mcda["Altitude"] >= 15)[0]
@@ -1214,6 +1271,11 @@ if __name__ == '__main__':
         filename = "feature_5km_180m_sr532_vs_532per_distribution"
         title = "$\mathbf{Feature\ 5km×180m}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
         plot_fig.plot_532per_vs_sr532(feature_5km_180m_sr532_signal, feature_5km_180m_532per_signal, title, filename)
+
+        hom_chunks_mean_sr532 = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"][:, alt_idx_above_15km]
+        filename = "homogeneous_chunks_mean_sr532_vs_532per_distribution"
+        title = "$\mathbf{Homogeneous\ Chunks\ Mean}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
+        plot_fig.plot_532per_vs_sr532(hom_chunks_mean_sr532, hom_chunks_mean_532per_signal, title, filename)    
 
     # Plot signal in detection mask
     if False:
