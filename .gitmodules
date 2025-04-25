@@ -1,3 +1,4 @@
 [submodule "my_modules"]
 	path = my_modules
 	url = git@github.com:tvaillantdeguelis/my_modules.git
+	branch = main
