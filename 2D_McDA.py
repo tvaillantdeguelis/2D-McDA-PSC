@@ -190,35 +190,36 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].valid_range = (0, 1)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Mask'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+    if False:
+        key = 'Homogeneous_Chunks_Mask'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Classification'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Homogeneous_Chunks_Classification'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
-    params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
     # Parameters saved for development
     if save_development_data:
@@ -595,10 +596,10 @@ if __name__ == '__main__':
         TYPE_CAL_LID_L1 = "Standard"
         PREVIOUS_GRANULE = None
         NEXT_GRANULE = None
-        SLICE_START_END_TYPE = "longitude" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
-        SLICE_START = 170.68 # profindex or longitude
-        SLICE_END = 27.93 # profindex or longitude
-        SAVE_DEVELOPMENT_DATA = True # if True save step by step data
+        SLICE_START_END_TYPE = "profindex" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
+        SLICE_START = None # 170.68 # profindex or longitude
+        SLICE_END = None # 27.93 # profindex or longitude
+        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         VERSION_2D_McDA = "V1.2.0"
         TYPE_2D_McDA = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"    
