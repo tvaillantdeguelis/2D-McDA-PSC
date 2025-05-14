@@ -372,6 +372,7 @@ class FigureMaker(CALIOPFigureMaker):
     
         # Plot figure
         ax0 = plt.subplot(gs0[0])
+        ax0.set_facecolor('0.5')
         # my_cmap = cm.plasma
         # nb_colors = 256
         # palette = my_cmap(np.linspace(0, 255, nb_colors).astype(int))
@@ -424,6 +425,7 @@ class FigureMaker(CALIOPFigureMaker):
     
         # Plot figure
         ax0 = plt.subplot(gs0[0])
+        ax0.set_facecolor('0.5')
         my_cmap = takecmap('extthermal')
         my_cmap.colorbar_extend = 'both'
         pc = plt.pcolormesh(self.pindexbins, self.altbins, sr_signal.T, cmap=my_cmap, norm=LogNorm())
@@ -818,7 +820,7 @@ class FigureMaker(CALIOPFigureMaker):
         self.save_fig(filename)
 
 
-    def plot_532per_vs_sr532(self, sr532, per532, title, filename):
+    def plot_532per_vs_sr532(self, sr532, per532, title, filename, sr532_chunk_value=None, per532_chunk_value=None):
         
         # Mask where negatice
         sr532 = np.ma.masked_where(sr532 <=0, sr532)
@@ -836,14 +838,37 @@ class FigureMaker(CALIOPFigureMaker):
         plot_fig.adj_right = 0.97
         plot_fig.adj_top = 0.9
 
+        xmin = 0.1
+        xmax = 60
+        ymin = 1e-8
+        ymax = 2.5e-3
+
         plt.figure(figsize=(7, 5))
         ax = plt.subplot(111)
         hb = ax.hexbin(sr532, per532, gridsize=50, xscale='log', yscale='log', 
-                       extent=(np.log10(1.1), np.log10(60), np.log10(1e-6), np.log10(2.5e-3)), 
+                       extent=(np.log10(xmin), np.log10(xmax), np.log10(ymin), np.log10(ymax)), 
                        cmap=cm.viridis, mincnt=1)#, vmax=100)
-        ax.set_xlim(1.1, 60)
-        ax.set_ylim(1e-6, 2.5e-3)
-        custom_ticks = [1.1, 2, 5, 10, 20, 50]
+        if sr532_chunk_value and per532_chunk_value:
+            plt.scatter(sr532_chunk_value, per532_chunk_value, marker='+', c='r', s=200)
+        if True:
+            atb_per_thresh = 7.2e-7
+            atb_per_enhanced_nat_thresh = 2e-5
+            sr_532_thresh = 1.3
+            sr_532_enhanced_nat_thresh = 2
+            sr_532_ice_thresh = 3
+            sr_532_wave_ice_thresh = 50
+            plt.hlines(y=atb_per_thresh, xmin=xmin, xmax=xmax, color='k', linestyle='--')
+            plt.hlines(y=atb_per_enhanced_nat_thresh, xmin=sr_532_enhanced_nat_thresh, xmax=sr_532_ice_thresh, color='k', linestyle='-')
+            plt.vlines(x=sr_532_thresh, ymin=ymin, ymax=atb_per_thresh, color='k', linestyle='--')
+            plt.vlines(x=sr_532_enhanced_nat_thresh, ymin=atb_per_enhanced_nat_thresh, ymax=ymax, color='k', linestyle='-')
+            plt.vlines(x=sr_532_ice_thresh, ymin=atb_per_thresh, ymax=ymax, color='k', linestyle='--')
+            plt.vlines(x=sr_532_wave_ice_thresh, ymin=atb_per_thresh, ymax=ymax, color='k', linestyle='-')
+        # ax.set_xlim(1.1, 60)
+        # ax.set_ylim(1e-6, 2.5e-3)
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        # custom_ticks = [0.1, 1.1, 2, 5, 10, 20, 50]
+        custom_ticks = [0.1, 1, 2, 5, 10, 20, 50]
         ax.set_xticks(custom_ticks)
         ax.set_xticklabels([f'{tick}' for tick in custom_ticks])
         plt.colorbar(hb, label="Occurrence")
@@ -904,6 +929,7 @@ def set_homogeneous_chunks_color(mask, color_number_array):
         
     return color_mask
 
+
 def change_color(i_color, nb_colors):
     """Loop on color array"""
     if i_color < nb_colors - 1:
@@ -911,6 +937,48 @@ def change_color(i_color, nb_colors):
     else:
         i_color = 0
     return i_color
+
+
+def get_largest_chunk(chunk_mask):
+    """Return a mask with TRUE for pixels that are part of the largest chunk."""
+
+    # Initialization
+    seen_pixels = np.zeros(chunk_mask.shape, dtype=bool)
+    current_chunk_pixel_count = 0
+    current_chunk_index = 0
+    
+    # Look for the largest chunk
+    for i in np.arange(chunk_mask.shape[0]):
+        for j in np.arange(chunk_mask.shape[1]):
+            if not seen_pixels[i, j] and chunk_mask[i, j] != 0: # pixel not processed and with atmospheric feature
+                accessible_pixels = [(i, j)] # start list of accessible pixels
+                pattern_pixels = np.zeros(chunk_mask.shape, dtype=bool)
+                pattern_pixels[i, j] = True
+                while (len(accessible_pixels) != 0):
+                    p = accessible_pixels[0] # 1st pixel of the list
+                    accessible_pixels = accessible_pixels[1:] # Remove 1st
+                    if not seen_pixels[p]:
+                        seen_pixels[p] = True # We note that we see this pixel
+                        v = neighbors(chunk_mask.shape, p) # Get pixel neighbors
+                        # Look for neighbors
+                        for voisin in v:
+                            if not seen_pixels[voisin]: # if pixel not already processed
+                                if chunk_mask[voisin] == chunk_mask[i, j]: # and part of the feature
+                                    accessible_pixels.append(voisin)
+                                    pattern_pixels[voisin] = True # add it
+                if True: # take any chunk
+                    current_chunk_index += 1
+                    # if current_chunk_index == 2000:
+                    if pattern_pixels.sum() > 40 and pattern_pixels.sum() < 5000 and current_chunk_index > 250:
+                        current_chunk_pixel_count = pattern_pixels.sum()
+                        largest_chunk_mask = np.ma.copy(pattern_pixels)
+                        print("current_chunk_pixel_count:", current_chunk_pixel_count)
+                        return largest_chunk_mask
+                if pattern_pixels.sum() > current_chunk_pixel_count:
+                    current_chunk_pixel_count = pattern_pixels.sum()
+                    largest_chunk_mask = np.ma.copy(pattern_pixels)
+                    
+    return largest_chunk_mask
 
 
 if __name__ == '__main__':
@@ -1225,7 +1293,7 @@ if __name__ == '__main__':
 
 
     # Plot signal distribution
-    if True:
+    if False:
         alt_idx_above_15km = np.where(data_dict_cal_2d_mcda["Altitude"] >= 15)[0]
 
         # 532par
@@ -1276,6 +1344,50 @@ if __name__ == '__main__':
         filename = "homogeneous_chunks_mean_sr532_vs_532per_distribution"
         title = "$\mathbf{Homogeneous\ Chunks\ Mean}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
         plot_fig.plot_532per_vs_sr532(hom_chunks_mean_sr532, hom_chunks_mean_532per_signal, title, filename)    
+
+    # Plot signal of the largest homogeneous chunk
+    if True:
+        largest_chunk_mask = get_largest_chunk(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mask"])
+        
+        feature_5km_180m_per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])
+        feature_5km_180m_per_signal[~largest_chunk_mask] = np.ma.masked
+        filename = "largest_chunk_feature_5km_180m_ab_532_per"
+        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        plot_fig.plot_ab_signal(feature_5km_180m_per_signal, title, filename)
+
+        feature_5km_180m_sr532_signal = (data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])/(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"])
+        feature_5km_180m_sr532_signal[~largest_chunk_mask] = np.ma.masked
+        filename = "largest_chunk_feature_5km_180m_sr532"
+        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
+        plot_fig.plot_sr532_signal(feature_5km_180m_sr532_signal, title, filename)
+
+    # Plot signal distribution for the largest homogeneous chunk
+    if True:
+        alt_idx_above_15km = np.where(data_dict_cal_2d_mcda["Altitude"] >= 15)[0]
+
+        largest_chunk_mask = get_largest_chunk(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mask"])
+        largest_chunk_mask = largest_chunk_mask[:, alt_idx_above_15km]
+        
+        # SR532 vs 532per
+        sr532 = (data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])/(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"])
+        feature_5km_180m_sr532_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, sr532)
+        feature_5km_180m_sr532_signal = feature_5km_180m_sr532_signal[:, alt_idx_above_15km]
+        feature_5km_180m_sr532_signal = feature_5km_180m_sr532_signal[largest_chunk_mask]
+        
+        feature_5km_180m_532per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])
+        feature_5km_180m_532per_signal = feature_5km_180m_532per_signal[:, alt_idx_above_15km]
+        feature_5km_180m_532per_signal = feature_5km_180m_532per_signal[largest_chunk_mask]
+        
+        hom_chunks_mean_sr532 = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"][:, alt_idx_above_15km]
+        hom_chunks_mean_sr532 = np.ma.max(hom_chunks_mean_sr532[largest_chunk_mask]) # get a unique value
+
+        hom_chunks_mean_532per_signal = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532"][:, alt_idx_above_15km]
+        hom_chunks_mean_532per_signal = np.ma.max(hom_chunks_mean_532per_signal[largest_chunk_mask]) # get a unique value
+
+        filename = "largest_chunk_feature_5km_180m_sr532_vs_532per_distribution"
+        title = "$\mathbf{Feature\ 5km×180m}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
+        plot_fig.plot_532per_vs_sr532(feature_5km_180m_sr532_signal, feature_5km_180m_532per_signal, title, filename, hom_chunks_mean_sr532, hom_chunks_mean_532per_signal)
+
 
     # Plot signal in detection mask
     if False:

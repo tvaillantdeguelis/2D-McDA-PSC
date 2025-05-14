@@ -1055,7 +1055,7 @@ if __name__ == '__main__':
 
     SEPARATION_TYPE = "all_levels_and_channels" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
 
-    if True:
+    if False:
         if SEPARATION_TYPE == "pixel":
             data_dict_2d_mcda["homogeneous_chunks_mask"] = np.ma.ones(data_dict_2d_mcda["Parallel_Detection_Flags_532"].shape) # not used
         else:
@@ -1075,7 +1075,7 @@ if __name__ == '__main__':
             
             print_elapsed_time(tic_algo)
 
-    if True:
+    if False:
         # ***********************************************************
         # *** Apply PSC v2 classification to homogeneous features ***
         print("\n\n############################################################\n"\
