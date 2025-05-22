@@ -596,9 +596,11 @@ if __name__ == '__main__':
         TYPE_CAL_LID_L1 = "Standard"
         PREVIOUS_GRANULE = None
         NEXT_GRANULE = None
-        SLICE_START_END_TYPE = "profindex" # "profindex" or "longitude" (Use "profindex" if SLICE_START/END = None to process the whole granule)
+        SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
         SLICE_START = None # 170.68 # profindex or longitude
         SLICE_END = None # 27.93 # profindex or longitude
+        LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
+        LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         VERSION_2D_McDA = "V1.2.0"
         TYPE_2D_McDA = "Prototype"
@@ -619,6 +621,8 @@ if __name__ == '__main__':
     print("\tSLICE_START_END_TYPE =", SLICE_START_END_TYPE)
     print("\tSLICE_START =", SLICE_START)
     print("\tSLICE_END =", SLICE_END)
+    print("\tLAT_MIN =", LAT_MIN)
+    print("\tLAT_MAX =", LAT_MAX)
     print("\tSAVE_DEVELOPMENT_DATA =", SAVE_DEVELOPMENT_DATA)
     print("\tVERSION_2D_McDA =", VERSION_2D_McDA)
     print("\tTYPE_2D_McDA =", TYPE_2D_McDA)
@@ -637,7 +641,9 @@ if __name__ == '__main__':
                           granule_date=GRANULE_DATE,
                           slice_start=SLICE_START,
                           slice_end=SLICE_END,
-                          slice_start_end_type=SLICE_START_END_TYPE)
+                          slice_start_end_type=SLICE_START_END_TYPE,
+                          lat_min=LAT_MIN,
+                          lat_max=LAT_MAX)
 
     # Print filepaths of loading files
     print(f"\tGranule path: {cal_l1.filepath}")
@@ -647,7 +653,7 @@ if __name__ == '__main__':
           f"(lat = {cal_l1.lat_min:.2f} / lon = {cal_l1.lon_min:.2f}) "
           f"to max profile index {cal_l1.prof_max:d} "
           f"(lat = {cal_l1.lat_max:.2f} / lon = {cal_l1.lon_max:.2f})")
-
+  
     # Load L1 parameters
     cal_l1_keys = [
         "Profile_ID",
