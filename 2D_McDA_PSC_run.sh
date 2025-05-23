@@ -26,7 +26,7 @@ OUT_FILETYPE='HDF' # 'HDF' or 'netCDF'
 #-----------------------------------------------------------------------
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."
-OUT_FOLDER="/work_users/vaillant/data/2D_CALIOP/2D_McDA_PSC/"
+OUT_FOLDER="/work_users/vaillant/data/2D_McDA_PSC/"
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 # Initialization

@@ -1029,7 +1029,7 @@ if __name__ == '__main__':
     
     # Create folder to store output data
     granule_date_dict = split_granule_date(GRANULE_DATE)
-    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSCs.{VERSION_2D_McDA_PSC.replace('V', 'v')}",
+    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSC.{VERSION_2D_McDA_PSC.replace('V', 'v')}",
                                   str(granule_date_dict['year']), f"{granule_date_dict['year']}_"
                                                                   f"{granule_date_dict['month']:02d}_"
                                                                   f"{granule_date_dict['day']:02d}")
