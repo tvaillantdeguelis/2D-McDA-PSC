@@ -384,7 +384,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
-    filename = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA}-{VERSION_2D_McDA.replace('.', '-')}." \
+    filename = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-')}." \
                 f"{GRANULE_DATE}{filename_end}"
     
     if filetype == 'HDF':
@@ -577,34 +577,33 @@ if __name__ == '__main__':
     
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
-    if False: #len(sys.argv) > 1:
+    if len(sys.argv) > 1:
         GRANULE_DATE = sys.argv[1]
         VERSION_CAL_LID_L1 = sys.argv[2]
         TYPE_CAL_LID_L1 = sys.argv[3]
-        PREVIOUS_GRANULE = None if sys.argv[4] == 'None' else sys.argv[4]
-        NEXT_GRANULE = None if sys.argv[5] == 'None' else sys.argv[5]
-        SLICE_START_END_TYPE = sys.argv[6] # 'profindex' or 'longitude'
-        SLICE_START = None if sys.argv[7] == 'None' else float(sys.argv[7])
-        SLICE_END = None if sys.argv[8] == 'None' else float(sys.argv[8])
+        SLICE_START_END_TYPE = sys.argv[4] # 'profindex' or 'longitude'
+        SLICE_START = None if sys.argv[5] == 'None' else float(sys.argv[5])
+        SLICE_END = None if sys.argv[6] == 'None' else float(sys.argv[6])
+        LAT_MIN = None if sys.argv[7] == 'None' else float(sys.argv[7])
+        LAT_MAX = None if sys.argv[8] == 'None' else float(sys.argv[8])
         SAVE_DEVELOPMENT_DATA = sys.argv[9] == 'True'
-        VERSION_2D_McDA = sys.argv[10]
-        TYPE_2D_McDA = sys.argv[11]
+        VERSION_2D_McDA_PSC = sys.argv[10]
+        TYPE_2D_McDA_PSC = sys.argv[11]
         OUT_FOLDER = sys.argv[12]
+        OUT_FILETYPE = sys.argv[13]
     else:
         GRANULE_DATE = "2010-01-18T00-19-57ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
-        PREVIOUS_GRANULE = None
-        NEXT_GRANULE = None
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
         SLICE_START = None # 170.68 # profindex or longitude
         SLICE_END = None # 27.93 # profindex or longitude
         LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA = "V1.2.0"
-        TYPE_2D_McDA = "Prototype"
-        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"    
+        VERSION_2D_McDA_PSC = "V1.2.1"
+        TYPE_2D_McDA_PSC = "Prototype"
+        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'HDF' # 'HDF' or 'netCDF'
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
@@ -616,16 +615,14 @@ if __name__ == '__main__':
     print("\tGRANULE_DATE =", GRANULE_DATE)
     print("\tVERSION_CAL_LID_L1 =", VERSION_CAL_LID_L1)
     print("\tTYPE_CAL_LID_L1 =", TYPE_CAL_LID_L1)
-    print("\tPREVIOUS_GRANULE =", PREVIOUS_GRANULE)
-    print("\tNEXT_GRANULE =", NEXT_GRANULE)
     print("\tSLICE_START_END_TYPE =", SLICE_START_END_TYPE)
     print("\tSLICE_START =", SLICE_START)
     print("\tSLICE_END =", SLICE_END)
     print("\tLAT_MIN =", LAT_MIN)
     print("\tLAT_MAX =", LAT_MAX)
     print("\tSAVE_DEVELOPMENT_DATA =", SAVE_DEVELOPMENT_DATA)
-    print("\tVERSION_2D_McDA =", VERSION_2D_McDA)
-    print("\tTYPE_2D_McDA =", TYPE_2D_McDA)
+    print("\tVERSION_2D_McDA_PSC =", VERSION_2D_McDA_PSC)
+    print("\tTYPE_2D_McDA_PSC =", TYPE_2D_McDA_PSC)
     print("\tOUT_FOLDER =", OUT_FOLDER)
 
 
@@ -695,91 +692,6 @@ if __name__ == '__main__':
     # "Perpendicular_RMS_Baseline_532_AB_domain"
     # "RMS_Baseline_1064_AB_domain"
     # "Noise_Scale_Factor_1064_AB_domain"
-    
-
-    # ### LOAD PREVIOUS GRANULE
-    # previous_file_data_used = False
-    # # If beginning of file and previous file given
-    # if cal_l1.prof_min == 0:
-    #     if PREVIOUS_GRANULE:
-    #         # Load previous granule
-    #         cal_l1_prev = CALIOPReader(product='L1',
-    #                                            version=VERSION_CAL_LID_L1,
-    #                                             data_type=TYPE_CAL_LID_L1,
-    #                                             granule_date=PREVIOUS_GRANULE,
-    #                                             grid='333mx30m',
-    #                                             slice_start=-NB_PROF_OVERLAP,
-    #                                             slice_end=None,
-    #                                             slice_start_end_type='profindex')
-        
-    #         # Print filepaths of loading files
-    #         print(f"\tPrevious granule path: {cal_l1_prev.filepath}")
-        
-    #         data_dict_cal_lid_l1_prev = {}
-    #         for key in cal_l1_keys:
-    #             data_dict_cal_lid_l1_prev[key] = cal_l1_prev.get_data(key)
-
-    #         # If less than 1 second between last profile of previous file and
-    #         # first profile of current file (no missing granule)
-    #         time_between_profiles = np.abs(data_dict_cal_lid_l1["Profile_Time"][0] -
-    #                                     data_dict_cal_lid_l1_prev["Profile_Time"][-1])
-    #         print(f"\tTime between last profile of previous file and first profile of current file"
-    #             f" = {time_between_profiles:.2f} s")
-    #         if time_between_profiles < 1:
-    #             print("\tAppend previous granule")
-    #             previous_file_data_used = True
-    #             # Append last profiles of previous file to data
-    #             for key in cal_l1_keys:
-    #                 if key != "Lidar_Data_Altitudes":
-    #                     data_dict_cal_lid_l1[key] = np.append(data_dict_cal_lid_l1_prev[key],
-    #                                                           data_dict_cal_lid_l1[key], axis=0)
-    #         else:
-    #             print("\tPrevious granule does not seem consecutive.")
-    #     else :
-    #         print("\tNo previous file to load.")
-
-
-    # ### LOAD NEXT GRANULE
-    # next_file_data_used = False
-    # # If end of file and next file given
-    # nb_profiles_in_granule = cal_l1._lon_granule_l1.size
-    # if cal_l1.prof_max == nb_profiles_in_granule - 1:
-    #     if NEXT_GRANULE:
-    #         # Load next granule
-    #         cal_l1_next = CALIOPReader(product='L1',
-    #                                            version=VERSION_CAL_LID_L1,
-    #                                             data_type=TYPE_CAL_LID_L1,
-    #                                             granule_date=NEXT_GRANULE,
-    #                                             grid='333mx30m',
-    #                                             slice_start=None,
-    #                                             slice_end=NB_PROF_OVERLAP,
-    #                                             slice_start_end_type='profindex')
-        
-    #         # Print filepaths of loading files
-    #         print(f"\tNext granule path: {cal_l1_next.filepath}")
-        
-    #         data_dict_cal_lid_l1_next = {}
-    #         for key in cal_l1_keys:
-    #             data_dict_cal_lid_l1_next[key] = cal_l1_next.get_data(key)
-
-    #         # If less than 1 second between first profile of next file and
-    #         # last profile of current file (no missing granule)
-    #         time_between_profiles = np.abs(data_dict_cal_lid_l1_next["Profile_Time"][0] -
-    #                                        data_dict_cal_lid_l1["Profile_Time"][-1])
-    #         print(f"\tTime between last profile of previous file and first profile of current file"
-    #             f" = {time_between_profiles:.2f} s")
-    #         if time_between_profiles < 1:
-    #             print("\tAppend next granule")
-    #             next_file_data_used = True
-    #             # Append first profiles of next file to data
-    #             for key in cal_l1_keys:
-    #                 if key != "Lidar_Data_Altitudes":
-    #                     data_dict_cal_lid_l1[key] = np.append(data_dict_cal_lid_l1[key],
-    #                                                           data_dict_cal_lid_l1_next[key], axis=0)
-    #         else:
-    #             print("\tNext granule does not seem consecutive.")
-    #     else:
-    #         print("\tNo next file to load.")
 
     print_elapsed_time(tic)
 
@@ -925,12 +837,7 @@ if __name__ == '__main__':
     nb_vert_bins_180m_R3 = int((END_INDEX_R3 - START_INDEX_R3 + 1)/3)
     
     # Get first profile ID of chunk
-    if PREVIOUS_GRANULE:
-        print("cal_l1_prev.prof_min:", cal_l1_prev.prof_min)
-        prof_index_first_in_chunk = get_first_profileID_of_chunk(cal_l1_prev.prof_min)
-        print("prof_index_first_in_chunk:", prof_index_first_in_chunk)
-    else:
-        prof_index_first_in_chunk = get_first_profileID_of_chunk(cal_l1.prof_min)
+    prof_index_first_in_chunk = get_first_profileID_of_chunk(cal_l1.prof_min)
     
     # Get number of 5-km chunks
     nb_chunk_5km = int(data_dict_cal_lid_l1["Latitude"][prof_index_first_in_chunk:].size/NB_HORIZ_BINS_TO_AVERAGE)
@@ -1122,7 +1029,7 @@ if __name__ == '__main__':
     
     # Create folder to store output data
     granule_date_dict = split_granule_date(GRANULE_DATE)
-    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSCs.{VERSION_2D_McDA.replace('V', 'v')}",
+    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSCs.{VERSION_2D_McDA_PSC.replace('V', 'v')}",
                                   str(granule_date_dict['year']), f"{granule_date_dict['year']}_"
                                                                   f"{granule_date_dict['month']:02d}_"
                                                                   f"{granule_date_dict['day']:02d}")
