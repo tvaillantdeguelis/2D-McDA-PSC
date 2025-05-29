@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # coding: utf8
 
+import sys
 from datetime import datetime
+
 import numpy as np
 from pyhdf.SD import SD
 import matplotlib as mpl
@@ -147,8 +149,7 @@ class FigureMaker(CALIOPFigureMaker):
         pc = plt.pcolormesh(self.pindexbins, self.altbins, mask.T, cmap=my_cmap,
                             norm=my_norm, rasterized=True)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
-        title = "Composite\ best\ detection\ level"
-        plt.title(r'$\mathbf{%s}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
+        plt.title(r'$\mathbf{Composite\ best\ detection\ level}$' % title, fontsize=self.axes_titlesize, y=self.axes_title_pad)
 
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
@@ -178,11 +179,11 @@ class FigureMaker(CALIOPFigureMaker):
                             '1.0', '1.5', '2.0', '3.0', '5.0']
         for j, bound in enumerate(minor_bounds):
             cbar.ax.text(2, bound, cbar_minor_label[j], va='center', fontsize=6)
-        cbar_major_label = ['$\mathbf{×10^{-5}}$', '$\mathbf{×10^{-4}}$', '$\mathbf{×10^{-3}}$', '$\mathbf{×10^{-2}}$']
+        cbar_major_label = [r'$\mathbf{×10^{-5}}$', r'$\mathbf{×10^{-4}}$', r'$\mathbf{×10^{-3}}$', r'$\mathbf{×10^{-2}}$']
         c_bar_major_values = np.array((1e-5, 1e-4, 1e-3, 1e-2))
         for j, bound in enumerate(c_bar_major_values):
             cbar.ax.text(3.5, bound, cbar_major_label[j], va='center', fontsize=8)
-        cbar.set_label(label=r"$\langle\beta'\rangle$ (km$^{-1}$ sr$^{-1}$)")
+        cbar.set_label(label=r"$\langle\beta^{\prime}\rangle$ (km$^{-1}$ sr$^{-1}$)")
 
     def plot_ab_signal(self, ab_signal, title, filename):
         # sourcery skip: merge-comparisons, merge-duplicate-blocks, remove-redundant-if
@@ -237,10 +238,10 @@ class FigureMaker(CALIOPFigureMaker):
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
         cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
-        cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
+        cbar.set_label(label=r"$\beta^{\prime}$ (km$^{-1}$ sr$^{-1}$)", labelpad=45)
         # cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
         # cbar.ax.tick_params(which='both', labelright=False)
-        # cbar_major_label = ['$10^{-5}$', '$10^{-4}$', '$10^{-3}$', '$10^{-2}$']
+        # cbar_major_label = [r'$10^{-5}$', r'$10^{-4}$', r'$10^{-3}$', r'$10^{-2}$']
         # for j, bound in enumerate(np.array((1e-5, 1e-4, 1e-3, 1e-2))):
         #     cbar.ax.text(2, bound, cbar_major_label[j], va='center', fontsize=9)
         # # cbar.ax.ticklabel_format(style="scientific", scilimits=(0, 0))
@@ -251,7 +252,7 @@ class FigureMaker(CALIOPFigureMaker):
         #                                  np.arange(2,10)*1e-2))
         # cbar.ax.yaxis.set_minor_locator(FixedLocator(minor_locators))
         # cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both')
-        # cbar.set_label(label=r"$\beta'$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=45)
+        # cbar.set_label(label=r"$\beta^{\prime}$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=45)
         # self.backscatter_cbar_labels(cbar)
 
         # Save figure
@@ -294,7 +295,7 @@ class FigureMaker(CALIOPFigureMaker):
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
         cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
-        cbar.set_label(label="$R'$", labelpad=45)
+        cbar.set_label(label=r"$R'$", labelpad=45)
         cbar.ax.yaxis.set_major_locator(FixedLocator(np.array((1, 10, 50))))
         cbar.ax.set_yticklabels(['1', '10', '50'])
 
@@ -390,11 +391,11 @@ class FigureMaker(CALIOPFigureMaker):
         # Plot colorbar
         ax1 = plt.subplot(gs0[1])
         # cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both', drawedges=False)
-        # cbar.set_label(label=r"$\langle\beta'\rangle$ (km$^{-1}$ sr$^{-1}$)")
+        # cbar.set_label(label=r"$\langle\beta^{\prime}\rangle$ (km$^{-1}$ sr$^{-1}$)")
         # cbar.ax.yaxis.set_major_locator(LogLocator(numticks=15))
         # cbar.ax.yaxis.set_minor_locator(LogLocator(numticks=15, subs=np.arange(0.2, 1, 0.1)))
         cbar = plt.colorbar(pc, cax=ax1, orientation='vertical', extend='both')
-        cbar.set_label(label=r"$\langle\beta'\rangle$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=40)
+        cbar.set_label(label=r"$\langle\beta^{\prime}\rangle$ (km$^{-1}$ sr$^{-1}$)", fontsize=8, labelpad=40)
         self.backscatter_cbar_labels(cbar)
 
         # Save figure
@@ -686,7 +687,7 @@ class FigureMaker(CALIOPFigureMaker):
         acr_signal[(acr_signal<0) & ~acr_signal.mask] = 1e-9
         pc = plt.pcolormesh(self.pindexbins, self.altbins, acr_signal.T, cmap=my_cmap, norm=my_norm)
         self.plot_params(ax0, YMIN, YMAX, INVERT_XAXIS, flag_granule=FLAG_GRANULE)
-        plt.title("$\mathbf{Attenuated\ Color\ Ratio}\ \\frac{\\beta'_{1064}}{\\beta'_{532}}$", fontsize=self.axes_titlesize, y=self.axes_title_pad5)
+        plt.title(r"$\mathbf{Attenuated\ Color\ Ratio}\ \frac{\beta^{\prime}_{1064}}{\beta^{\prime}_{532}}$", fontsize=self.axes_titlesize, y=self.axes_title_pad5)
         plt.text(0.02, 0.85, "(5km×180m)", ha='left', va='center', transform=fig.transFigure)
         
         # Plot colorbar
@@ -812,7 +813,7 @@ class FigureMaker(CALIOPFigureMaker):
         plt.figure(figsize=(10, 5))
         plt.hist(data.flatten(), bins=bins_par)
         plt.xscale("log")
-        plt.xlabel(r"$\beta'_{\parallel}$ (km$^{-1}$ sr$^{-1}$)")
+        plt.xlabel(r"$\beta^{\prime}_{\parallel}$ (km$^{-1}$ sr$^{-1}$)")
         plt.ylabel("Occurrence")
         plt.title(title, weight='bold')
 
@@ -872,8 +873,8 @@ class FigureMaker(CALIOPFigureMaker):
         ax.set_xticks(custom_ticks)
         ax.set_xticklabels([f'{tick}' for tick in custom_ticks])
         plt.colorbar(hb, label="Occurrence")
-        plt.xlabel("$R'_{532}$")
-        plt.ylabel("$\\beta'_{532,\\perp}$")
+        plt.xlabel(r"$R'_{532}$")
+        plt.ylabel(r"$\beta^{\prime}_{532,\perp}$")
         plt.title(title, weight='bold')
 
         # Save figure
@@ -986,13 +987,18 @@ if __name__ == '__main__':
 
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
-    INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/data/"
-    GRANULE_DATE = "2010-01-18T00-19-57ZN_lon_170.68_27.93" # "2011-06-25T00-11-52ZN_lon_5.95_-150.07"
-    VERSION_2D_McDA = "V1.2.0"
+    if len(sys.argv) > 1:
+        GRANULE_DATE =  sys.argv[1]
+        FIGURES_PATH = sys.argv[2]
+    else:
+        GRANULE_DATE = "2011-01-04T04-30-38ZN_lon_111.59_-35.45" # "2011-06-25T00-11-52ZN_lon_5.95_-150.07"
+        FIGURES_PATH = "/home/vaillant/codes/projects/2D_McDA_PSC/out/figures/" # 
+    INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
+    VERSION_2D_McDA = "V1.2.1"
     TYPE_2D_McDA = "Prototype"
-    SLICE_START_END_TYPE = 'longitude' # 'profindex' (of the 2D-McDA file) or 'longitude'
-    SLICE_START = 170.59 # profindex or longitude
-    SLICE_END = 27.95 # profindex or longitude
+    SLICE_START_END_TYPE = 'profindex' # 'profindex' (of the 2D-McDA file) or 'longitude'
+    SLICE_START = None # profindex or longitude
+    SLICE_END = None # profindex or longitude
     EDGES_REMOVAL = 0 # number of prof to remove on both edges of plot
     MAX_DETECT_LEVEL = 5
     PLOT_ALL_STEPS = False
@@ -1000,9 +1006,8 @@ if __name__ == '__main__':
     YMIN = 15
     YMAX = 30
     PLOT_ASPECT_RATIO = "browse" # "browse", "spec" or None
-    FIGURES_PATH = "/home/vaillant/codes/projects/2D_McDA_for_PSCs/out/figures/"
     FIGURES_FILETYPE = 'png' #'png' 'svg'
-    FLAG_GRANULE = False # Write granule name in the plots
+    FLAG_GRANULE = True # Write granule name in the plots
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     
     
@@ -1011,10 +1016,10 @@ if __name__ == '__main__':
     print("\n*****Load 2D-McDA HDF data file...*****")
     
     # Get filename and filepath
-    filename_2d_mcda = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA}-{VERSION_2D_McDA.replace('.', '-')}." \
+    filename_2d_mcda = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA}-{VERSION_2D_McDA.replace('.', '-')}." \
                        f"{GRANULE_DATE}.hdf"
     granule_date_dict = split_granule_date(GRANULE_DATE)
-    hdffile = os.path.join(INDATA_FOLDER, f"2D_McDA_PSCs.{VERSION_2D_McDA.replace('V', 'v')}",
+    hdffile = os.path.join(INDATA_FOLDER, f"2D_McDA_PSC.{VERSION_2D_McDA.replace('V', 'v')}",
                            str(granule_date_dict['year']),
                            f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_"
                            f"{granule_date_dict['day']:02d}",
@@ -1031,9 +1036,15 @@ if __name__ == '__main__':
     if SLICE_START_END_TYPE == 'longitude':
         prof_min, prof_max = get_prof_min_max_indexes_from_lon(lon, SLICE_START, SLICE_END)
     else:
-        prof_min = SLICE_START
-        prof_max = SLICE_END
-        
+        if SLICE_START:
+            prof_min = SLICE_START
+        else:
+            prof_min = 0
+        if SLICE_END:
+            prof_max = SLICE_END
+        else:
+            prof_max = lat.size - 1
+
     # Print lat/lon of min and max prof indices
     print(f"\tFrom min profile index {prof_min:d} "
           f"(lat = {lat[prof_min]:.2f} / lon = {lon[prof_min]:.2f}) "
@@ -1052,19 +1063,19 @@ if __name__ == '__main__':
         "Parallel_Detection_Flags_532",
         "Perpendicular_Detection_Flags_532",
         "Detection_Flags_1064",
-        "Composite_Detection_Flags",
-        "Homogeneous_Chunks_Mask",
-        "Homogeneous_Chunks_Classification",
-        "Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532",
-        "Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532",
-        "Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064",
-        "Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"
+        "Composite_Detection_Flags"
     ] + ["Parallel_Attenuated_Backscatter_532",
          "Perpendicular_Attenuated_Backscatter_532",
-         "Attenuated_Backscatter_1064",
-         "Molecular_Parallel_Attenuated_Backscatter_532",
-         "Molecular_Perpendicular_Attenuated_Backscatter_532",
-         "Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"]
+         "Attenuated_Backscatter_1064"]
+    # ] + ["Homogeneous_Chunks_Mask",
+    #     "Homogeneous_Chunks_Classification",
+    #     "Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532",
+    #     "Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532",
+    #     "Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064",
+    #     "Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"
+    # ] + ["Molecular_Parallel_Attenuated_Backscatter_532",
+    #      "Molecular_Perpendicular_Attenuated_Backscatter_532",
+    #      "Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"]
     for key in cal_2d_mcda_keys:
         data_dict_cal_2d_mcda[key] = cal_2d_mcda.get_data(key, SLICE_START, SLICE_END, SLICE_START_END_TYPE)
 
@@ -1158,90 +1169,90 @@ if __name__ == '__main__':
                              data_dict_cal_2d_mcda["Altitude"])
     
     # Plot signals
-    if False:
+    if True:
         filename = "ab_532_par"
-        title = "$\mathbf{532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{532,\\parallel}$"
+        title = r"$\mathbf{532\ nm\ Parallel\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"], title, filename)
 
         filename = "ab_532_per"
-        title = "$\mathbf{532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        title = r"$\mathbf{532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\perp}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
         filename = "ab_1064"
-        title = "$\mathbf{1064\ nm\ Attenuated\ Backscatter}\ \\beta'_{1064}$"
+        title = r"$\mathbf{1064\ nm\ Attenuated\ Backscatter}\ \beta^{\prime}_{1064}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Attenuated_Backscatter_1064"], title, filename)
 
     if False:
         filename = "mol_ab_532_par"
-        title = "$\mathbf{532\ nm\ Molecular\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{m,532,\\parallel}$"
+        title = r"$\mathbf{532\ nm\ Molecular\ Parallel\ Attenuated\ Backscatter}\ \beta^{\prime}_{m,532,\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"], title, filename)
 
         filename = "mol_ab_532_per"
-        title = "$\mathbf{532\ nm\ Molecular\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{m,532,\\perp}$"
+        title = r"$\mathbf{532\ nm\ Molecular\ Perpendicular\ Attenuated\ Backscatter}\ \beta^{\prime}_{m,532,\perp}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
         filename = "mol_ab_1064"
-        title = "$\mathbf{1064\ nm\ Molecular\ Attenuated\ Backscatter}\ \\beta'_{m,1064}$"
+        title = r"$\mathbf{1064\ nm\ Molecular\ Attenuated\ Backscatter}\ \beta^{\prime}_{m,1064}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Attenuated_Backscatter_1064"], title, filename)
         
         filename = "background_noise_532_par"
-        title = "$\mathbf{532\ nm\ Parallel\ Background\ Noise}\ \\Delta\\beta'_{b,532,\\parallel}$"
+        title = r"$\mathbf{532\ nm\ Parallel\ Background\ Noise}\ \Delta\beta^{\prime}_{b,532,\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Background_Noise_532_Parallel"], title, filename)
 
         filename = "background_noise_532_per"
-        title = "$\mathbf{532\ nm\ Perpendicular\ Background\ Noise}\ \\Delta\\beta'_{b,532,\\perp}$"
+        title = r"$\mathbf{532\ nm\ Perpendicular\ Background\ Noise}\ \Delta\beta^{\prime}_{b,532,\perp}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Background_Noise_532_Perpendicular"], title, filename)
 
         filename = "background_noise_1064"
-        title = "$\mathbf{1064\ nm\ Background\ Noise}\ \\Delta\\beta'_{b,1064}$"
+        title = r"$\mathbf{1064\ nm\ Background\ Noise}\ \Delta\beta^{\prime}_{b,1064}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Background_Noise_1064"], title, filename)
 
         filename = "nsf_532_par"
-        title = "$\mathbf{532\ nm\ Parallel\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\\beta',532,\\parallel}$"
+        title = r"$\mathbf{532\ nm\ Parallel\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\beta^{\prime},532,\parallel}$"
         plot_fig.plot_nsf(data_dict_cal_2d_mcda["Noise_Scale_Factor_532_Parallel_AB_domain"], title, filename)
 
         filename = "nsf_532_per"
-        title = "$\mathbf{532\ nm\ Perpendicular\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\\beta',532,\\perp}$"
+        title = r"$\mathbf{532\ nm\ Perpendicular\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\beta^{\prime},532,\perp}$"
         plot_fig.plot_nsf(data_dict_cal_2d_mcda["Noise_Scale_Factor_532_Perpendicular_AB_domain"], title, filename)
 
         filename = "nsf_1064"
-        title = "$\mathbf{1064\ nm\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\\beta',1064}$"
+        title = r"$\mathbf{1064\ nm\ Noise\ Scale\ Factor}\ \mathrm{NSF}_{\beta^{\prime},1064}$"
         plot_fig.plot_nsf(data_dict_cal_2d_mcda["Noise_Scale_Factor_1064_AB_domain"], title, filename)
 
         filename = "shot_noise_532_par"
-        title = "$\mathbf{532\ nm\ Parallel\ Shot\ Noise}\ \mathrm{NSF}_{\\beta',532,\\parallel} \sqrt{\\beta'_{m,532,\\parallel}}$"
+        title = r"$\mathbf{532\ nm\ Parallel\ Shot\ Noise}\ \mathrm{NSF}_{\beta^{\prime},532,\parallel} \sqrt{\beta^{\prime}_{m,532,\parallel}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Shot_Noise_532_Parallel"], title, filename)
 
         filename = "shot_noise_532_per"
-        title = "$\mathbf{532\ nm\ Perpendicular\ Shot\ Noise}\ \mathrm{NSF}_{\\beta',532,\\perp} \sqrt{\\beta'_{m,532,\\perp}}$"
+        title = r"$\mathbf{532\ nm\ Perpendicular\ Shot\ Noise}\ \mathrm{NSF}_{\beta^{\prime},532,\perp} \sqrt{\beta^{\prime}_{m,532,\perp}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Shot_Noise_532_Perpendicular"], title, filename)
 
         filename = "shot_noise_1064"
-        title = "$\mathbf{1064\ nm\ Shot\ Noise}\ \mathrm{NSF}_{\\beta',1064} \sqrt{\\beta'_{m,1064}}$"
+        title = r"$\mathbf{1064\ nm\ Shot\ Noise}\ \mathrm{NSF}_{\beta^{\prime},1064} \sqrt{\beta^{\prime}_{m,1064}}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Shot_Noise_1064"], title, filename)
 
         filename = "ab_std_532_par"
-        title = "$\mathbf{532\ Parallel\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \\sigma_{\\beta',532,\\parallel}$"
+        title = r"$\mathbf{532\ Parallel\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \sigma_{\beta^{\prime},532,\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel"], title, filename)
 
         filename = "ab_std_532_per"
-        title = "$\mathbf{532\ Perpendicular\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \\sigma_{\\beta',532,\\perp}$"
+        title = r"$\mathbf{532\ Perpendicular\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \sigma_{\beta^{\prime},532,\perp}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular"], title, filename)
 
         filename = "ab_std_1064"
-        title = "$\mathbf{1064\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \\sigma_{\\beta',1064}$"
+        title = r"$\mathbf{1064\ nm\ Attenuated\ Backscatter\ Uncertainty}\ \sigma_{\beta^{\prime},1064}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064"], title, filename)
 
         filename = "threshold_k1_532_par"
-        title = "$\mathbf{532\ Parallel\ nm\ Detection\ Threshold\ (k=1)}$"
+        title = r"$\mathbf{532\ Parallel\ nm\ Detection\ Threshold\ (k=1)}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"]+data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel"], title, filename)
 
         filename = "threshold_k1_532_per"
-        title = "$\mathbf{532\ Perpendicular\ nm\ Detection\ Threshold\ (k=1)}$"
+        title = r"$\mathbf{532\ Perpendicular\ nm\ Detection\ Threshold\ (k=1)}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"]+data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular"], title, filename)
 
         filename = "threshold_k1_1064"
-        title = "$\mathbf{1064\ nm\ Detection\ Threshold\ (k=1)}$"
+        title = r"$\mathbf{1064\ nm\ Detection\ Threshold\ (k=1)}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Molecular_Attenuated_Backscatter_1064"]+data_dict_cal_2d_mcda["Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064"], title, filename)
 
         # plot_fig.plot_attenuated_color_ratio(data_dict_cal_2d_mcda['Attenuated_Backscatter_1064']/\
@@ -1249,7 +1260,7 @@ if __name__ == '__main__':
 
 
     # Plot the 3 channel masks
-    if False:
+    if True:
         plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Parallel_Detection_Flags_532"], '532_par')
         plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Perpendicular_Detection_Flags_532"], '532_per')
         plot_fig.plot_mask(None, data_dict_cal_2d_mcda["Detection_Flags_1064"], '1064')
@@ -1258,29 +1269,30 @@ if __name__ == '__main__':
     if False:
         plot_fig.plot_composite_mask(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
         plot_fig.plot_composite_mask_strong_weak(mask_weak_strong)
-        plot_fig.plot_composite_mask_channel(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
         plot_fig.plot_best_detection_mask(best_detection_level_mask)
+    if True:
+        plot_fig.plot_composite_mask_channel(data_dict_cal_2d_mcda["Composite_Detection_Flags"])
     if False:
         plot_fig.plot_psc_composition(data_dict_cal_2d_mcda["Homogeneous_Chunks_Classification"])
 
         filename = "homogeneous_chunks_separation_in_4_colors"
-        title = "$\mathbf{Homogeneous\ Chunks\ Boundaries}$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Boundaries}$"
         plot_fig.plot_hom_4_colors(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mask"], title, filename)
 
         filename = "homogeneous_chunks_mean_ab_532_par"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\parallel}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\parallel}\rangle$"
         plot_fig.plot_hom_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532"], title, filename)
 
         filename = "homogeneous_chunks_mean_ab_532_per"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\perp}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\perp}\rangle$"
         plot_fig.plot_hom_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
         filename = "homogeneous_chunks_mean_ab_1064"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \\langle\\beta'_{1064}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{1064}\rangle$"
         plot_fig.plot_hom_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064"], title, filename)
 
         filename = "homogeneous_chunks_mean_asr_532"
-        title = "$\mathbf{Mean\ Attenuated\ 532\ nm\ Scattering\ Ratio}\ \\langle R'_{532}\\rangle$"
+        title = r"$\mathbf{Mean\ Attenuated\ 532\ nm\ Scattering\ Ratio}\ \langle R'_{532}\rangle$"
         plot_fig.plot_hom_asr_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"], title, filename)
 
     if False:
@@ -1288,7 +1300,7 @@ if __name__ == '__main__':
         sr532 = (data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])/(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"])
         feature_5km_180m_sr532_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, sr532)
         filename = "feature_5km_180m_sr532"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
         plot_fig.plot_sr532_signal(feature_5km_180m_sr532_signal, title, filename)
 
 
@@ -1299,37 +1311,37 @@ if __name__ == '__main__':
         # 532par
         hom_chunks_mean_532par_signal = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532"][:, alt_idx_above_15km]
         filename = "homogeneous_chunks_mean_ab_532_par_distribution"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\parallel}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\parallel}\rangle$"
         plot_fig.plot_ab_signal_distribution(hom_chunks_mean_532par_signal, title, filename)
 
         feature_5km_180m_532par_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"])
         feature_5km_180m_532par_signal = feature_5km_180m_532par_signal[:, alt_idx_above_15km]
         filename = "feature_5km_180m_ab_532_par_distribution"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{532,\\parallel}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\parallel}$"
         plot_fig.plot_ab_signal_distribution(feature_5km_180m_532par_signal.compressed(), title, filename)
 
         # 532per
         hom_chunks_mean_532per_signal = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532"][:, alt_idx_above_15km]
         filename = "homogeneous_chunks_mean_ab_532_per_distribution"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\perp}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\perp}\rangle$"
         plot_fig.plot_ab_signal_distribution(hom_chunks_mean_532per_signal, title, filename)
 
         feature_5km_180m_532per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])
         feature_5km_180m_532per_signal = feature_5km_180m_532per_signal[:, alt_idx_above_15km]
         filename = "feature_5km_180m_ab_532_per_distribution"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\perp}$"
         plot_fig.plot_ab_signal_distribution(feature_5km_180m_532per_signal.compressed(), title, filename)
 
         # 1064
         hom_chunks_mean_1064_signal = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064"][:, alt_idx_above_15km]
         filename = "homogeneous_chunks_mean_ab_1064_distribution"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \\langle\\beta'_{1064}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{1064}\rangle$"
         plot_fig.plot_ab_signal_distribution(hom_chunks_mean_1064_signal, title, filename)
 
         feature_5km_180m_1064_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Attenuated_Backscatter_1064"])
         feature_5km_180m_1064_signal = feature_5km_180m_1064_signal[:, alt_idx_above_15km]
         filename = "feature_5km_180m_ab_1064_distribution"
-        title = "$\mathbf{Feature\ 5km×180m\ 1064\ nm\ Attenuated\ Backscatter}\ \\beta'_{1064}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 1064\ nm\ Attenuated\ Backscatter}\ \beta^{\prime}_{1064}$"
         plot_fig.plot_ab_signal_distribution(feature_5km_180m_1064_signal.compressed(), title, filename)
 
         # SR532 vs 532per
@@ -1337,32 +1349,32 @@ if __name__ == '__main__':
         feature_5km_180m_sr532_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, sr532)
         feature_5km_180m_sr532_signal = feature_5km_180m_sr532_signal[:, alt_idx_above_15km]
         filename = "feature_5km_180m_sr532_vs_532per_distribution"
-        title = "$\mathbf{Feature\ 5km×180m}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
+        title = r"$\mathbf{Feature\ 5km×180m}\ \beta^{\prime}_{532,\perp}\ \mathbf{vs}\ R'_{532}$"
         plot_fig.plot_532per_vs_sr532(feature_5km_180m_sr532_signal, feature_5km_180m_532per_signal, title, filename)
 
         hom_chunks_mean_sr532 = data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532"][:, alt_idx_above_15km]
         filename = "homogeneous_chunks_mean_sr532_vs_532per_distribution"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean}\ \beta^{\prime}_{532,\perp}\ \mathbf{vs}\ R'_{532}$"
         plot_fig.plot_532per_vs_sr532(hom_chunks_mean_sr532, hom_chunks_mean_532per_signal, title, filename)    
 
     # Plot signal of the largest homogeneous chunk
-    if True:
+    if False:
         largest_chunk_mask = get_largest_chunk(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mask"])
         
         feature_5km_180m_per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])
         feature_5km_180m_per_signal[~largest_chunk_mask] = np.ma.masked
         filename = "largest_chunk_feature_5km_180m_ab_532_per"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\perp}$"
         plot_fig.plot_ab_signal(feature_5km_180m_per_signal, title, filename)
 
         feature_5km_180m_sr532_signal = (data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])/(data_dict_cal_2d_mcda["Molecular_Parallel_Attenuated_Backscatter_532"] + data_dict_cal_2d_mcda["Molecular_Perpendicular_Attenuated_Backscatter_532"])
         feature_5km_180m_sr532_signal[~largest_chunk_mask] = np.ma.masked
         filename = "largest_chunk_feature_5km_180m_sr532"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Attenuated\ Scattering\ Ratio}\ R'_{532}$"
         plot_fig.plot_sr532_signal(feature_5km_180m_sr532_signal, title, filename)
 
     # Plot signal distribution for the largest homogeneous chunk
-    if True:
+    if False:
         alt_idx_above_15km = np.where(data_dict_cal_2d_mcda["Altitude"] >= 15)[0]
 
         largest_chunk_mask = get_largest_chunk(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mask"])
@@ -1385,7 +1397,7 @@ if __name__ == '__main__':
         hom_chunks_mean_532per_signal = np.ma.max(hom_chunks_mean_532per_signal[largest_chunk_mask]) # get a unique value
 
         filename = "largest_chunk_feature_5km_180m_sr532_vs_532per_distribution"
-        title = "$\mathbf{Feature\ 5km×180m}\ \\beta'_{532,\\perp}\ \mathbf{vs}\ R'_{532}$"
+        title = r"$\mathbf{Feature\ 5km×180m}\ \beta^{\prime}_{532,\perp}\ \mathbf{vs}\ R'_{532}$"
         plot_fig.plot_532per_vs_sr532(feature_5km_180m_sr532_signal, feature_5km_180m_532per_signal, title, filename, hom_chunks_mean_sr532, hom_chunks_mean_532per_signal)
 
 
@@ -1393,32 +1405,32 @@ if __name__ == '__main__':
     if False:
         # 532par
         filename = "homogeneous_chunks_mean_ab_532_par_bis"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\parallel}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\parallel}\rangle$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532"], title, filename)
 
         feature_5km_180m_par_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"])
         filename = "feature_5km_180m_ab_532_par"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \\beta'_{532,\\parallel}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Parallel\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\parallel}$"
         plot_fig.plot_ab_signal(feature_5km_180m_par_signal, title, filename)
 
         # 532per
         filename = "homogeneous_chunks_mean_ab_532_per_bis"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\langle\\beta'_{532,\\perp}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{532,\perp}\rangle$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532"], title, filename)
 
         feature_5km_180m_per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Perpendicular_Attenuated_Backscatter_532"])
         filename = "feature_5km_180m_ab_532_per"
-        title = "$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \\beta'_{532,\\perp}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 532\ nm\ Perpendicular\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\perp}$"
         plot_fig.plot_ab_signal(feature_5km_180m_per_signal, title, filename)
 
         # 1064
         filename = "homogeneous_chunks_mean_ab_1064_bis"
-        title = "$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \\langle\\beta'_{1064}\\rangle$"
+        title = r"$\mathbf{Homogeneous\ Chunks\ Mean\ 1064\ nm\ Attenuated\ Backscatter}\ \langle\beta^{\prime}_{1064}\rangle$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064"], title, filename)
 
         feature_5km_180m_per_signal = np.ma.masked_where(data_dict_cal_2d_mcda["Composite_Detection_Flags"] == 1, data_dict_cal_2d_mcda["Attenuated_Backscatter_1064"])
         filename = "feature_5km_180m_ab_1064"
-        title = "$\mathbf{Feature\ 5km×180m\ 1064\ nm\ Attenuated\ Backscatter}\ \\beta'_{1064}$"
+        title = r"$\mathbf{Feature\ 5km×180m\ 1064\ nm\ Attenuated\ Backscatter}\ \beta^{\prime}_{1064}$"
         plot_fig.plot_ab_signal(feature_5km_180m_per_signal, title, filename)
 
     # Plot every steps

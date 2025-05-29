@@ -27,6 +27,7 @@ OUT_FILETYPE='HDF' # 'HDF' or 'netCDF'
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."
 OUT_FOLDER="/work_users/vaillant/data/2D_McDA_PSC/"
+MAX_NB_JOBS=101
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 # Initialization
@@ -36,7 +37,6 @@ currentdate=$START_DATE
 data_file_l1_head="CAL_LID_L1-${TYPE_CAL_LID_L1}-${VERSION_CAL_LID_L1//[.]/-}"
 EXTENSION=".hdf"
 GRANULE_DATE_SIZE=21
-MAX_NB_JOBS=101
 
 # Loop on each day between 'START_DATE' and 'END_DATE'
 while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
@@ -73,7 +73,7 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
 
             # Run 2D-McDA
             jobname="2D-McDA-PSC_${granule_date}"
-            echo -n "Launching job $jobname:"
+            echo -n '['$(date)'] Launching job $jobname: '
             sbatch --job-name="$jobname" \
                    --error=./out/slurm/"${jobname}.e" \
                    --output=./out/slurm/"${jobname}.o" \

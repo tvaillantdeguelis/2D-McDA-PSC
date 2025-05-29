@@ -384,7 +384,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
-    filename = f"CAL_LID_L2_2D_McDA_PSCs-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-')}." \
+    filename = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-')}." \
                 f"{GRANULE_DATE}{filename_end}"
     
     if filetype == 'HDF':
@@ -592,7 +592,7 @@ if __name__ == '__main__':
         OUT_FOLDER = sys.argv[12]
         OUT_FILETYPE = sys.argv[13]
     else:
-        GRANULE_DATE = "2010-01-18T00-19-57ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2011-01-04T04-30-38ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
@@ -600,7 +600,7 @@ if __name__ == '__main__':
         SLICE_END = None # 27.93 # profindex or longitude
         LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
-        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
+        SAVE_DEVELOPMENT_DATA = True # if True save step by step data
         VERSION_2D_McDA_PSC = "V1.2.1"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
