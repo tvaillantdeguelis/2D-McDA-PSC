@@ -1004,7 +1004,7 @@ if __name__ == '__main__':
     PLOT_ALL_STEPS = False
     INVERT_XAXIS = False
     YMIN = 15
-    YMAX = 30
+    YMAX = 40
     PLOT_ASPECT_RATIO = "browse" # "browse", "spec" or None
     FIGURES_FILETYPE = 'png' #'png' 'svg'
     FLAG_GRANULE = True # Write granule name in the plots
