@@ -6,6 +6,7 @@ __pycache__/
 # Folders
 slurm/
 in/
+test/
 
 # C extensions
 *.so

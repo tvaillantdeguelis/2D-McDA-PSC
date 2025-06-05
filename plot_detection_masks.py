@@ -1063,10 +1063,10 @@ if __name__ == '__main__':
         "Parallel_Detection_Flags_532",
         "Perpendicular_Detection_Flags_532",
         "Detection_Flags_1064",
-        "Composite_Detection_Flags"
-    ] + ["Parallel_Attenuated_Backscatter_532",
-         "Perpendicular_Attenuated_Backscatter_532",
-         "Attenuated_Backscatter_1064"]
+        "Composite_Detection_Flags"]
+    # ] + ["Parallel_Attenuated_Backscatter_532",
+    #      "Perpendicular_Attenuated_Backscatter_532",
+    #      "Attenuated_Backscatter_1064"]
     # ] + ["Homogeneous_Chunks_Mask",
     #     "Homogeneous_Chunks_Classification",
     #     "Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532",
@@ -1169,7 +1169,7 @@ if __name__ == '__main__':
                              data_dict_cal_2d_mcda["Altitude"])
     
     # Plot signals
-    if True:
+    if False:
         filename = "ab_532_par"
         title = r"$\mathbf{532\ nm\ Parallel\ Attenuated\ Backscatter}\ \beta^{\prime}_{532,\parallel}$"
         plot_fig.plot_ab_signal(data_dict_cal_2d_mcda["Parallel_Attenuated_Backscatter_532"], title, filename)

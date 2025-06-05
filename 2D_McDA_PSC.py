@@ -601,8 +601,8 @@ if __name__ == '__main__':
         SLICE_END = None # 27.93 # profindex or longitude
         LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
-        SAVE_DEVELOPMENT_DATA = True # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.2.1"
+        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
+        VERSION_2D_McDA_PSC = "V1.3.1"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'HDF' # 'HDF' or 'netCDF'
