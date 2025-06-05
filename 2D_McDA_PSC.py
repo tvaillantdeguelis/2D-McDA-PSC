@@ -602,7 +602,7 @@ if __name__ == '__main__':
         LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.3.1"
+        VERSION_2D_McDA_PSC = "V1.3.2"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'HDF' # 'HDF' or 'netCDF'
@@ -820,7 +820,7 @@ if __name__ == '__main__':
     print_elapsed_time(tic)
 
 
-    # *********************************************************************
+    # *******************************************************************************
     # *** Get data between 8.2 km and 30.1 (or 40.0) km at 5-km×180-m resolution  ***
     print("\n*****Get data between 8.2 km and 30.1 (or 40.0) km at 5-km×180-m resolution ...*****")
 
@@ -854,7 +854,7 @@ if __name__ == '__main__':
     # 1-D vertical data at 180-m resolution
     for key in ["Lidar_Data_Altitudes",]:
         # Initialization
-        data_dict_5kmx180m[key] = np.ma.ones(nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3)*FILL_VALUE_FLOAT
+        data_dict_5kmx180m[key] = np.ones(nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3)*FILL_VALUE_FLOAT
         if PROCESS_UP_TO_40KM:
             # Add 180 m nb_vert_bins_180m_R5 times from START_INDEX_R4
             data_dict_5kmx180m[key][:nb_vert_bins_180m_R5] = data_dict_cal_lid_l1[key][START_INDEX_R4] + 0.180*(nb_vert_bins_180m_R5 - np.arange(nb_vert_bins_180m_R5))
@@ -877,29 +877,55 @@ if __name__ == '__main__':
         key_list = key_list + ["Background_Noise_532_Parallel", "Background_Noise_532_Perpendicular", "Background_Noise_1064", 
                                "Shot_Noise_532_Parallel", "Shot_Noise_532_Perpendicular", "Shot_Noise_1064",
                                "Noise_Scale_Factor_532_Parallel_AB_domain", "Noise_Scale_Factor_532_Perpendicular_AB_domain", "Noise_Scale_Factor_1064_AB_domain"]
+    # Average data
     for key in key_list:
         # Initialization
         data_dict_5kmx180m[key] = np.ma.ones((nb_chunk_5km, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3))*FILL_VALUE_FLOAT
-        # Average data
-        for prof_i in np.arange(nb_chunk_5km):
-            if PROCESS_UP_TO_40KM: 
-                # Average horizontally
-                data_R5_300m = np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE, START_INDEX_R5:END_INDEX_R5+2], axis=0)
-                # Interpolate vertically from 300 m to 180 m
-                alts_R5_300m = data_dict_cal_lid_l1["Lidar_Data_Altitudes"][START_INDEX_R5:END_INDEX_R5+2]
-                alts_R5_180m = data_dict_5kmx180m["Lidar_Data_Altitudes"][:nb_vert_bins_180m_R5]
-                f_interp = interp1d(alts_R5_300m, data_R5_300m, kind='linear', bounds_error=False, fill_value='extrapolate')
-                data_dict_5kmx180m[key][prof_i, :nb_vert_bins_180m_R5] = f_interp(np.array(alts_R5_180m))
-            for alt_i in np.arange(nb_vert_bins_180m_R4):
-                # Average horizontally and vertically
-                data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+alt_i] =\
-                    np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
-                                                         START_INDEX_R4+alt_i])
-            for alt_i in np.arange(nb_vert_bins_180m_R3):
-                # Average horizontally and vertically
-                data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+alt_i] =\
-                    np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
-                                                         START_INDEX_R3+alt_i*NB_VERT_BINS_TO_AVERAGE_IN_R3:START_INDEX_R3+(alt_i+1)*NB_VERT_BINS_TO_AVERAGE_IN_R3])
+
+        # Horizontal averaging of the whole dataset over 15-profile chunks (5 km resolution)
+        data = data_dict_cal_lid_l1[key][cal_lid_l1_prof_index_range_mult_of_15, :]
+        data_15_prof_chunks = data.reshape(nb_chunk_5km, NB_HORIZ_BINS_TO_AVERAGE, -1)
+        data_5km = np.ma.mean(data_15_prof_chunks, axis=1) 
+
+        # Vertical averaging/interpolation per vertical region on data_5km
+        if PROCESS_UP_TO_40KM:
+            # R5 vertical interpolation from 300 m to 180 m
+            alts_R5_300m = data_dict_cal_lid_l1["Lidar_Data_Altitudes"][START_INDEX_R5:END_INDEX_R5+2]
+            alts_R5_180m = data_dict_5kmx180m["Lidar_Data_Altitudes"][:nb_vert_bins_180m_R5]
+            data_R5_300m = data_5km[:, START_INDEX_R5:END_INDEX_R5+2]  
+            f_interp = interp1d(alts_R5_300m, data_R5_300m, kind='linear', axis=1, bounds_error=False, fill_value='extrapolate')
+            data_dict_5kmx180m[key][:, :nb_vert_bins_180m_R5] = f_interp(alts_R5_180m)
+        # R4 region: already at 180-m resolution, just copy averaged data in altitude range
+        data_dict_5kmx180m[key][:, nb_vert_bins_180m_R5:nb_vert_bins_180m_R5+nb_vert_bins_180m_R4] = data_5km[:, START_INDEX_R4:END_INDEX_R4+1]
+        # R3 region: vertical averaging over groups of 3 bins (60m -> 180m)
+        R3_data = data_5km[:, START_INDEX_R3:END_INDEX_R3+1] 
+        R3_3_vert_bins = R3_data.reshape(nb_chunk_5km, nb_vert_bins_180m_R3, NB_VERT_BINS_TO_AVERAGE_IN_R3)
+        data_dict_5kmx180m[key][:, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = np.ma.mean(R3_3_vert_bins, axis=2)
+
+
+
+
+        # # Initialization
+        # data_dict_5kmx180m[key] = np.ma.ones((nb_chunk_5km, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3))*FILL_VALUE_FLOAT
+        # for prof_i in np.arange(nb_chunk_5km):
+        #     if PROCESS_UP_TO_40KM: 
+        #         # Average horizontally
+        #         data_R5_300m = np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE, START_INDEX_R5:END_INDEX_R5+2], axis=0)
+        #         # Interpolate vertically from 300 m to 180 m
+        #         alts_R5_300m = data_dict_cal_lid_l1["Lidar_Data_Altitudes"][START_INDEX_R5:END_INDEX_R5+2]
+        #         alts_R5_180m = data_dict_5kmx180m["Lidar_Data_Altitudes"][:nb_vert_bins_180m_R5]
+        #         f_interp = interp1d(alts_R5_300m, data_R5_300m, kind='linear', bounds_error=False, fill_value='extrapolate')
+        #         data_dict_5kmx180m[key][prof_i, :nb_vert_bins_180m_R5] = f_interp(np.array(alts_R5_180m))
+        #     # for alt_i in np.arange(nb_vert_bins_180m_R4):
+        #     #     # Average horizontally and vertically
+        #     #     data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+alt_i] =\
+        #     #         np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
+        #     #                                              START_INDEX_R4+alt_i])
+        #     for alt_i in np.arange(nb_vert_bins_180m_R3):
+        #         # Average horizontally and vertically
+        #         data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+alt_i] =\
+        #             np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
+        #                                                  START_INDEX_R3+alt_i*NB_VERT_BINS_TO_AVERAGE_IN_R3:START_INDEX_R3+(alt_i+1)*NB_VERT_BINS_TO_AVERAGE_IN_R3])
 
     # Print number of profiles in the granule
     print(f"\tNumber of 5-km profiles to process: {nb_chunk_5km}")
