@@ -15,19 +15,20 @@ TYPE_CAL_LID_L1="Standard"
 SLICE_START_END_TYPE="latminmax"
 SLICE_START="None"
 SLICE_END="None"
-START_DATE="2010-01-01"
-END_DATE="2010-01-31" # included
+START_DATE="2006-06-12"
+END_DATE="2023-06-30" # included
 LAT_MIN=50
 LAT_MAX="None"
 SAVE_DEVELOPMENT_DATA="False" # if "True" save step by step data
-VERSION_2D_McDA_PSC="V1.2.1"
+VERSION_2D_McDA_PSC="V1.4.0"
 TYPE_2D_McDA_PSC="Prototype"
-OUT_FILETYPE='HDF' # 'HDF' or 'netCDF'
+OUT_FILETYPE='netCDF' # 'HDF' or 'netCDF'
+PROCESS_UP_TO_40KM="True"
 #-----------------------------------------------------------------------
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."
 OUT_FOLDER="/work_users/vaillant/data/2D_McDA_PSC/"
-MAX_NB_JOBS=101
+MAX_NB_JOBS=11
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 # Initialization
@@ -91,7 +92,8 @@ SAVE_DEVELOPMENT_DATA=$SAVE_DEVELOPMENT_DATA,\
 VERSION_2D_McDA_PSC=$VERSION_2D_McDA_PSC,\
 TYPE_2D_McDA_PSC=$TYPE_2D_McDA_PSC,\
 OUT_FOLDER=$OUT_FOLDER,\
-OUT_FILETYPE=$OUT_FILETYPE" \
+OUT_FILETYPE=$OUT_FILETYPE,\
+PROCESS_UP_TO_40KM=$PROCESS_UP_TO_40KM" \
        2D_McDA_PSC.sbatch
         done
     fi

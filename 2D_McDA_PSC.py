@@ -90,7 +90,7 @@ def rm_prof(array, nb_prof_to_remove, side):
 def compute_uncertainty(nb_bins_shift, mol_ab, rms, nsf):
 
     # Definition
-    FCORR = np.array((1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131))
+    FCORR = np.array((1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131)) # values for 180-m vertical resolution
     NB_PIXELS = 15*12 # 5-km horizontal × 180-m vertical resolution
 
     nb_bins_shift_abs = np.squeeze(np.abs(nb_bins_shift))
@@ -622,7 +622,7 @@ if __name__ == '__main__':
     
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
-    if False: # len(sys.argv) > 1:
+    if len(sys.argv) > 1:
         GRANULE_DATE = sys.argv[1]
         VERSION_CAL_LID_L1 = sys.argv[2]
         TYPE_CAL_LID_L1 = sys.argv[3]
@@ -636,8 +636,9 @@ if __name__ == '__main__':
         TYPE_2D_McDA_PSC = sys.argv[11]
         OUT_FOLDER = sys.argv[12]
         OUT_FILETYPE = sys.argv[13]
+        PROCESS_UP_TO_40KM = sys.argv[14]
     else:
-        GRANULE_DATE = "2011-01-04T04-30-38ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2006-06-12T00-53-43ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
@@ -646,7 +647,7 @@ if __name__ == '__main__':
         LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.3.2"
+        VERSION_2D_McDA_PSC = "V1.4.0"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
