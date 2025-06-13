@@ -108,6 +108,7 @@ class DataVar():
         self.data = data
         self.fillvalue = None
         self.units = ''
+        self.long_name = ''
         self.description = ''
         self.dimensions = []
         self.valid_range = ()
@@ -120,76 +121,94 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
     key = 'Profile_ID'
     params[key] = DataVar(key, data_dict_5kmx180m["Profile_ID"])
-    params[key].description = "Profile number from start of file"
+    params[key].long_name = "Profile_ID"
+    params[key].description = "The 8th of 15 consecutive laser shots Profile ID composing the 5-km chunk in CALIOP L1 product."
     # params[key].valid_range = (1, 228630)
     params[key].dimensions = ['Profile_ID']
 
-    key = 'Profile_Time'
-    params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
-    params[key].units = "seconds...TAI"
-    # params[key].valid_range = (4.204e8, 1.072e9)
-    params[key].dimensions = ['Profile_ID']
+    if False:
+        key = 'Profile_Time'
+        params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
+        params[key].units = "seconds...TAI"
+        # params[key].valid_range = (4.204e8, 1.072e9)
+        params[key].dimensions = ['Profile_ID']
 
-    key = 'Profile_UTC_Time'
-    params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
-    params[key].units = "UTC - yymmdd.ffffffff"
-    # params[key].valid_range = (60426.0, 261231.0)
-    params[key].dimensions = ['Profile_ID']
+        key = 'Profile_UTC_Time'
+        params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
+        params[key].units = "UTC - yymmdd.ffffffff"
+        # params[key].valid_range = (60426.0, 261231.0)
+        params[key].dimensions = ['Profile_ID']
 
-    key = 'Latitude'
-    params[key] = DataVar(key, data_dict_5kmx180m["Latitude"])
-    params[key].fillvalue = FILL_VALUE_FLOAT
-    params[key].units = "degrees"
-    # params[key].valid_range = (-90.0, 90.0)
-    params[key].dimensions = ['Profile_ID']
+    if True:
+        key = 'Latitude'
+        params[key] = DataVar(key, data_dict_5kmx180m["Latitude"])
+        params[key].long_name = "Latitude coordinate"
+        params[key].description = "The 8th of 15 consecutive laser shots Latitude composing the 5-km chunk in CALIOP L1 product."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "degree_north"
+        # params[key].valid_range = (-90.0, 90.0)
+        params[key].dimensions = ['Profile_ID']
 
-    key = 'Longitude'
-    params[key] = DataVar(key, data_dict_5kmx180m["Longitude"])
-    params[key].fillvalue = FILL_VALUE_FLOAT
-    params[key].units = "degrees"
-    # params[key].valid_range = (-90.0, 90.0)
-    params[key].dimensions = ['Profile_ID']
+        key = 'Longitude'
+        params[key] = DataVar(key, data_dict_5kmx180m["Longitude"])
+        params[key].long_name = "Longitude coordinate"
+        params[key].description = "The 8th of 15 consecutive laser shots Longitude composing the 5-km chunk in CALIOP L1 product."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "degree_east"
+        # params[key].valid_range = (-90.0, 90.0)
+        params[key].dimensions = ['Profile_ID']
     
     key = 'Altitude'
     params[key] = DataVar(key, data_dict_5kmx180m["Lidar_Data_Altitudes"])
-    params[key].units = "kilometer"
+    params[key].long_name = "Altitude coordinate"
+    params[key].description = "Altitude with 180-m resolution."
+    params[key].units = "km"
     # params[key].valid_range = (-0.5, 30.1)
     params[key].dimensions = ['Altitude']
     
     key = 'Parallel_Detection_Flags_532'
     params[key] = DataVar(key, data_dict_2d_mcda["Parallel_Detection_Flags_532"])
+    params[key].long_name = "532-nm parallel detection flag mask"
+    params[key].description = "Level of detection (1 to 5) mask for the 532 nm parallel channel."
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
     key = 'Perpendicular_Detection_Flags_532'
     params[key] = DataVar(key, data_dict_2d_mcda["Perpendicular_Detection_Flags_532"])
+    params[key].long_name = "532-nm perpendicular detection flag mask"
+    params[key].description = "Level of detection (1 to 5) mask for the 532 nm perpendicular channel."
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
     key = 'Detection_Flags_1064'
     params[key] = DataVar(key, data_dict_2d_mcda["Detection_Flags_1064"])
+    params[key].long_name = "1064-nm detection flag mask"
+    params[key].description = "Level of detection (1 to 5) mask for the 1064 nm channel."
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Composite_Detection_Flags'
-    params[key] = DataVar(key, data_dict_2d_mcda["Composite_Detection_Flags"])
-    params[key].valid_range = (0, 255)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+    if False:
+        key = 'Composite_Detection_Flags'
+        params[key] = DataVar(key, data_dict_2d_mcda["Composite_Detection_Flags"])
+        params[key].description = "Composite detection mask from the 3 detection channels."
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
     
-    key = 'Parallel_Spikes_532'
-    params[key] = DataVar(key, data_dict_2d_mcda_dev["Parallel_Spikes_532"])
-    params[key].valid_range = (0, 1)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-    key = 'Perpendicular_Spikes_532'
-    params[key] = DataVar(key, data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
-    params[key].valid_range = (0, 1)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+    if False:
+        key = 'Parallel_Spikes_532'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Parallel_Spikes_532"])
+        params[key].valid_range = (0, 1)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        
+        key = 'Perpendicular_Spikes_532'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
+        params[key].valid_range = (0, 1)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    key = 'Spikes_1064'
-    params[key] = DataVar(key, data_dict_2d_mcda_dev["Spikes_1064"])
-    params[key].valid_range = (0, 1)
-    params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Spikes_1064'
+        params[key] = DataVar(key, data_dict_2d_mcda_dev["Spikes_1064"])
+        params[key].valid_range = (0, 1)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
 
     if False:
         key = 'Homogeneous_Chunks_Mask'
@@ -221,6 +240,29 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
+
+    if False:
+        key = 'Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
+        params[key].description = "532-nm parallel attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
+        params[key].description = "532-nm perpendicular attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
+        params[key].description = "1064-nm attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
 
     # Parameters saved for development
     if save_development_data:
@@ -403,14 +445,16 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         for key, datavar in params.items():
             if key in dim_keys:
                 nc_dim = NetCDFVariable(key, datavar.data)
-                nc_dim.long_name = datavar.description
+                nc_dim.long_name = datavar.long_name
+                nc_dim.description = datavar.description
                 nc_dim.fillvalue = datavar.fillvalue # might need to check if None if error
                 nc_dim.units = datavar.units
                 nc_dim.dimensions = datavar.dimensions
                 nc_dims.append(nc_dim)
             else:
                 nc_param = NetCDFVariable(key, datavar.data)
-                nc_param.long_name = datavar.description
+                nc_param.long_name = datavar.long_name
+                nc_param.description = datavar.description
                 nc_param.fillvalue = datavar.fillvalue # might need to check if None if error
                 nc_param.units = datavar.units
                 nc_param.dimensions = datavar.dimensions
@@ -605,7 +649,7 @@ if __name__ == '__main__':
         VERSION_2D_McDA_PSC = "V1.3.2"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
-        OUT_FILETYPE = 'HDF' # 'HDF' or 'netCDF'
+        OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
         PROCESS_UP_TO_40KM = True
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
@@ -854,7 +898,7 @@ if __name__ == '__main__':
     # 1-D vertical data at 180-m resolution
     for key in ["Lidar_Data_Altitudes",]:
         # Initialization
-        data_dict_5kmx180m[key] = np.ones(nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3)*FILL_VALUE_FLOAT
+        data_dict_5kmx180m[key] = np.ones(nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3, dtype=np.float32)*FILL_VALUE_FLOAT
         if PROCESS_UP_TO_40KM:
             # Add 180 m nb_vert_bins_180m_R5 times from START_INDEX_R4
             data_dict_5kmx180m[key][:nb_vert_bins_180m_R5] = data_dict_cal_lid_l1[key][START_INDEX_R4] + 0.180*(nb_vert_bins_180m_R5 - np.arange(nb_vert_bins_180m_R5))
@@ -864,7 +908,7 @@ if __name__ == '__main__':
         data_dict_5kmx180m[key][nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = data_dict_cal_lid_l1[key][START_INDEX_R3+1:END_INDEX_R3:3]
 
     # 1-D horizontal data at 5-km resolution
-    for key in ["Latitude", "Longitude", "Number_Bins_Shift", "Profile_ID", "Profile_Time", "Profile_UTC_Time"]: 
+    for key in ["Latitude", "Longitude", "Profile_ID"]: #, "Number_Bins_Shift", "Profile_Time", "Profile_UTC_Time"]: 
         # Take middle (8th) profile of 5-km horizontal bins
         data_dict_5kmx180m[key] = data_dict_cal_lid_l1[key][cal_lid_l1_prof_index_range_mult_of_15][int(NB_HORIZ_BINS_TO_AVERAGE/2)::NB_HORIZ_BINS_TO_AVERAGE]
     
