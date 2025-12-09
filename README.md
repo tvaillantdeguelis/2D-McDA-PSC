@@ -4,10 +4,6 @@ Two-dimensional and multi-channel feature detection algorithm for the CALIPSO li
 
 ## Overview
 
-The environment required to run the program is defined in the file:
-
-```environment.yml```
-
 The main Python program is:
 
 ```src/2D_McDA_PSC.py```
@@ -37,11 +33,13 @@ macOS/Linux: open a terminal
 
 ## 3. Create the Conda environment
 
-Go to the 2D-McDA-PSC folder.
+Create a Conda environment. For example, create an environment named 2D_McDA_PSC in python 3.13:
 
-Create the environment:
+```conda create -n 2D_McDA_PSC python=3.13```
 
-```conda env create -f environment.yml```
+And install the packages required for this program:
+
+```conda install numpy numba scipy matplotlib pyhdf netcdf4```
 
 This will download and install all required software.
 The installation may take several minutes.
