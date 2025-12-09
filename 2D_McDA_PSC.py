@@ -647,7 +647,7 @@ if __name__ == '__main__':
         LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.4.0"
+        VERSION_2D_McDA_PSC = "V1.4.1"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
