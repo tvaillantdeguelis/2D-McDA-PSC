@@ -1,4 +1,4 @@
-name: 2D_McDA_PSC_V1.2.1
+name: 2D_McDA_PSC
 channels:
   - conda-forge
 dependencies:
@@ -285,4 +285,3 @@ dependencies:
   - zlib=1.3.1
   - zstandard=0.23.0
   - zstd=1.5.7
-prefix: /work_users/vaillant/mambaforge/envs/2D_McDA_PSC_V1.2.1
