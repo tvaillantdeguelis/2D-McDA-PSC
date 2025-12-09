@@ -994,7 +994,7 @@ if __name__ == '__main__':
         GRANULE_DATE = "2011-01-04T04-30-38ZN_lon_111.59_-35.45" # "2011-06-25T00-11-52ZN_lon_5.95_-150.07"
         FIGURES_PATH = "/home/vaillant/codes/projects/2D_McDA_PSC/out/figures/" # 
     INDATA_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
-    VERSION_2D_McDA = "V1.3.2"
+    VERSION_2D_McDA = "V1.4.0"
     TYPE_2D_McDA = "Prototype"
     SLICE_START_END_TYPE = 'profindex' # 'profindex' (of the 2D-McDA file) or 'longitude'
     SLICE_START = None # profindex or longitude

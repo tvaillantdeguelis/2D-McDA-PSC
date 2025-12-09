@@ -17,8 +17,6 @@ SLICE_START="None"
 SLICE_END="None"
 START_DATE="2006-06-12"
 END_DATE="2023-06-30" # included
-LAT_MIN=50
-LAT_MAX="None"
 SAVE_DEVELOPMENT_DATA="False" # if "True" save step by step data
 VERSION_2D_McDA_PSC="V1.4.0"
 TYPE_2D_McDA_PSC="Prototype"
@@ -28,7 +26,7 @@ PROCESS_UP_TO_40KM="True"
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."
 OUT_FOLDER="/work_users/vaillant/data/2D_McDA_PSC/"
-MAX_NB_JOBS=11
+MAX_NB_JOBS=101
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 
 # Initialization
@@ -46,6 +44,25 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
     year="${currentdate:0:4}"
     month="${currentdate:5:2}"
     day="${currentdate:8:2}"
+
+    # Decide which hemisphere to process
+    LAT_MIN=""
+    LAT_MAX=""
+
+    case "$month" in
+        05|06|07|08|09|10)
+            LAT_MIN="None"
+            LAT_MAX=-50
+            ;;
+        12|01|02|03)
+            LAT_MIN=50
+            LAT_MAX="None"
+            ;;
+        *)
+            currentdate=$(date -I -d "$currentdate + 1 day")
+            continue
+            ;;
+    esac
 
     # Get the corresponding L1 data folder
     data_folder_l1="${DATA_FOLDER_L1_HEAD}${VERSION_CAL_LID_L1//[V]/v}/${year}/${year}_${month}_${day}/"
@@ -74,10 +91,13 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
 
             # Run 2D-McDA
             jobname="2D-McDA-PSC_${granule_date}"
-            echo -n '['$(date)'] Launching job $jobname: '
+            job_year="${granule_date:0:4}"
+            log_dir="./out/slurm/${job_year}"
+            mkdir -p "$log_dir"
+            echo -n "[$(date)] Launching job ${jobname}: "
             sbatch --job-name="$jobname" \
-                   --error=./out/slurm/"${jobname}.e" \
-                   --output=./out/slurm/"${jobname}.o" \
+                   --error="${log_dir}/${jobname}.e" \
+                   --output="${log_dir}/${jobname}.o" \
                    --export="GRANULE_DATE=$granule_date,\
 VERSION_CAL_LID_L1=$VERSION_CAL_LID_L1,\
 TYPE_CAL_LID_L1=$TYPE_CAL_LID_L1,\

@@ -4,9 +4,7 @@
 """Main program of 2D-McDA. Takes CLaMS/ZOMM data files to process as input."""
 
 __author__     = "Thibault Vaillant de Guélis"
-__version__    = "1.01"
 __email__      = "thibault.vaillantdeguelis@outlook.com"
-__status__     = "Prototype"
 
 import sys
 

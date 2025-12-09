@@ -4,9 +4,7 @@
 """Main program of 2D-McDA. Takes granule to process as input."""
 
 __author__     = "Thibault Vaillant de Guélis"
-__version__    = "1.01"
 __email__      = "thibault.vaillantdeguelis@outlook.com"
-__status__     = "Prototype"
 
 import sys
 import os
@@ -16,6 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 from scipy.interpolate import interp1d
 
+sys.path.append("/home/vaillant/codes/projects/2D_McDA_PSC/my_modules")
 from standard_outputs import print_time, print_elapsed_time
 from readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
 from paths import split_granule_date
@@ -126,13 +125,14 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     # params[key].valid_range = (1, 228630)
     params[key].dimensions = ['Profile_ID']
 
-    if False:
+    if True:
         key = 'Profile_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
-        params[key].units = "seconds...TAI"
+        params[key].units = "The 8th of 15 consecutive laser shots Profile Time composing the 5-km chunk in CALIOP L1 product."
         # params[key].valid_range = (4.204e8, 1.072e9)
         params[key].dimensions = ['Profile_ID']
 
+    if False:
         key = 'Profile_UTC_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
         params[key].units = "UTC - yymmdd.ffffffff"
@@ -241,7 +241,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    if False:
+    if True:
         key = 'Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
         params[key].description = "532-nm parallel attenuated backscatter signal averaged at 5-km×180-m resolution."
@@ -638,14 +638,14 @@ if __name__ == '__main__':
         OUT_FILETYPE = sys.argv[13]
         PROCESS_UP_TO_40KM = sys.argv[14]
     else:
-        GRANULE_DATE = "2006-06-12T00-53-43ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2006-07-23T18-54-52ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
         SLICE_START = None # 170.68 # profindex or longitude
         SLICE_END = None # 27.93 # profindex or longitude
-        LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
-        LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
+        LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
+        LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         VERSION_2D_McDA_PSC = "V1.4.0"
         TYPE_2D_McDA_PSC = "Prototype"
@@ -909,7 +909,7 @@ if __name__ == '__main__':
         data_dict_5kmx180m[key][nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = data_dict_cal_lid_l1[key][START_INDEX_R3+1:END_INDEX_R3:3]
 
     # 1-D horizontal data at 5-km resolution
-    for key in ["Latitude", "Longitude", "Profile_ID"]: #, "Number_Bins_Shift", "Profile_Time", "Profile_UTC_Time"]: 
+    for key in ["Latitude", "Longitude", "Profile_ID", "Profile_Time"]: #, "Number_Bins_Shift",  "Profile_UTC_Time"]: 
         # Take middle (8th) profile of 5-km horizontal bins
         data_dict_5kmx180m[key] = data_dict_cal_lid_l1[key][cal_lid_l1_prof_index_range_mult_of_15][int(NB_HORIZ_BINS_TO_AVERAGE/2)::NB_HORIZ_BINS_TO_AVERAGE]
     
