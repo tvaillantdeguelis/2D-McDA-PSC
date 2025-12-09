@@ -31,7 +31,7 @@ slice_start_end_type="longitude" # "profindex" or "longitude"
 slice_start=-50.00 # profindex or longitude
 slice_end=-140.00 # profindex or longitude
 save_development_data="False" # if "True" save step by step data
-version_2d_mcda="V1.01"
+version_2d_mcda="V1.4.1"
 type_2d_mcda="Prototype"
 out_folder="/home/vaillant/workspace/data/2D_McDA_for_PSCs/"
 run_2d_mcda $granule_date $version_cal_lid_l1 $type_cal_lid_l1 $previous_granule $next_granule\

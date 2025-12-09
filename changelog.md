@@ -1,4 +1,6 @@
+**Version 1.4.1** Released 2025-12-09.
 
+* Exit process if no data between lat_min and lat_max.
 
 **Version 1.4.0** Released 2025-06-13.
 
