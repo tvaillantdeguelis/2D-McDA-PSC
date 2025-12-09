@@ -27,7 +27,7 @@ from calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
 
 from config import NB_PROF_OVERLAP
 from feature_detection import detect_features, neighbors
-from merged_3channels_feature_mask import merged_feature_masks
+from src.merged_3channels_feature_mask import merged_feature_masks
 
 
 def get_start_end_indexes(prof_min, prof_max, nb_prof_slice, nb_prof_overlap):

@@ -169,3 +169,10 @@ cython_debug/
 # VS Code
 .vscode/
 *.code-workspace
+
+CLaMS_ZOMM/
+misc/
+notebooks/
+out/
+plot/
+test/
