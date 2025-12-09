@@ -11,7 +11,6 @@ import os
 from datetime import datetime
 
 import numpy as np
-import matplotlib.pyplot as plt 
 from scipy.interpolate import interp1d
 
 sys.path.append("/home/vaillant/codes/projects/2D_McDA_PSC/my_modules")
@@ -638,7 +637,7 @@ if __name__ == '__main__':
         OUT_FILETYPE = sys.argv[13]
         PROCESS_UP_TO_40KM = sys.argv[14]
     else:
-        GRANULE_DATE = "2006-07-23T18-54-52ZN" #"2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2011-06-25T00-11-52ZN" #"2006-07-23T18-54-52ZN" "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)

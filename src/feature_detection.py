@@ -7,11 +7,6 @@ from datetime import datetime
 
 import numpy as np
 from numba import jit
-import matplotlib as mpl
-from matplotlib import cm, gridspec
-import matplotlib.pyplot as plt
-from matplotlib.colors import from_levels_and_colors
-import seaborn as sns
 
 from standard_outputs import print_elapsed_time
 from calipso_constants import FILL_VALUE_FLOAT
@@ -490,6 +485,12 @@ def gaussian_2d_window(width_window, horizontal_gauss_sigma, ab_signal, feature,
 
 # For algorithm development purpose
 def plot_mask(mask):
+    
+    import matplotlib as mpl
+    from matplotlib import cm, gridspec
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import from_levels_and_colors
+    import seaborn as sns
 
     # Labels
     clabels = ["No detection",] +\

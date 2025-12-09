@@ -37,6 +37,8 @@ macOS/Linux: open a terminal
 
 ## 3. Create the Conda environment
 
+Go to the 2D-McDA-PSC folder.
+
 Create the environment:
 
 ```conda env create -f environment.yml```
@@ -58,9 +60,9 @@ You can run the main Python script directly:
 
 ```python src/2D_McDA_PSC.py```
 
-The parameters controlling what is processed (granule slice, dates, etc.) are located in the script immediately after:
+The parameters controlling what is processed (granule slice, dates, etc.) are located in the script immediately after `if __name__ == '__main__':`:
 
-```
+```ma
 if __name__ == '__main__':
     tic_main_program = print_time()
     
@@ -69,6 +71,20 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         ...
     else:
+        GRANULE_DATE = "2011-06-25T00-11-52ZN"
+        VERSION_CAL_LID_L1 = "V4.51"
+        TYPE_CAL_LID_L1 = "Standard"
+        SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
+        SLICE_START = None # 170.68 # profindex or longitude
+        SLICE_END = None # 27.93 # profindex or longitude
+        LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
+        LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
+        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
+        VERSION_2D_McDA_PSC = "V1.4.1"
+        TYPE_2D_McDA_PSC = "Prototype"
+        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
+        OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
+        PROCESS_UP_TO_40KM = True
 ```
 
 Modify these values before running the script to process the desired granule slice.
