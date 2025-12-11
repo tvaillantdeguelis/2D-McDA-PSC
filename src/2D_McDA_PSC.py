@@ -13,7 +13,8 @@ from datetime import datetime
 import numpy as np
 from scipy.interpolate import interp1d
 
-sys.path.append("/home/vaillant/codes/projects/2D_McDA_PSC/my_modules")
+# sys.path.append("/home/vaillant/codes/projects/2D_McDA_PSC/my_modules")
+sys.path.append("./my_modules/")
 from standard_outputs import print_time, print_elapsed_time
 from readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
 from paths import split_granule_date

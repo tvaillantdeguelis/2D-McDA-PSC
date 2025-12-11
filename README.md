@@ -20,6 +20,8 @@ On a computing cluster, to process all granules between a start and end date, us
 
 Go to https://github.com/tvaillantdeguelis/2D-McDA-PSC/ and click the green **Code** button near the top right. In the dropdown menu, click **Download ZIP**. Save the ZIP file anywhere on your computer and extract it.
 
+On the same page, click on "my_modules", then click **Download ZIP**. Add the downloaded files under the folder "my_modules" of the project.
+
 ## 2. Install Conda
 
 To run the program, **if you don't already have a Python environment**, you can install Miniconda.
