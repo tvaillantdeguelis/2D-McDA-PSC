@@ -89,7 +89,8 @@ def rm_prof(array, nb_prof_to_remove, side):
 def compute_uncertainty(nb_bins_shift, mol_ab, rms, nsf):
 
     # Definition
-    FCORR = np.array((1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131, 1.188, 1.345, 1.573, 1.345, 1.188, 1.131)) # values for 180-m vertical resolution
+    pattern = np.array([1.573, 1.345, 1.188, 1.131, 1.188, 1.345])
+    FCORR = np.tile(pattern, 1000)
     NB_PIXELS = 15*12 # 5-km horizontal × 180-m vertical resolution
 
     nb_bins_shift_abs = np.squeeze(np.abs(nb_bins_shift))
@@ -638,7 +639,7 @@ if __name__ == '__main__':
         OUT_FILETYPE = sys.argv[13]
         PROCESS_UP_TO_40KM = sys.argv[14]
     else:
-        GRANULE_DATE = "2011-06-25T00-11-52ZN" #"2006-07-23T18-54-52ZN" "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
+        GRANULE_DATE = "2008-03-13T22-12-45ZN" #"2006-07-23T18-54-52ZN" "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
         TYPE_CAL_LID_L1 = "Standard"
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
@@ -647,7 +648,7 @@ if __name__ == '__main__':
         LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.4.1"
+        VERSION_2D_McDA_PSC = "V1.4.2"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
