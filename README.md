@@ -37,22 +37,27 @@ Create a Conda environment. For example, create an environment named 2D_McDA_PSC
 
 ```conda create -n 2D_McDA_PSC python=3.13```
 
-And install the packages required for this program:
-
-```conda install numpy numba scipy matplotlib pyhdf netcdf4```
-
-This will download and install all required software.
-The installation may take several minutes.
-
-## 4. Activate the environment
-
-Before running the program, activate the environment:
+Activate the environment:
 
 ```conda activate 2D_McDA_PSC```
 
-Your terminal will now use the correct Python version and libraries.
+Install the packages required for this program:
 
-## 5. Running the program locally
+```conda install numpy numba scipy matplotlib pyhdf netcdf4```
+
+## 4. Define the paths where the CALIOP files are stored
+
+In my_modules/paths.py define the paths where the CALIOP files are stored for the 'hostname' machine.
+
+```
+elif hostname == 'argo':  # change by the name of your machine
+    # Head paths
+    CALIOP_DATA_HEAD_PATH = "/SCF10/Data_Archive/CALIPSO/"  # change by the path to CALIPSO data on your machine
+    # Tail paths format
+    CALIOP_DATA_TAIL_PATH_FMT['L1'] = "LID_L1.-{data_type}-{version}/{year:d}/{month:02d}/"  # change according the the subfolders organisation on your machine ('data_type' and 'version' are values set for parameters TYPE_CAL_LID_L1 and VERSION_CAL_LID_L1 in 2D_McDA_PSC_run.sh or 2D_McDA_PSC.py)
+```
+
+## 5. Running the program locally on a single granule
 
 You can run the main Python script directly:
 
@@ -87,7 +92,7 @@ if __name__ == '__main__':
 
 Modify these values before running the script to process the desired granule slice.
 
-## 6. Running the program on a computing cluster (SLURM)
+## 6. Running the program on a computing cluster (SLURM) on many granules
 
 To process all granules between two dates, use the SLURM job script:
 
