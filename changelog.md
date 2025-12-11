@@ -1,4 +1,4 @@
-**Version 1.4.2** Released .
+**Version 1.4.2** Released 2025-12-11.
 
 * Increase number of values in FCORR to avoid error when nb_bins_shift > 20.
 
