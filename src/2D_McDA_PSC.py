@@ -3,12 +3,14 @@
 
 """Main program of 2D-McDA. Takes granule to process as input."""
 
-__author__     = "Thibault Vaillant de Guélis"
-__email__      = "thibault.vaillantdeguelis@outlook.com"
+__author__  = "Thibault Vaillant de Guélis"
+__email__   = "thibault.vaillantdeguelis@outlook.com"
+__version__ = "1.4.2"
 
 import sys
 import os
 from datetime import datetime
+import subprocess
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -28,6 +30,62 @@ from calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
 from config import NB_PROF_OVERLAP
 from feature_detection import detect_features, neighbors
 from merged_3channels_feature_mask import merged_feature_masks
+
+
+def git_version():
+    """
+    Return a string describing the current Git state of the code.
+
+    The function runs:
+        git describe --tags --dirty --always
+
+    Typical returned values:
+        - "v1.4.2"                       (exactly on a tag)
+        - "v1.4.2-5-g7a3f9c2"             (5 commits after tag v1.4.2)
+        - "v1.4.2-5-g7a3f9c2-dirty"       (uncommitted local changes)
+        - "g7a3f9c2"                      (no tags available)
+
+    If the code is not inside a Git repository or Git is not available,
+    the function returns None.
+    """
+    try:
+        # Call Git to obtain a human-readable description of the current commit
+        git_desc = subprocess.check_output(
+            ["git", "describe", "--tags", "--dirty", "--always"],
+            stderr=subprocess.DEVNULL
+        )
+
+        # Convert bytes to string and remove trailing newline
+        return git_desc.decode().strip()
+
+    except Exception:
+        # Git is not available or the code is not in a Git repository
+        return None
+
+
+def get_full_version():
+    """
+    Return the best possible version string for this code.
+
+    Priority order:
+        1. Use the Git-based version string (tag + commit hash),
+           which uniquely identifies the exact code state.
+        2. If Git information is unavailable, fall back to the static
+           Python version defined in __version__.
+
+    Returned values examples:
+        - "v1.4.2"
+        - "v1.4.2-5-g7a3f9c2"
+        - "v1.4.2-5-g7a3f9c2-dirty"
+    """
+    git_ver = git_version()
+
+    if git_ver is not None:
+        # Git information available: use it as the authoritative version
+        return git_ver
+    else:
+        # Fallback: use the static version defined in the code
+        return f"v{__version__}"
 
 
 def get_start_end_indexes(prof_min, prof_max, nb_prof_slice, nb_prof_overlap):
@@ -623,6 +681,7 @@ if __name__ == '__main__':
     
     # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
     # PARAMETERS
+    VERSION_2D_McDA_PSC = get_full_version()
     if len(sys.argv) > 1:
         GRANULE_DATE = sys.argv[1]
         VERSION_CAL_LID_L1 = sys.argv[2]
@@ -633,11 +692,10 @@ if __name__ == '__main__':
         LAT_MIN = None if sys.argv[7] == 'None' else float(sys.argv[7])
         LAT_MAX = None if sys.argv[8] == 'None' else float(sys.argv[8])
         SAVE_DEVELOPMENT_DATA = sys.argv[9] == 'True'
-        VERSION_2D_McDA_PSC = sys.argv[10]
-        TYPE_2D_McDA_PSC = sys.argv[11]
-        OUT_FOLDER = sys.argv[12]
-        OUT_FILETYPE = sys.argv[13]
-        PROCESS_UP_TO_40KM = sys.argv[14]
+        TYPE_2D_McDA_PSC = sys.argv[10]
+        OUT_FOLDER = sys.argv[11]
+        OUT_FILETYPE = sys.argv[12]
+        PROCESS_UP_TO_40KM = sys.argv[13]
     else:
         GRANULE_DATE = "2008-03-13T22-12-45ZN" #"2006-07-23T18-54-52ZN" "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
         VERSION_CAL_LID_L1 = "V4.51"
@@ -648,7 +706,6 @@ if __name__ == '__main__':
         LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
         LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        VERSION_2D_McDA_PSC = "V1.4.2"
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
         OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'

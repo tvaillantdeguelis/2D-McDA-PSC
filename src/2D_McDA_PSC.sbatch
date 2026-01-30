@@ -17,5 +17,5 @@ export PYTHONPATH="/home/vaillant/codes/projects/2D_McDA_PSC/my_modules/"
 ./2D_McDA_PSC.py "$GRANULE_DATE" "$VERSION_CAL_LID_L1" "$TYPE_CAL_LID_L1" \
                  "$SLICE_START_END_TYPE" "$SLICE_START" "$SLICE_END" \
                  "$LAT_MIN" "$LAT_MAX" \
-                 "$SAVE_DEVELOPMENT_DATA" "$VERSION_2D_McDA_PSC" \
+                 "$SAVE_DEVELOPMENT_DATA" \
                  "$TYPE_2D_McDA_PSC" "$OUT_FOLDER" "$OUT_FILETYPE" "$PROCESS_UP_TO_40KM"
