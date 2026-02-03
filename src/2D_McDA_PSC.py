@@ -5,11 +5,11 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "1.4.2"
+__version__ = "1.4.3"
 
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 import subprocess
 
 import numpy as np
@@ -147,7 +147,7 @@ def rm_prof(array, nb_prof_to_remove, side):
 def compute_uncertainty(nb_bins_shift, mol_ab, rms, nsf):
 
     # Definition
-    pattern = np.array([1.573, 1.345, 1.188, 1.131, 1.188, 1.345])
+    pattern = np.array([1.573, 1.345, 1.188, 1.131, 1.188, 1.345]) # This is for 30.1 to 20.2 km. TODO: Adapt depending on range altitude
     FCORR = np.tile(pattern, 1000)
     NB_PIXELS = 15*12 # 5-km horizontal × 180-m vertical resolution
 
@@ -174,6 +174,17 @@ class DataVar():
 
 def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='HDF', save_development_data=False):
 
+    global_attrs = {
+        "algorithm_name": "2D-McDA-PSC",
+        "algorithm_version": get_full_version(),
+
+        "input_product": "CAL_LID_L1",
+        "input_product_version": VERSION_CAL_LID_L1,
+
+        "processing_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "author": __author__,
+    }
+    
     # Create a dictionary of parameters to save
     params = {}
 
@@ -518,7 +529,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
                 nc_param.units = datavar.units
                 nc_param.dimensions = datavar.dimensions
                 nc_params.append(nc_param)
-        write_netcdf(outdata_folder+"/"+filename+".nc", nc_dims, nc_params)
+        write_netcdf(outdata_folder+"/"+filename+".nc", nc_dims, nc_params, global_attrs=global_attrs)
 
 
 def separate_homogeneous_chunks(mask_composite, mask_par532, mask_per532, mask_1064, separation_type):
@@ -703,8 +714,8 @@ if __name__ == '__main__':
         SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
         SLICE_START = None # 170.68 # profindex or longitude
         SLICE_END = None # 27.93 # profindex or longitude
-        LAT_MIN = None # with SLICE_START_END_TYPE = "latminmax"
-        LAT_MAX = -50 # SLICE_START_END_TYPE = "latminmax"
+        LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
+        LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
         SAVE_DEVELOPMENT_DATA = False # if True save step by step data
         TYPE_2D_McDA_PSC = "Prototype"
         OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
