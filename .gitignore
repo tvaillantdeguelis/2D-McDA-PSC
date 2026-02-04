@@ -176,3 +176,7 @@ notebooks/
 out/
 plot/
 test/
+
+# Runtime configuration files
+2D_McDA_PSC_params_run.yaml
+2D_McDA_PSC_params_tmp/

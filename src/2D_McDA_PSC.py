@@ -5,9 +5,11 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
+import yaml
 import sys
+from pathlib import Path
 import os
 from datetime import datetime, timezone
 import subprocess
@@ -687,41 +689,47 @@ def classify_homogeneous_chunks_with_psc_v2(ab_532_per_mean, sr_532_mean):
     return psc_mask
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     tic_main_program = print_time()
-    
-    # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
-    # PARAMETERS
+
+    # Algorithm version (from git)
     VERSION_2D_McDA_PSC = get_full_version()
-    if len(sys.argv) > 1:
-        GRANULE_DATE = sys.argv[1]
-        VERSION_CAL_LID_L1 = sys.argv[2]
-        TYPE_CAL_LID_L1 = sys.argv[3]
-        SLICE_START_END_TYPE = sys.argv[4] # 'profindex' or 'longitude'
-        SLICE_START = None if sys.argv[5] == 'None' else float(sys.argv[5])
-        SLICE_END = None if sys.argv[6] == 'None' else float(sys.argv[6])
-        LAT_MIN = None if sys.argv[7] == 'None' else float(sys.argv[7])
-        LAT_MAX = None if sys.argv[8] == 'None' else float(sys.argv[8])
-        SAVE_DEVELOPMENT_DATA = sys.argv[9] == 'True'
-        TYPE_2D_McDA_PSC = sys.argv[10]
-        OUT_FOLDER = sys.argv[11]
-        OUT_FILETYPE = sys.argv[12]
-        PROCESS_UP_TO_40KM = sys.argv[13]
-    else:
-        GRANULE_DATE = "2008-03-13T22-12-45ZN" #"2006-07-23T18-54-52ZN" "2011-06-25T00-11-52ZN" # "2008-07-17T19-15-43ZN"
-        VERSION_CAL_LID_L1 = "V4.51"
-        TYPE_CAL_LID_L1 = "Standard"
-        SLICE_START_END_TYPE = "latminmax" # "profindex", "longitude", "latminmax" (Use "profindex" if SLICE_START/END = None to process the whole granule)
-        SLICE_START = None # 170.68 # profindex or longitude
-        SLICE_END = None # 27.93 # profindex or longitude
-        LAT_MIN = 50 # with SLICE_START_END_TYPE = "latminmax"
-        LAT_MAX = None # SLICE_START_END_TYPE = "latminmax"
-        SAVE_DEVELOPMENT_DATA = False # if True save step by step data
-        TYPE_2D_McDA_PSC = "Prototype"
-        OUT_FOLDER = "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"    
-        OUT_FILETYPE = 'netCDF' # 'HDF' or 'netCDF'
-        PROCESS_UP_TO_40KM = True
-    # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
+
+    # ------------------------------------------------------------------
+    # CONFIGURATION
+    # ------------------------------------------------------------------
+    if len(sys.argv) != 2:
+        raise ValueError("Usage: python main.py <config.yaml>")
+
+    config_file = Path(sys.argv[1])
+    if not config_file.exists():
+        raise FileNotFoundError(config_file)
+
+    with open(config_file, "r") as f:
+        config = yaml.safe_load(f)
+
+    # ------------------------------------------------------------------
+    # PARAMETERS
+    # ------------------------------------------------------------------
+    GRANULE_DATE = config["granule_date"]
+
+    VERSION_CAL_LID_L1 = config["cal_lid_l1"]["version"]
+    TYPE_CAL_LID_L1 = config["cal_lid_l1"]["type"]
+
+    SLICE_START_END_TYPE = config["slice"]["mode"]
+    SLICE_START = config["slice"]["start"]
+    SLICE_END = config["slice"]["end"]
+    LAT_MIN = config["slice"]["lat_min"]
+    LAT_MAX = config["slice"]["lat_max"]
+
+    SAVE_DEVELOPMENT_DATA = config["processing"]["save_development_data"]
+    PROCESS_UP_TO_40KM = config["processing"]["process_up_to_40km"]
+
+    TYPE_2D_McDA_PSC = config["algorithm"]["type"]
+
+    OUT_FOLDER = config["output"]["folder"]
+    OUT_FILETYPE = config["output"]["filetype"]
+
 
 
     # ********************************

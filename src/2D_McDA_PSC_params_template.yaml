@@ -1,0 +1,23 @@
+granule_date: "2008-03-13T22-12-45ZN"
+
+cal_lid_l1:
+  version: "V4.51"
+  type: "Standard"
+
+slice:
+  mode: "latminmax"
+  start: null
+  end: null
+  lat_min: 50
+  lat_max: null
+
+processing:
+  save_development_data: false
+  process_up_to_40km: true
+
+algorithm:
+  type: "Prototype"
+
+output:
+  folder: "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
+  filetype: "netCDF"

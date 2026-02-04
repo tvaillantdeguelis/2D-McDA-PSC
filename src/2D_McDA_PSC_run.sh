@@ -33,7 +33,7 @@ mkdir -p out/slurm # Ensure the directory exists and avoids job submission failu
 shopt -s nullglob # Prevent glob pattern from expanding to itself
 currentdate=$START_DATE
 data_file_l1_head="CAL_LID_L1-${TYPE_CAL_LID_L1}-${VERSION_CAL_LID_L1//[.]/-}"
-EXTENSION=".hdf"
+EXTENSION_CAL_LID_L1=".hdf"
 GRANULE_DATE_SIZE=21
 
 # Loop on each day between 'START_DATE' and 'END_DATE'
@@ -75,11 +75,11 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
     # If this folder exists
     else
         # Loop on granules in this folder
-        file_l1_list=( "${data_folder_l1}${data_file_l1_head}"*"${DAYNIGHT_FLAG}${EXTENSION}" )
+        file_l1_list=( "${data_folder_l1}${data_file_l1_head}"*"${DAYNIGHT_FLAG}${EXTENSION_CAL_LID_L1}" )
         for file_l1 in "${file_l1_list[@]}"; do
 
             # Get granule time
-            granule_date=${file_l1:(-GRANULE_DATE_SIZE - ${#EXTENSION}):${GRANULE_DATE_SIZE}}
+            granule_date=${file_l1:(-GRANULE_DATE_SIZE - ${#EXTENSION_CAL_LID_L1}):${GRANULE_DATE_SIZE}}
 
             # Wait if max number of jobs reached
             jobs_count=$(squeue -u vaillant | tail -n +2 | wc -l)
@@ -87,6 +87,25 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
                 sleep 3
                 jobs_count=$(squeue -u vaillant | tail -n +2 | wc -l)
             done
+
+            # Create YAML params file
+            params_file="src/2D_McDA_PSC_params_tmp/2D_McDA_PSC_params_${granule_date}.yaml"
+
+            sed \
+            -e "s|__GRANULE_DATE__|$granule_date|g" \
+            -e "s|__VERSION_CAL_LID_L1__|$VERSION_CAL_LID_L1|g" \
+            -e "s|__TYPE_CAL_LID_L1__|$TYPE_CAL_LID_L1|g" \
+            -e "s|__SLICE_START_END_TYPE__|$SLICE_START_END_TYPE|g" \
+            -e "s|__SLICE_START__|$SLICE_START|g" \
+            -e "s|__SLICE_END__|$SLICE_END|g" \
+            -e "s|__LAT_MIN__|$LAT_MIN|g" \
+            -e "s|__LAT_MAX__|$LAT_MAX|g" \
+            -e "s|__SAVE_DEVELOPMENT_DATA__|$SAVE_DEVELOPMENT_DATA|g" \
+            -e "s|__PROCESS_UP_TO_40KM__|$PROCESS_UP_TO_40KM|g" \
+            -e "s|__TYPE_2D_McDA_PSC__|$TYPE_2D_McDA_PSC|g" \
+            -e "s|__OUT_FOLDER__|$OUT_FOLDER|g" \
+            -e "s|__OUT_FILETYPE__|$OUT_FILETYPE|g" \
+            configs/2D_McDA_PSC_params_template.yaml > "$params_file"
 
             # Run 2D-McDA
             jobname="2D-McDA-PSC_${granule_date}"
@@ -97,21 +116,7 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
             sbatch --job-name="$jobname" \
                    --error="${log_dir}/${jobname}.e" \
                    --output="${log_dir}/${jobname}.o" \
-                   --export="GRANULE_DATE=$granule_date,\
-VERSION_CAL_LID_L1=$VERSION_CAL_LID_L1,\
-TYPE_CAL_LID_L1=$TYPE_CAL_LID_L1,\
-PREVIOUS_GRANULE=$previous_granule_date,\
-NEXT_GRANULE=$next_granule_date,\
-SLICE_START_END_TYPE=$SLICE_START_END_TYPE,\
-SLICE_START=$SLICE_START,\
-SLICE_END=$SLICE_END,\
-LAT_MIN=$LAT_MIN,\
-LAT_MAX=$LAT_MAX,\
-SAVE_DEVELOPMENT_DATA=$SAVE_DEVELOPMENT_DATA,\
-TYPE_2D_McDA_PSC=$TYPE_2D_McDA_PSC,\
-OUT_FOLDER=$OUT_FOLDER,\
-OUT_FILETYPE=$OUT_FILETYPE,\
-PROCESS_UP_TO_40KM=$PROCESS_UP_TO_40KM" \
+                   --export=PARAMS_FILE="$params_file" \
        2D_McDA_PSC.sbatch
         done
     fi
