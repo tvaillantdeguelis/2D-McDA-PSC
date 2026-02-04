@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "1.4.3"
+__version__ = "1.4.4"
 
 import yaml
 import sys
