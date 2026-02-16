@@ -1,3 +1,7 @@
+**Versiont 1.4.4** Released 2026-02-04.
+
+* Move input configuration parameters to YAML file
+
 **Versiont 1.4.3** Released 2026-02-03.
 
 * Fixed: Avoid log(0) by skipping fully invalid met density profiles
