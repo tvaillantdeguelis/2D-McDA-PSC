@@ -499,7 +499,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
-    filename = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-')}." \
+    filename = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-').replace('v', 'V', 1)}." \
                 f"{GRANULE_DATE}{filename_end}"
     
     if filetype == 'HDF':
@@ -1198,7 +1198,7 @@ if __name__ == "__main__":
     
     # Create folder to store output data
     granule_date_dict = split_granule_date(GRANULE_DATE)
-    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSC.{VERSION_2D_McDA_PSC.replace('V', 'v')}",
+    outdata_folder = os.path.join(OUT_FOLDER, f"2D_McDA_PSC.{VERSION_2D_McDA_PSC}",
                                   str(granule_date_dict['year']), f"{granule_date_dict['year']}_"
                                                                   f"{granule_date_dict['month']:02d}_"
                                                                   f"{granule_date_dict['day']:02d}")
