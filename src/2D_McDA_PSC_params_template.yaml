@@ -1,7 +1,7 @@
-granule_date: "2008-03-13T22-12-45ZN"
+granule_date: "2022-07-21T01-49-09ZN"
 
 cal_lid_l1:
-  version: "V4.51"
+  version: "V5.00"
   type: "Standard"
 
 slice:
