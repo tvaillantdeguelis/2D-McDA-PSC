@@ -1,3 +1,7 @@
+**Versiont 1.5.0** Released 2026-03-12.
+
+* Filter low energy shots.
+
 **Versiont 1.4.4** Released 2026-02-04.
 
 * Move input configuration parameters to YAML file
