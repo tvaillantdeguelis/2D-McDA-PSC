@@ -23,6 +23,7 @@ from standard_outputs import print_time, print_elapsed_time
 from readers.calipso_reader import CALIOPReader, automatic_path_detection, get_first_profileID_of_chunk, range_from_altitude
 from paths import split_granule_date
 from calipso_constants import *
+from constants import *
 from writers.hdf_writer import SDSData, write_hdf
 from writers.netcdf_writer import NetCDFVariable, write_netcdf
 from calipso_calculator import compute_par_ab532, compute_ab_mol_and_b_mol, \
@@ -242,6 +243,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key] = DataVar(key, data_dict_2d_mcda["Parallel_Detection_Flags_532"])
     params[key].long_name = "532-nm parallel detection flag mask"
     params[key].description = "Level of detection (1 to 5) mask for the 532 nm parallel channel."
+    params[key].fillvalue = FILL_VALUE_BYTE
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
@@ -249,6 +251,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key] = DataVar(key, data_dict_2d_mcda["Perpendicular_Detection_Flags_532"])
     params[key].long_name = "532-nm perpendicular detection flag mask"
     params[key].description = "Level of detection (1 to 5) mask for the 532 nm perpendicular channel."
+    params[key].fillvalue = FILL_VALUE_BYTE
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
@@ -256,6 +259,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key] = DataVar(key, data_dict_2d_mcda["Detection_Flags_1064"])
     params[key].long_name = "1064-nm detection flag mask"
     params[key].description = "Level of detection (1 to 5) mask for the 1064 nm channel."
+    params[key].fillvalue = FILL_VALUE_BYTE
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
@@ -864,7 +868,7 @@ if __name__ == "__main__":
     print_elapsed_time(tic)
 
 
-    # **********************************************************************
+    # **************************************************************************
     # *** Compute signal uncertainty (from shot noise and background noise)  ***
     print("\n*****Compute signal uncertainty (from shot noise and background noise) ...*****")
 
@@ -948,7 +952,9 @@ if __name__ == "__main__":
 
     tic = datetime.now()
 
-    # Initialization
+    # ------------------------------------------------------------------------------
+    # INITIALIZATION
+    # ------------------------------------------------------------------------------
     data_dict_5kmx180m = {}
     data_dict_5km_met = {}
     START_INDEX_R5 = LAYER_ALTITUDE_R5_INDEX_RANGE[0] # at 40.0 km
@@ -971,9 +977,131 @@ if __name__ == "__main__":
     
     # Get number of 5-km chunks
     nb_chunk_5km = int(data_dict_cal_lid_l1["Latitude"][prof_index_first_in_chunk:].size/NB_HORIZ_BINS_TO_AVERAGE)
-    cal_lid_l1_prof_index_range_mult_of_15 = np.arange(prof_index_first_in_chunk, prof_index_first_in_chunk+nb_chunk_5km*15)
+    cal_lid_l1_prof_index_range_mult_of_15 = np.arange(prof_index_first_in_chunk, prof_index_first_in_chunk+nb_chunk_5km*NB_HORIZ_BINS_TO_AVERAGE)
 
+
+    # ------------------------------------------------------------------------------
+    # LOW ENERGY SHOTS
+    # ------------------------------------------------------------------------------
+
+    LOW_ENERGY_THRESHOLD_532  = 0.08
+    LOW_ENERGY_THRESHOLD_1064 = 0.08
+    MAX_LOW_ENERGY_PROFILES_IN_REGION_3 = 1 # 3 profiles (1 km) in region 3
+    MAX_LOW_ENERGY_PROFILES_IN_REGION_4 = 2 # 5 profiles (5/3 km) in region 4
+    MAX_LOW_ENERGY_PROFILES_IN_REGION_5 = 7 # 15 profiles (5 km) in region 5
+
+    low_energy_profile_532  = data_dict_cal_lid_l1["Laser_Energy_532"]  < LOW_ENERGY_THRESHOLD_532
+    low_energy_profile_1064 = data_dict_cal_lid_l1["Laser_Energy_1064"] < LOW_ENERGY_THRESHOLD_1064
+
+    n_profiles_total = low_energy_profile_532.size
+
+    bad_block_R3_532  = np.zeros(n_profiles_total, dtype=bool)
+    bad_block_R4_532  = np.zeros(n_profiles_total, dtype=bool)
+    bad_block_R5_532  = np.zeros(n_profiles_total, dtype=bool)
+
+    bad_block_R3_1064 = np.zeros(n_profiles_total, dtype=bool)
+    bad_block_R4_1064 = np.zeros(n_profiles_total, dtype=bool)
+    bad_block_R5_1064 = np.zeros(n_profiles_total, dtype=bool)
+
+    # Only consider profiles that belong to full 5-km chunks
+    start = prof_index_first_in_chunk
+    end   = prof_index_first_in_chunk + nb_chunk_5km * NB_HORIZ_BINS_TO_AVERAGE
+
+    # ------------------------------------------------------------------
+    # Region 3: blocks of 3 profiles (1 km)
+    # ------------------------------------------------------------------
+    for i in range(start, end, 3):
+
+        block_532  = low_energy_profile_532[i:i+3]
+        block_1064 = low_energy_profile_1064[i:i+3]
+
+        if block_532.size == 3 and np.sum(block_532) > MAX_LOW_ENERGY_PROFILES_IN_REGION_3:
+            bad_block_R3_532[i:i+3] = True
+
+        if block_1064.size == 3 and np.sum(block_1064) > MAX_LOW_ENERGY_PROFILES_IN_REGION_3:
+            bad_block_R3_1064[i:i+3] = True
+
+    # ------------------------------------------------------------------
+    # Region 4: blocks of 5 profiles (5/3 km)
+    # ------------------------------------------------------------------
+    for i in range(start, end, 5):
+
+        block_532  = low_energy_profile_532[i:i+5]
+        block_1064 = low_energy_profile_1064[i:i+5]
+
+        if block_532.size == 5 and np.sum(block_532) > MAX_LOW_ENERGY_PROFILES_IN_REGION_4:
+            bad_block_R4_532[i:i+5] = True
+
+        if block_1064.size == 5 and np.sum(block_1064) > MAX_LOW_ENERGY_PROFILES_IN_REGION_4:
+            bad_block_R4_1064[i:i+5] = True
+
+    # ------------------------------------------------------------------
+    # Region 5: blocks of 15 profiles (5 km)
+    # ------------------------------------------------------------------
+    for i in range(start, end, 15):
+
+        block_532  = low_energy_profile_532[i:i+15]
+        block_1064 = low_energy_profile_1064[i:i+15]
+
+        if block_532.size == 15 and np.sum(block_532) > MAX_LOW_ENERGY_PROFILES_IN_REGION_5:
+            bad_block_R5_532[i:i+15] = True
+
+        if block_1064.size == 15 and np.sum(block_1064) > MAX_LOW_ENERGY_PROFILES_IN_REGION_5:
+            bad_block_R5_1064[i:i+15] = True
+
+
+    # ------------------------------------------------------------------
+    # BUILD 5-km MASKS FROM BAD PROFILES
+    # ------------------------------------------------------------------
+
+    bad_chunk_R3_532  = np.zeros(nb_chunk_5km, dtype=bool)
+    bad_chunk_R4_532  = np.zeros(nb_chunk_5km, dtype=bool)
+    bad_chunk_R5_532  = np.zeros(nb_chunk_5km, dtype=bool)
+
+    bad_chunk_R3_1064 = np.zeros(nb_chunk_5km, dtype=bool)
+    bad_chunk_R4_1064 = np.zeros(nb_chunk_5km, dtype=bool)
+    bad_chunk_R5_1064 = np.zeros(nb_chunk_5km, dtype=bool)
+
+    for c in range(nb_chunk_5km):
+
+        i0 = start + c * NB_HORIZ_BINS_TO_AVERAGE
+        i1 = i0 + NB_HORIZ_BINS_TO_AVERAGE
+
+        # --- R5 (15 profiles)
+        if np.any(bad_block_R5_532[i0:i1]):
+            bad_chunk_R5_532[c] = True
+
+        if np.any(bad_block_R5_1064[i0:i1]):
+            bad_chunk_R5_1064[c] = True
+
+        # --- R4 (3 blocks of 5 profiles)
+        for k in range(3):
+
+            j0 = i0 + k*5
+            j1 = j0 + 5
+
+            if np.any(bad_block_R4_532[j0:j1]):
+                bad_chunk_R4_532[c] = True
+
+            if np.any(bad_block_R4_1064[j0:j1]):
+                bad_chunk_R4_1064[c] = True
+
+        # --- R3 (5 blocks of 3 profiles)
+        for k in range(5):
+
+            j0 = i0 + k*3
+            j1 = j0 + 3
+
+            if np.any(bad_block_R3_532[j0:j1]):
+                bad_chunk_R3_532[c] = True
+
+            if np.any(bad_block_R3_1064[j0:j1]):
+                bad_chunk_R3_1064[c] = True
+
+
+    # ------------------------------------------------------------------------------
     # 1-D vertical data at 180-m resolution
+    # ------------------------------------------------------------------------------
     for key in ["Lidar_Data_Altitudes",]:
         # Initialization
         data_dict_5kmx180m[key] = np.ones(nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3, dtype=np.float32)*FILL_VALUE_FLOAT
@@ -985,14 +1113,101 @@ if __name__ == "__main__":
         # Take middle altitude of 3 60-m vertical bins in R3 region (8.2 - 20.2 km)
         data_dict_5kmx180m[key][nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = data_dict_cal_lid_l1[key][START_INDEX_R3+1:END_INDEX_R3:3]
 
+    # ------------------------------------------------------------------------------
+    # 2-D AB signal
+    # ------------------------------------------------------------------------------
+
+    key_list = [
+        "Total_Attenuated_Backscatter_532",
+        "Parallel_Attenuated_Backscatter_532",
+        "Perpendicular_Attenuated_Backscatter_532",
+        "Attenuated_Backscatter_1064",
+    ]
+
+    for key in key_list:
+
+        data_dict_5kmx180m[key] = np.ma.ones(
+            (nb_chunk_5km, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3)
+        ) * FILL_VALUE_FLOAT
+
+        # --- Load full-resolution data first ---
+        data_full = np.ma.masked_invalid(data_dict_cal_lid_l1[key])
+
+        # --- Apply LOW-ENERGY MASKS BEFORE 5-km averaging ---
+
+        if "532"  in key:
+            data_full[bad_block_R3_532, START_INDEX_R3:END_INDEX_R3+1] = np.ma.masked
+            data_full[bad_block_R4_532, START_INDEX_R4:END_INDEX_R4+1] = np.ma.masked
+            if PROCESS_UP_TO_40KM:
+                data_full[bad_block_R5_532, START_INDEX_R5:END_INDEX_R5+1] = np.ma.masked
+
+        if "1064" in key:
+            data_full[bad_block_R3_1064, START_INDEX_R3:END_INDEX_R3+1] = np.ma.masked
+            data_full[bad_block_R4_1064, START_INDEX_R4:END_INDEX_R4+1] = np.ma.masked
+            if PROCESS_UP_TO_40KM:
+                data_full[bad_block_R5_1064, START_INDEX_R5:END_INDEX_R5+1] = np.ma.masked
+
+        # --- Perform 5-km horizontal averaging
+        data = data_full[cal_lid_l1_prof_index_range_mult_of_15, :]
+        data_15_prof_chunks = data.reshape(nb_chunk_5km,
+                                        NB_HORIZ_BINS_TO_AVERAGE,
+                                        -1)
+
+        data_5km = np.ma.mean(data_15_prof_chunks, axis=1)
+
+        # --- Vertical processing
+
+        # --- R5 ---
+        if PROCESS_UP_TO_40KM:
+
+            alts_R5_300m = data_dict_cal_lid_l1["Lidar_Data_Altitudes"][
+                START_INDEX_R5:END_INDEX_R5+2]
+
+            alts_R5_180m = data_dict_5kmx180m["Lidar_Data_Altitudes"][
+                :nb_vert_bins_180m_R5]
+
+            data_R5_300m = data_5km[:, START_INDEX_R5:END_INDEX_R5+2]
+
+            f_interp = interp1d(alts_R5_300m,
+                                data_R5_300m,
+                                kind='linear',
+                                axis=1,
+                                bounds_error=False,
+                                fill_value='extrapolate')
+
+            data_dict_5kmx180m[key][:, :nb_vert_bins_180m_R5] = \
+                f_interp(alts_R5_180m)
+
+        # --- R4 ---
+        data_dict_5kmx180m[key][:,
+            nb_vert_bins_180m_R5:
+            nb_vert_bins_180m_R5+nb_vert_bins_180m_R4] = \
+            data_5km[:, START_INDEX_R4:END_INDEX_R4+1]
+
+        # --- R3 ---
+        R3_data = data_5km[:, START_INDEX_R3:END_INDEX_R3+1]
+
+        R3_3_vert_bins = R3_data.reshape(
+            nb_chunk_5km,
+            nb_vert_bins_180m_R3,
+            NB_VERT_BINS_TO_AVERAGE_IN_R3
+        )
+
+        data_dict_5kmx180m[key][:,
+            nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = \
+            np.ma.mean(R3_3_vert_bins, axis=2)
+
+    # ------------------------------------------------------------------------------
     # 1-D horizontal data at 5-km resolution
+    # ------------------------------------------------------------------------------
     for key in ["Latitude", "Longitude", "Profile_ID", "Profile_Time"]: #, "Number_Bins_Shift",  "Profile_UTC_Time"]: 
         # Take middle (8th) profile of 5-km horizontal bins
         data_dict_5kmx180m[key] = data_dict_cal_lid_l1[key][cal_lid_l1_prof_index_range_mult_of_15][int(NB_HORIZ_BINS_TO_AVERAGE/2)::NB_HORIZ_BINS_TO_AVERAGE]
     
-    # 2-D data at 5-km×180-m resolution
-    key_list = ["Total_Attenuated_Backscatter_532", "Parallel_Attenuated_Backscatter_532", "Perpendicular_Attenuated_Backscatter_532", "Attenuated_Backscatter_1064",
-                "Molecular_Total_Attenuated_Backscatter_532", "Molecular_Parallel_Attenuated_Backscatter_532", "Molecular_Perpendicular_Attenuated_Backscatter_532", "Molecular_Attenuated_Backscatter_1064",
+    # ------------------------------------------------------------------------------
+    # 2-D data at 5-km×180-m resolution (other than AB signal)
+    # ------------------------------------------------------------------------------
+    key_list = ["Molecular_Total_Attenuated_Backscatter_532", "Molecular_Parallel_Attenuated_Backscatter_532", "Molecular_Perpendicular_Attenuated_Backscatter_532", "Molecular_Attenuated_Backscatter_1064",
                 "Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Parallel", "Attenuated_Backscatter_Uncertainty_Standard_Deviation_532_Perpendicular", "Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064",
                 "Attenuated_Scattering_Ratio_532"]
     if SAVE_DEVELOPMENT_DATA:
@@ -1023,31 +1238,6 @@ if __name__ == "__main__":
         R3_data = data_5km[:, START_INDEX_R3:END_INDEX_R3+1] 
         R3_3_vert_bins = R3_data.reshape(nb_chunk_5km, nb_vert_bins_180m_R3, NB_VERT_BINS_TO_AVERAGE_IN_R3)
         data_dict_5kmx180m[key][:, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = np.ma.mean(R3_3_vert_bins, axis=2)
-
-
-
-
-        # # Initialization
-        # data_dict_5kmx180m[key] = np.ma.ones((nb_chunk_5km, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+nb_vert_bins_180m_R3))*FILL_VALUE_FLOAT
-        # for prof_i in np.arange(nb_chunk_5km):
-        #     if PROCESS_UP_TO_40KM: 
-        #         # Average horizontally
-        #         data_R5_300m = np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE, START_INDEX_R5:END_INDEX_R5+2], axis=0)
-        #         # Interpolate vertically from 300 m to 180 m
-        #         alts_R5_300m = data_dict_cal_lid_l1["Lidar_Data_Altitudes"][START_INDEX_R5:END_INDEX_R5+2]
-        #         alts_R5_180m = data_dict_5kmx180m["Lidar_Data_Altitudes"][:nb_vert_bins_180m_R5]
-        #         f_interp = interp1d(alts_R5_300m, data_R5_300m, kind='linear', bounds_error=False, fill_value='extrapolate')
-        #         data_dict_5kmx180m[key][prof_i, :nb_vert_bins_180m_R5] = f_interp(np.array(alts_R5_180m))
-        #     # for alt_i in np.arange(nb_vert_bins_180m_R4):
-        #     #     # Average horizontally and vertically
-        #     #     data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+alt_i] =\
-        #     #         np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
-        #     #                                              START_INDEX_R4+alt_i])
-        #     for alt_i in np.arange(nb_vert_bins_180m_R3):
-        #         # Average horizontally and vertically
-        #         data_dict_5kmx180m[key][prof_i, nb_vert_bins_180m_R5+nb_vert_bins_180m_R4+alt_i] =\
-        #             np.ma.mean(data_dict_cal_lid_l1[key][prof_index_first_in_chunk+prof_i*NB_HORIZ_BINS_TO_AVERAGE:prof_index_first_in_chunk+(prof_i+1)*NB_HORIZ_BINS_TO_AVERAGE,
-        #                                                  START_INDEX_R3+alt_i*NB_VERT_BINS_TO_AVERAGE_IN_R3:START_INDEX_R3+(alt_i+1)*NB_VERT_BINS_TO_AVERAGE_IN_R3])
 
     # Print number of profiles in the granule
     print(f"\tNumber of 5-km profiles to process: {nb_chunk_5km}")
@@ -1095,6 +1285,47 @@ if __name__ == "__main__":
                         data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"],
                         data_dict_5kmx180m["Attenuated_Backscatter_Uncertainty_Standard_Deviation_1064"],
                         '1064')
+
+
+    # ************************************************
+    # *** Mask low energy regions in channel masks ***
+    print("\n\n*****Mask low energy regions in channel masks...*****")
+
+    key_list = [
+        "Parallel_Detection_Flags_532",
+        "Perpendicular_Detection_Flags_532",
+        "Detection_Flags_1064"
+    ]
+
+    for key in key_list:
+
+        channel_mask = data_dict_2d_mcda[key].copy()
+
+        if "532" in key:
+            channel_mask[bad_chunk_R3_532,
+                nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = np.ma.masked
+
+            channel_mask[bad_chunk_R4_532,
+                nb_vert_bins_180m_R5:
+                nb_vert_bins_180m_R5+nb_vert_bins_180m_R4] = np.ma.masked
+
+            if PROCESS_UP_TO_40KM:
+                channel_mask[bad_chunk_R5_532,
+                    :nb_vert_bins_180m_R5] = np.ma.masked
+    
+        if "1064" in key:
+            channel_mask[bad_chunk_R3_1064,
+                nb_vert_bins_180m_R5+nb_vert_bins_180m_R4:] = np.ma.masked
+
+            channel_mask[bad_chunk_R4_1064,
+                nb_vert_bins_180m_R5:
+                nb_vert_bins_180m_R5+nb_vert_bins_180m_R4] = np.ma.masked
+
+            if PROCESS_UP_TO_40KM:
+                channel_mask[bad_chunk_R5_1064,
+                    :nb_vert_bins_180m_R5] = np.ma.masked
+
+        data_dict_2d_mcda[key] = channel_mask
 
 
     # *******************************************
@@ -1204,6 +1435,23 @@ if __name__ == "__main__":
                                                                   f"{granule_date_dict['day']:02d}")
     os.makedirs(outdata_folder, exist_ok=True)
     
+    # Replace masked data by FILL_VALUE
+    key_list = [
+        "Parallel_Attenuated_Backscatter_532",
+        "Perpendicular_Attenuated_Backscatter_532",
+        "Attenuated_Backscatter_1064"
+    ]
+    for key in key_list:
+        data_dict_5kmx180m[key] = data_dict_5kmx180m[key].filled(FILL_VALUE_FLOAT)
+    key_list = [
+        "Parallel_Detection_Flags_532",
+        "Perpendicular_Detection_Flags_532",
+        "Detection_Flags_1064"
+    ]
+    for key in key_list:
+        data_dict_2d_mcda[key] = data_dict_2d_mcda[key].filled(FILL_VALUE_BYTE)
+
+
     # Save the data
     save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype=OUT_FILETYPE, save_development_data=SAVE_DEVELOPMENT_DATA)
 
