@@ -1,3 +1,7 @@
+**Versiont 1.6.0** Released 2026-03-31.
+
+* Adjust algorithm parameters to improve detection of faint PSCs.
+
 **Versiont 1.5.0** Released 2026-03-12.
 
 * Filter low energy shots.

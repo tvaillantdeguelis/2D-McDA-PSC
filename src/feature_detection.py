@@ -580,7 +580,11 @@ def process_detection_level(channel, level, ab_mol, ab_sigma, feature_dict, ab_d
 
     # Filter Small Features: Remove regions in the smoothed binary mask that contain fewer connected pixels than the specified minimum threshold.
     print("\t\t- Flag 'Detected' where patterns of 'FLAG_MAYBE' pixels meet neighbors number limit condition...", end='')
-    feature_dict[step := step+1] = replace_maybe(n, feature_dict[get_last_key(feature_dict)], level)
+    if level == 5:
+        prev_detect=False
+    else:
+        prev_detect=True
+    feature_dict[step := step+1] = replace_maybe(n, feature_dict[get_last_key(feature_dict)], level, prev_detect)
     tic = print_elapsed_time(tic)
 
     # Remove detected pixel from AB
