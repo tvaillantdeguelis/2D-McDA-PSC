@@ -700,6 +700,8 @@ def classify_features(ab_532_par_mean, ab_532_per_mean):
     psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean >= ab_par_lim_nat_ice) & (ab_532_par_mean < ab_par_lim_ice_waveice)] = 4 # Ice
     psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 2 # NAT
     psc_mask[(ab_532_per_mean >= ab_per_lim_nat_enhanced_nat) & (ab_532_par_mean >= ab_par_lim_nat_enhanced_nat) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 5 # Enhanced NAT
+    
+    psc_mask[ab_532_par_mean == FILL_VALUE_FLOAT] = 0 # No detection
 
     return psc_mask
 
