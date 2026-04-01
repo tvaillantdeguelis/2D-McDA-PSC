@@ -263,7 +263,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    if False:
+    if True:
         key = 'Composite_Detection_Flags'
         params[key] = DataVar(key, data_dict_2d_mcda["Composite_Detection_Flags"])
         params[key].description = "Composite detection mask from the 3 detection channels."
@@ -286,7 +286,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].valid_range = (0, 1)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
-    if False:
+    if MAKE_CLASSIFICATION:
         key = 'Homogeneous_Chunks_Mask'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
         params[key].valid_range = (0, 255)
@@ -294,26 +294,31 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
         key = 'Homogeneous_Chunks_Classification'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
+        params[key].description = "1: STS, 2: NAT, 3: , 4: Ice, 5: Enhanced NAT, 6: Wave ice"
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
+        params[key].description = "532-nm parallel attenuated backscatter signal averaged on homogeneous chunks."
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+        params[key].description = "532-nm perpendicular attenuated backscatter signal averaged on homogeneous chunks."
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
+        params[key].description = "1064-nm attenuated backscatter signal averaged on homogeneous chunks."
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+        params[key].description = "532-nm attenuated scattering ratio averaged on homogeneous chunks."
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
@@ -337,6 +342,13 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].description = "1064-nm attenuated backscatter signal averaged at 5-km×180-m resolution."
         params[key].fillvalue = FILL_VALUE_FLOAT
         params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Attenuated_Scattering_Ratio_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"])
+        params[key].description = "532-nm attenuated backscatter scattering ratio averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = ""
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
 
@@ -672,7 +684,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
 
 
-def classify_homogeneous_chunks_with_psc_v2(ab_532_per_mean, sr_532_mean):
+def classify_features(ab_532_per_mean, sr_532_mean):
 
     # Initialization
     psc_mask = np.zeros(ab_532_per_mean.shape)
@@ -728,6 +740,8 @@ if __name__ == "__main__":
 
     SAVE_DEVELOPMENT_DATA = config["processing"]["save_development_data"]
     PROCESS_UP_TO_40KM = config["processing"]["process_up_to_40km"]
+    MAKE_CLASSIFICATION = config["processing"]["make_classification"]
+    SEPARATION_TYPE = config["processing"]["feature_separation_type_for_classification"]
 
     TYPE_2D_McDA_PSC = config["algorithm"]["type"]
 
@@ -749,6 +763,9 @@ if __name__ == "__main__":
     print("\tLAT_MIN =", LAT_MIN)
     print("\tLAT_MAX =", LAT_MAX)
     print("\tSAVE_DEVELOPMENT_DATA =", SAVE_DEVELOPMENT_DATA)
+    print("\tPROCESS_UP_TO_40KM =", PROCESS_UP_TO_40KM)
+    print("\tMAKE_CLASSIFICATION =", MAKE_CLASSIFICATION)
+    print("\tSEPARATION_TYPE =", SEPARATION_TYPE)
     print("\tVERSION_2D_McDA_PSC =", VERSION_2D_McDA_PSC)
     print("\tTYPE_2D_McDA_PSC =", TYPE_2D_McDA_PSC)
     print("\tOUT_FOLDER =", OUT_FOLDER)
@@ -1367,9 +1384,10 @@ if __name__ == "__main__":
     #     for key in data_dict_2d_mcda_dev:
     #         data_dict_2d_mcda_dev[key] = rm_prof(data_dict_2d_mcda_dev[key], int(NB_PROF_OVERLAP/15), 'end')
 
-    SEPARATION_TYPE = "all_levels_and_channels" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
+    
 
-    if False:
+    if MAKE_CLASSIFICATION:
+
         if SEPARATION_TYPE == "pixel":
             data_dict_2d_mcda["homogeneous_chunks_mask"] = np.ma.ones(data_dict_2d_mcda["Parallel_Detection_Flags_532"].shape) # not used
         else:
@@ -1389,35 +1407,28 @@ if __name__ == "__main__":
             
             print_elapsed_time(tic_algo)
 
-    if False:
-        # ***********************************************************
-        # *** Apply PSC v2 classification to homogeneous features ***
+
+        # ****************************************************
+        # *** Apply classification to homogeneous features ***
         print("\n\n############################################################\n"\
-            "*****Apply PSC v2 classification to homogeneous features...*****")
+            "*****Apply classification to homogeneous features...*****")
 
         tic_algo = print_time()
-
-        # Mask where spikes
-        ab_532_par = mask_where_spikes(data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], 
-                                       data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
-        ab_532_per = mask_where_spikes(data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], 
-                                       data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
-        ab_1064 = mask_where_spikes(data_dict_5kmx180m["Attenuated_Backscatter_1064"], 
-                                    data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
-        sr_532 = mask_where_spikes(data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"], 
-                                   data_dict_2d_mcda_dev["Parallel_Spikes_532"], data_dict_2d_mcda_dev["Perpendicular_Spikes_532"])
 
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"] = \
             average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
-                                            ab_532_par, ab_532_per, ab_1064, sr_532,
+                                            data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], 
+                                            data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], 
+                                            data_dict_5kmx180m["Attenuated_Backscatter_1064"], 
+                                            data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
-            classify_homogeneous_chunks_with_psc_v2(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"],
-                                                    data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
         
         print_elapsed_time(tic_algo)
 
