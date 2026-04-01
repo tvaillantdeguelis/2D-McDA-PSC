@@ -684,23 +684,22 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
 
 
-def classify_features(ab_532_per_mean, sr_532_mean):
+def classify_features(ab_532_par_mean, ab_532_per_mean):
 
     # Initialization
     psc_mask = np.zeros(ab_532_per_mean.shape)
 
     # Classification
-    atb_per_thresh = 2.5e-6
-    atb_per_enhanced_nat_thresh = 2e-5
-    sr_532_thresh = 1.5
-    sr_532_enhanced_nat_thresh = 2
-    sr_532_ice_thresh = 3
-    sr_532_wave_ice_thresh = 50
-    psc_mask[(ab_532_per_mean < atb_per_thresh) & (sr_532_mean >= sr_532_thresh)] = 1 # STS
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_wave_ice_thresh)] = 6 # Wave ice
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean >= sr_532_ice_thresh) & (sr_532_mean < sr_532_wave_ice_thresh)] = 4 # Ice
-    psc_mask[(ab_532_per_mean >= atb_per_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 2 # NAT
-    psc_mask[(ab_532_per_mean >= atb_per_enhanced_nat_thresh) & (sr_532_mean >= sr_532_enhanced_nat_thresh) & (sr_532_mean < sr_532_ice_thresh)] = 5 # Enhanced NAT
+    ab_per_lim_liquid_solid = 2e-6
+    ab_per_lim_nat_enhanced_nat = 2e-5
+    ab_par_lim_nat_enhanced_nat = 5e-5
+    ab_par_lim_nat_ice = 4e-4
+    ab_par_lim_ice_waveice = 1e-2
+    psc_mask[ab_532_per_mean < ab_per_lim_liquid_solid] = 1 # STS
+    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean >= ab_par_lim_ice_waveice)] = 6 # Wave ice
+    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean >= ab_par_lim_nat_ice) & (ab_532_par_mean < ab_par_lim_ice_waveice)] = 4 # Ice
+    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 2 # NAT
+    psc_mask[(ab_532_per_mean >= ab_per_lim_nat_enhanced_nat) & (ab_532_par_mean >= ab_par_lim_nat_enhanced_nat) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 5 # Enhanced NAT
 
     return psc_mask
 
@@ -1427,8 +1426,8 @@ if __name__ == "__main__":
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
-            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"],
-                              data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
         
         print_elapsed_time(tic_algo)
 
