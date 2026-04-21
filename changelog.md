@@ -1,3 +1,7 @@
+**Versiont 2.0.0** Released 2026-04-21.
+
+* Add classification function. Similar to PSCMask V3 applied to homogeneous features.
+
 **Versiont 1.6.0** Released 2026-03-31.
 
 * Adjust algorithm parameters to improve detection of faint PSCs.
