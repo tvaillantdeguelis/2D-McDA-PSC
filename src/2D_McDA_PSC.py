@@ -16,6 +16,7 @@ import subprocess
 
 import numpy as np
 from scipy.interpolate import interp1d
+from pyhdf.SD import SD, SDC
 
 # sys.path.append("/home/vaillant/codes/projects/2D_McDA_PSC/my_modules")
 sys.path.append("./my_modules/")
@@ -301,25 +302,55 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
         params[key].description = "532-nm parallel attenuated backscatter signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Homogeneous_Chunks_Mean_Particulate_Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"])
+        params[key].description = "532-nm parallel attenuated backscatter particulate signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
         params[key].description = "532-nm perpendicular attenuated backscatter signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Homogeneous_Chunks_Mean_Particulate_Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"])
+        params[key].description = "532-nm perpendicular attenuated backscatter particulate signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
         params[key].description = "1064-nm attenuated backscatter signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Homogeneous_Chunks_Mean_Particulate_Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"])
+        params[key].description = "1064-nm attenuated backscatter particulate signal averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
         params[key].description = "532-nm attenuated scattering ratio averaged on homogeneous chunks."
+        params[key].fillvalue = FILL_VALUE_FLOAT
         params[key].valid_range = (0, 255)
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'NAT_Ice_Scattering_Ratio_Threshold'
+        params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"])
+        params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio, from CALIPSO L2 PSCMask V3 (PSC_Ice_Mixture_Boundary)."
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
     if True:
@@ -684,26 +715,41 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
 
 
-def classify_features(ab_532_par_mean, ab_532_per_mean):
+def classify_features(asr_mean, ab_p_per_mean, asr_nat_ice):
 
     # Initialization
-    psc_mask = np.zeros(ab_532_per_mean.shape)
+    psc_mask = np.zeros(ab_p_per_mean.shape)
 
     # Classification
-    ab_per_lim_liquid_solid = 2e-6
-    ab_per_lim_nat_enhanced_nat = 2e-5
-    ab_par_lim_nat_enhanced_nat = 5e-5
-    ab_par_lim_nat_ice = 4e-4
-    ab_par_lim_ice_waveice = 1e-2
-    psc_mask[ab_532_per_mean < ab_per_lim_liquid_solid] = 1 # STS
-    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean >= ab_par_lim_ice_waveice)] = 6 # Wave ice
-    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean >= ab_par_lim_nat_ice) & (ab_532_par_mean < ab_par_lim_ice_waveice)] = 4 # Ice
-    psc_mask[(ab_532_per_mean >= ab_per_lim_liquid_solid) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 2 # NAT
-    psc_mask[(ab_532_per_mean >= ab_per_lim_nat_enhanced_nat) & (ab_532_par_mean >= ab_par_lim_nat_enhanced_nat) & (ab_532_par_mean < ab_par_lim_nat_ice)] = 5 # Enhanced NAT
+    ab_p_per_liq_solid = 4e-6 # In V3, this threshold changes with horizontal averaging scale
+    ab_p_per_nat_enat = 2e-5
+    asr_nat_enat = 2
+    asr_ice_waveice = 50
+    psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
+    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
+    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
+    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean < asr_nat_ice)] = 2 # NAT
+    psc_mask[(ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
     
-    psc_mask[ab_532_par_mean == FILL_VALUE_FLOAT] = 0 # No detection
+    psc_mask[asr_mean == FILL_VALUE_FLOAT] = 0 # No detection
 
     return psc_mask
+
+
+def match_profiles(time_ref, time_target, tol=1e-3):
+
+    idx = np.searchsorted(time_target, time_ref)
+    idx = np.clip(idx, 1, len(time_target) - 1)
+
+    left = time_target[idx - 1]
+    right = time_target[idx]
+
+    idx -= (np.abs(time_ref - left) < np.abs(time_ref - right))
+
+    dt = np.abs(time_ref - time_target[idx])
+    valid = dt < tol
+
+    return idx, valid, dt
 
 
 if __name__ == "__main__":
@@ -749,6 +795,10 @@ if __name__ == "__main__":
     OUT_FOLDER = config["output"]["folder"]
     OUT_FILETYPE = config["output"]["filetype"]
 
+    if MAKE_CLASSIFICATION:
+        FOLDER_CAL_LID_L2_PSCMask = "/DATA/LIENS/CALIOP/"
+        VERSION_CAL_LID_L2_PSCMask = "V3.00"
+        TYPE_CAL_LID_L2_PSCMask = "Standard" # "Standard", "Prov"
 
 
     # ********************************
@@ -770,6 +820,10 @@ if __name__ == "__main__":
     print("\tVERSION_2D_McDA_PSC =", VERSION_2D_McDA_PSC)
     print("\tTYPE_2D_McDA_PSC =", TYPE_2D_McDA_PSC)
     print("\tOUT_FOLDER =", OUT_FOLDER)
+    if MAKE_CLASSIFICATION:
+        print("\tFOLDER_CAL_LID_L2_PSCMask =", FOLDER_CAL_LID_L2_PSCMask)
+        print("\tVERSION_CAL_LID_L2_PSCMask =", VERSION_CAL_LID_L2_PSCMask)
+        print("\tTYPE_CAL_LID_L2_PSCMask =", TYPE_CAL_LID_L2_PSCMask)
 
 
     # ***************************
@@ -1263,6 +1317,22 @@ if __name__ == "__main__":
     print_elapsed_time(tic)
     
 
+    # ***********************************
+    # *** Compute particulate signals ***
+    print("\n\n*****Compute particulate signals...*****")
+
+    tic_algo = print_time()
+
+    data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"] = data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"] -\
+                                                                            data_dict_5kmx180m["Molecular_Parallel_Attenuated_Backscatter_532"]
+    data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"] = data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"] -\
+                                                                                 data_dict_5kmx180m["Molecular_Perpendicular_Attenuated_Backscatter_532"]
+    data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"] = data_dict_5kmx180m["Attenuated_Backscatter_1064"] -\
+                                                                    data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"]
+
+    print_elapsed_time(tic)
+
+
     # *************************
     # *** Feature detection ***
     print("\n\n*****Feature detection...*****")
@@ -1389,6 +1459,72 @@ if __name__ == "__main__":
 
     if MAKE_CLASSIFICATION:
 
+        # *************************
+        # *** Load PSCMask data ***
+        # To get PSC_Ice_Mixture_Boundary, the threshold between NAT and ice computed from MLS observations
+        print("\n*****Load PSCMask data...*****")
+
+        tic = datetime.now()
+
+        # Get filename and filepath
+        granule_date_dict = split_granule_date(GRANULE_DATE)
+        filename_psc = f"CAL_LID_L2_PSCMask-{TYPE_CAL_LID_L2_PSCMask}-{VERSION_CAL_LID_L2_PSCMask.replace('.', '-')}." \
+                    f"{granule_date_dict['year']}-{granule_date_dict['month']:02d}-{granule_date_dict['day']:02d}T00-00-00ZN.hdf"
+        hdffile = os.path.join(FOLDER_CAL_LID_L2_PSCMask, f"PSCMask.{VERSION_CAL_LID_L2_PSCMask.replace('V', 'v')}",
+                            str(granule_date_dict['year']),
+                            f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_"
+                            f"{granule_date_dict['day']:02d}",
+                            filename_psc)
+
+        # Open HDF file
+        print(f"\tGranule path: {hdffile}")
+        cal_psc = hdf = SD(hdffile, SDC.READ)
+
+        # Find granule section in the daily PSC file
+        l1_input_filenames = cal_psc.select("L1_Input_Filenames")[:]
+        granule_names = []
+        for i_filenames in np.arange(l1_input_filenames.shape[0]):
+            granule_name = ''
+            if VERSION_CAL_LID_L2_PSCMask in ("V2.00", "V3.00"):
+                granule_name_char_indexes = np.arange(26, 47)
+            elif VERSION_CAL_LID_L2_PSCMask == "V1.00":
+                granule_name_char_indexes = np.arange(27, 48)
+            else:
+                raise ValueError(f"Define 'granule_name_char_indexes' for VERSION_CAL_LID_L2_PSCMask = {VERSION_CAL_LID_L2_PSCMask}")
+            for i_char in granule_name_char_indexes:
+                granule_name = granule_name + l1_input_filenames[i_filenames][i_char].decode('UTF-8')
+            granule_names.append(granule_name)
+        granule_name_index = granule_names.index(GRANULE_DATE)
+        granule_start_time = cal_psc.select("L1_Input_Start_Times")[granule_name_index]
+        granule_end_time = cal_psc.select("L1_Input_End_Times")[granule_name_index]
+        profile_utc_time = cal_psc.select("Profile_UTC_Time")[:]
+        granule_start_index = int((np.abs(profile_utc_time - granule_start_time)).argmin())
+        granule_end_index = int((np.abs(profile_utc_time - granule_end_time)).argmin())
+
+        psc_v3_ice_nat_threshold = cal_psc.select("PSC_Ice_Mixture_Boundary")[granule_start_index:granule_end_index + 1, :]
+        psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
+        psc_v3_altitude = cal_psc.select("Altitude")[:]
+
+        if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
+            raise ValueError("Altitude grids do not match")
+                             
+        indices, valid, dt = match_profiles(data_dict_5kmx180m["Profile_Time"], psc_v3_profile_time)
+
+        print(f"\tMax time difference: {dt.max():.2e} s")
+        print(f"\tValid matches: {valid.sum()} / {len(valid)}")
+
+        n_prof = len(data_dict_5kmx180m["Profile_Time"])
+        n_alt = len(psc_v3_altitude)
+
+        psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
+
+        psc_v3_ice_nat_threshold_matched[valid] = psc_v3_ice_nat_threshold[indices[valid], :]
+
+        data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
+
+        print_elapsed_time(tic)
+
+
         if SEPARATION_TYPE == "pixel":
             data_dict_2d_mcda["homogeneous_chunks_mask"] = np.ma.ones(data_dict_2d_mcda["Parallel_Detection_Flags_532"].shape) # not used
         else:
@@ -1427,9 +1563,21 @@ if __name__ == "__main__":
                                             data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             separation_type=SEPARATION_TYPE)
         
+        data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"], \
+        _ = \
+            average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
+                                            data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"], 
+                                            data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"], 
+                                            data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"], 
+                                            data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
+                                            separation_type=SEPARATION_TYPE)
+        
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
-            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"],
-                              data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
+                              data_dict_5kmx180m["nat_ice_R_threshold"])
         
         print_elapsed_time(tic_algo)
 
