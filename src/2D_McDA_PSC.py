@@ -721,7 +721,7 @@ def classify_features(asr_mean, ab_p_per_mean, asr_nat_ice):
     psc_mask = np.zeros(ab_p_per_mean.shape)
 
     # Classification
-    ab_p_per_liq_solid = 4e-6 # In V3, this threshold changes with horizontal averaging scale
+    ab_p_per_liq_solid = 8e-5 # In V3, this threshold changes with horizontal averaging scale
     ab_p_per_nat_enat = 2e-5
     asr_nat_enat = 2
     asr_ice_waveice = 50
@@ -736,7 +736,7 @@ def classify_features(asr_mean, ab_p_per_mean, asr_nat_ice):
     return psc_mask
 
 
-def match_profiles(time_ref, time_target, tol=1e-3):
+def match_profiles(time_ref, time_target, tol=2e-1):
 
     idx = np.searchsorted(time_target, time_ref)
     idx = np.clip(idx, 1, len(time_target) - 1)
