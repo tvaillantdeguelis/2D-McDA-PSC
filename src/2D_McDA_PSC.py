@@ -721,7 +721,7 @@ def classify_features(asr_mean, ab_p_per_mean, asr_nat_ice):
     psc_mask = np.zeros(ab_p_per_mean.shape)
 
     # Classification
-    ab_p_per_liq_solid = 1e-5 # In V3, this threshold changes with horizontal averaging scale
+    ab_p_per_liq_solid = 7.5e-6 # In V3, this threshold changes with horizontal averaging scale
     ab_p_per_nat_enat = 2e-5
     asr_nat_enat = 2
     asr_ice_waveice = 50
