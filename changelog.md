@@ -1,20 +1,24 @@
-**Versiont 2.0.0** Released 2026-04-21.
+**Version 2.1.0** Released 2026-04-22.
+
+* Determine liquid/solid based on detection in perp channel.
+
+**Version 2.0.0** Released 2026-04-21.
 
 * Add classification function. Similar to PSCMask V3 applied to homogeneous features.
 
-**Versiont 1.6.0** Released 2026-03-31.
+**Version 1.6.0** Released 2026-03-31.
 
 * Adjust algorithm parameters to improve detection of faint PSCs.
 
-**Versiont 1.5.0** Released 2026-03-12.
+**Version 1.5.0** Released 2026-03-12.
 
 * Filter low energy shots.
 
-**Versiont 1.4.4** Released 2026-02-04.
+**Version 1.4.4** Released 2026-02-04.
 
 * Move input configuration parameters to YAML file
 
-**Versiont 1.4.3** Released 2026-02-03.
+**Version 1.4.3** Released 2026-02-03.
 
 * Fixed: Avoid log(0) by skipping fully invalid met density profiles
 * Added: global_attrs to write_netcdf()
