@@ -715,21 +715,24 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
 
 
-def classify_features(asr_mean, ab_p_per_mean, asr_nat_ice):
+def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice):
 
     # Initialization
     psc_mask = np.zeros(ab_p_per_mean.shape)
 
-    # Classification
-    ab_p_per_liq_solid = 7.5e-6 # In V3, this threshold changes with horizontal averaging scale
+    # Thresholds
+    # ab_p_per_liq_solid = 7.5e-6 # In V3, this threshold changes with horizontal averaging scale
     ab_p_per_nat_enat = 2e-5
     asr_nat_enat = 2
     asr_ice_waveice = 50
-    psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
-    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
-    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
-    psc_mask[(ab_p_per_mean >= ab_p_per_liq_solid) & (asr_mean < asr_nat_ice)] = 2 # NAT
-    psc_mask[(ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
+
+    # Classification
+    # psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
+    psc_mask[~(per_detection_flags > 0)] = 1 # STS where no enhancement in the perpendicular channel
+    psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
+    psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
+    psc_mask[(per_detection_flags > 0) & (asr_mean < asr_nat_ice)] = 2 # NAT
+    psc_mask[(per_detection_flags > 0) & (ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
     
     psc_mask[asr_mean == FILL_VALUE_FLOAT] = 0 # No detection
 
@@ -1575,7 +1578,8 @@ if __name__ == "__main__":
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
-            classify_features(data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
+            classify_features(data_dict_2d_mcda["Perpendicular_Detection_Flags_532"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
                               data_dict_5kmx180m["nat_ice_R_threshold"])
         
