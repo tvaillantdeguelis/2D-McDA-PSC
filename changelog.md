@@ -1,3 +1,7 @@
+**Version 2.1.0** Released 2026-04-22.
+
+* Determine liquid/solid based on detection in perp channel.
+
 **Version 2.0.0** Released 2026-04-21.
 
 * Add classification function. Similar to PSCMask V3 applied to homogeneous features.
