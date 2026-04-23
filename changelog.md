@@ -1,3 +1,7 @@
+**Version 2.2.0** Released 2026-04-23.
+
+* Add "Likely tropospheric feature" to the classification.
+
 **Version 2.1.0** Released 2026-04-22.
 
 * Determine liquid/solid based on detection in perp channel.
