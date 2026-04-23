@@ -356,7 +356,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Pressure'
-        params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"])
+        params[key] = DataVar(key, data_dict_5kmx180m["press"])
         params[key].description = "Pressure from PSCMask V3.00."
         params[key].units = "hPa"
         params[key].dimensions = ['Profile_ID', 'Altitude']
@@ -726,7 +726,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean
 
 
-def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice):
+def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, press):
 
     # Initialization
     psc_mask = np.zeros(ab_p_per_mean.shape)
@@ -736,6 +736,7 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice)
     ab_p_per_nat_enat = 2e-5
     asr_nat_enat = 2
     asr_ice_waveice = 50
+    tropo_press_lim = 215 # hPa
 
     # Classification
     # psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
@@ -745,6 +746,7 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice)
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
     psc_mask[(per_detection_flags > 0) & (ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
+    psc_mask[press > tropo_press_lim] = -4 # Likely tropospheric features
     
     psc_mask[asr_mean == FILL_VALUE_FLOAT] = 0 # No detection
 
@@ -1580,7 +1582,7 @@ if __name__ == "__main__":
         psc_v3_ice_nat_threshold_matched[valid] = psc_v3_ice_nat_threshold[indices[valid], :]
         data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
         psc_v3_pressure_matched[valid] = psc_v3_pressure[indices[valid], :]
-        data_dict_5kmx180m["Pressure"] = psc_v3_pressure_matched
+        data_dict_5kmx180m["press"] = psc_v3_pressure_matched
 
         print_elapsed_time(tic)
 
@@ -1638,7 +1640,8 @@ if __name__ == "__main__":
             classify_features(data_dict_2d_mcda["Perpendicular_Detection_Flags_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
-                              data_dict_5kmx180m["nat_ice_R_threshold"])
+                              data_dict_5kmx180m["nat_ice_R_threshold"],
+                              data_dict_5kmx180m["press"])
         
         print_elapsed_time(tic_algo)
 
