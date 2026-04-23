@@ -355,6 +355,12 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio, from CALIPSO L2 PSCMask V3 (PSC_Ice_Mixture_Boundary)."
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
+        key = 'Pressure'
+        params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"])
+        params[key].description = "Pressure from PSCMask V3.00."
+        params[key].units = "hPa"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
     if True:
         key = 'Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
@@ -902,7 +908,6 @@ if __name__ == "__main__":
         "Latitude",
         "Longitude",
         "Lidar_Data_Altitudes",
-        "Pressure",
         "Total_Attenuated_Backscatter_532",
         "Perpendicular_Attenuated_Backscatter_532",
         "Attenuated_Backscatter_1064",
@@ -1545,8 +1550,9 @@ if __name__ == "__main__":
         granule_start_index = int((np.abs(profile_utc_time - granule_start_time)).argmin())
         granule_end_index = int((np.abs(profile_utc_time - granule_end_time)).argmin())
 
-        # Load PSC_Ice_Mixture_Boundary and match 
+        # Load PSC_Ice_Mixture_Boundary and Pressure and match 
         psc_v3_ice_nat_threshold = cal_psc.select("PSC_Ice_Mixture_Boundary")[granule_start_index:granule_end_index + 1, :]
+        psc_v3_pressure = cal_psc.select("Pressure")[granule_start_index:granule_end_index + 1, :]
         psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
         psc_v3_altitude = cal_psc.select("Altitude")[:]
 
@@ -1567,11 +1573,14 @@ if __name__ == "__main__":
         n_prof = len(data_dict_5kmx180m["Profile_Time"])
         n_alt = len(data_dict_5kmx180m["Lidar_Data_Altitudes"])
         psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
+        psc_v3_pressure_matched = np.full((n_prof, n_alt), np.nan)
 
         # Fill only valid matches:
         # For each valid L1 profile, copy the corresponding PSCMask profile
         psc_v3_ice_nat_threshold_matched[valid] = psc_v3_ice_nat_threshold[indices[valid], :]
         data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
+        psc_v3_pressure_matched[valid] = psc_v3_pressure[indices[valid], :]
+        data_dict_5kmx180m["Pressure"] = psc_v3_pressure_matched
 
         print_elapsed_time(tic)
 
