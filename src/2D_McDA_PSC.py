@@ -1278,7 +1278,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------------------
     # 1-D horizontal data at 5-km resolution
     # ------------------------------------------------------------------------------
-    for key in ["Latitude", "Longitude", "Profile_ID", "Profile_Time"]: #, "Number_Bins_Shift",  "Profile_UTC_Time"]: 
+    for key in ["Latitude", "Longitude", "Profile_ID", "Profile_Time", "Profile_UTC_Time"]: #, "Number_Bins_Shift"]: 
         # Take middle (8th) profile of 5-km horizontal bins
         data_dict_5kmx180m[key] = data_dict_cal_lid_l1[key][cal_lid_l1_prof_index_range_mult_of_15][int(NB_HORIZ_BINS_TO_AVERAGE/2)::NB_HORIZ_BINS_TO_AVERAGE]
     
