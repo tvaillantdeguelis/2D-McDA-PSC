@@ -203,6 +203,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         key = 'Profile_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
         params[key].description = "The 8th of 15 consecutive laser shots Profile Time composing the 5-km chunk in CALIOP L1 product."
+        params[key].units = "International Atomic Time (TAI), in seconds, starting from January 1, 1993"
         # params[key].valid_range = (4.204e8, 1.072e9)
         params[key].dimensions = ['Profile_ID']
 
@@ -210,7 +211,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         key = 'Profile_UTC_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
         params[key].description = "The 8th of 15 consecutive laser shots Profile UTC Time composing the 5-km chunk in CALIOP L1 product."
-        params[key].units = "UTC - yymmdd.ffffffff"
+        params[key].units = "Coordinated Universal Time (UTC), formatted as 'yymmdd.ffffffff'"
         # params[key].valid_range = (60426.0, 261231.0)
         params[key].dimensions = ['Profile_ID']
 
@@ -733,9 +734,10 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice)
     # Classification
     # psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
     psc_mask[~(per_detection_flags > 0)] = 1 # STS where no enhancement in the perpendicular channel
+    psc_mask[(per_detection_flags > 0) & (asr_mean == np.nan)] = 0 # Not determinable
+    psc_mask[(per_detection_flags > 0) & (asr_mean < asr_nat_ice)] = 2 # NAT
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
-    psc_mask[(per_detection_flags > 0) & (asr_mean < asr_nat_ice)] = 2 # NAT
     psc_mask[(per_detection_flags > 0) & (ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
     
     psc_mask[asr_mean == FILL_VALUE_FLOAT] = 0 # No detection
@@ -743,17 +745,51 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice)
     return psc_mask
 
 
-def match_profiles(time_ref, time_target, tol=2e-1):
+def match_profiles(time_ref, time_target, tol=1):
+    """
+    Match each profile time in 'time_ref' with the closest profile time in 'time_target'.
 
+    Parameters
+    ----------
+    time_ref : array-like
+        Reference time array (e.g., CALIOP L1 Profile_Time at 5-km resolution).
+    time_target : array-like
+        Target time array to match against (e.g., PSCMask Profile_Time).
+        Must be sorted in ascending order.
+    tol : float
+        Maximum allowed time difference (in same units as time arrays) to consider a match valid (e.g., seconds for Profile_Time).
+
+    Returns
+    -------
+    idx : ndarray
+        Indices in 'time_target' corresponding to the closest match for each element of 'time_ref'.
+    valid : ndarray (bool)
+        Boolean mask indicating whether the match is within tolerance.
+    dt : ndarray
+        Absolute time difference between matched profiles.
+    """
+
+    # Find insertion indices: where each time_ref would be inserted in time_target
+    # to maintain sorted order (points to the "right neighbor")
     idx = np.searchsorted(time_target, time_ref)
+
+    # Ensure indices stay within valid bounds [1, len(time_target)-1]
+    # This is required because we will access idx-1 (left neighbor)
     idx = np.clip(idx, 1, len(time_target) - 1)
 
+    # Get left and right neighboring times in time_target
     left = time_target[idx - 1]
     right = time_target[idx]
 
+    # Compare distance to left and right neighbors
+    # If left is closer, subtract 1 from idx to select it
+    # (True = 1, False = 0 → vectorized operation)
     idx -= (np.abs(time_ref - left) < np.abs(time_ref - right))
 
+    # Compute absolute time difference between matched profiles
     dt = np.abs(time_ref - time_target[idx])
+
+    # Determine which matches are acceptable based on tolerance
     valid = dt < tol
 
     return idx, valid, dt
@@ -866,6 +902,7 @@ if __name__ == "__main__":
         "Latitude",
         "Longitude",
         "Lidar_Data_Altitudes",
+        "Pressure",
         "Total_Attenuated_Backscatter_532",
         "Perpendicular_Attenuated_Backscatter_532",
         "Attenuated_Backscatter_1064",
@@ -1508,6 +1545,7 @@ if __name__ == "__main__":
         granule_start_index = int((np.abs(profile_utc_time - granule_start_time)).argmin())
         granule_end_index = int((np.abs(profile_utc_time - granule_end_time)).argmin())
 
+        # Load PSC_Ice_Mixture_Boundary and match 
         psc_v3_ice_nat_threshold = cal_psc.select("PSC_Ice_Mixture_Boundary")[granule_start_index:granule_end_index + 1, :]
         psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
         psc_v3_altitude = cal_psc.select("Altitude")[:]
@@ -1515,18 +1553,24 @@ if __name__ == "__main__":
         if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
             raise ValueError("Altitude grids do not match")
                              
-        indices, valid, dt = match_profiles(data_dict_5kmx180m["Profile_Time"], psc_v3_profile_time)
+        # Match L1 profile times with PSCMask profile times
+        indices, valid, dt = match_profiles(
+            data_dict_5kmx180m["Profile_Time"], 
+            psc_v3_profile_time
+        )
 
+        # Print diagnostic information about matching quality
         print(f"\tMax time difference: {dt.max():.2e} s")
         print(f"\tValid matches: {valid.sum()} / {len(valid)}")
 
+        # Initialize output array with NaNs (missing values)
         n_prof = len(data_dict_5kmx180m["Profile_Time"])
-        n_alt = len(psc_v3_altitude)
-
+        n_alt = len(data_dict_5kmx180m["Lidar_Data_Altitudes"])
         psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
 
+        # Fill only valid matches:
+        # For each valid L1 profile, copy the corresponding PSCMask profile
         psc_v3_ice_nat_threshold_matched[valid] = psc_v3_ice_nat_threshold[indices[valid], :]
-
         data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
 
         print_elapsed_time(tic)
