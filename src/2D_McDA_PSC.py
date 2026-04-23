@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.1.0"
+__version__ = "2.2.0"
 
 import yaml
 import sys
@@ -297,7 +297,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
         key = 'Homogeneous_Chunks_Classification'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
-        params[key].description = "1: STS, 2: NAT, 3: , 4: Ice, 5: Enhanced NAT, 6: Wave ice"
+        params[key].description = "1: STS, 2: NAT, 3: , 4: Ice, 5: Enhanced NAT, 6: Wave ice, -4: Likely tropospheric features"
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
