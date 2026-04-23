@@ -202,13 +202,14 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     if True:
         key = 'Profile_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
-        params[key].units = "The 8th of 15 consecutive laser shots Profile Time composing the 5-km chunk in CALIOP L1 product."
+        params[key].description = "The 8th of 15 consecutive laser shots Profile Time composing the 5-km chunk in CALIOP L1 product."
         # params[key].valid_range = (4.204e8, 1.072e9)
         params[key].dimensions = ['Profile_ID']
 
     if True:
         key = 'Profile_UTC_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
+        params[key].description = "The 8th of 15 consecutive laser shots Profile UTC Time composing the 5-km chunk in CALIOP L1 product."
         params[key].units = "UTC - yymmdd.ffffffff"
         # params[key].valid_range = (60426.0, 261231.0)
         params[key].dimensions = ['Profile_ID']
