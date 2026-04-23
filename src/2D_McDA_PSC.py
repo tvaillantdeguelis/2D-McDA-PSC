@@ -206,7 +206,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         # params[key].valid_range = (4.204e8, 1.072e9)
         params[key].dimensions = ['Profile_ID']
 
-    if False:
+    if True:
         key = 'Profile_UTC_Time'
         params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
         params[key].units = "UTC - yymmdd.ffffffff"
@@ -382,27 +382,30 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].units = ""
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
+    if True:
+        key = 'Particulate_Parallel_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"])
+        params[key].description = "532-nm particulate parallel attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Particulate_Perpendicular_Attenuated_Backscatter_532'
+        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"])
+        params[key].description = "532-nm particulate perpendicular attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+    
+        key = 'Particulate_Attenuated_Backscatter_1064'
+        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"])
+        params[key].description = "1064-nm particulate attenuated backscatter signal averaged at 5-km×180-m resolution."
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].units = "km-1 sr-1"
+        params[key].dimensions = ['Profile_ID', 'Altitude']        
 
     # Parameters saved for development
     if save_development_data:
-        key = 'Parallel_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Perpendicular_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Attenuated_Backscatter_1064'
-        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-
         key = 'Molecular_Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Parallel_Attenuated_Backscatter_532"])
         params[key].fillvalue = FILL_VALUE_FLOAT
