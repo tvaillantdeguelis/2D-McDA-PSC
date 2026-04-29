@@ -718,33 +718,33 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
 
                         # If masked replace by fill value
                         try:
-                            if sr_532_mean_feature.mask:
-                                sr_532_mean_feature = FILL_VALUE_FLOAT
+                            if sr_532_mean.mask:
+                                sr_532_mean = FILL_VALUE_FLOAT
                         except:
                             pass
                         try:
-                            if ab_532_par_mean_feature.mask:
-                                ab_532_par_mean_feature = FILL_VALUE_FLOAT
+                            if ab_532_par_mean.mask:
+                                ab_532_par_mean = FILL_VALUE_FLOAT
                         except:
                             pass
                         try:
-                            if ab_532_per_mean_feature.mask:
-                                ab_532_per_mean_feature = FILL_VALUE_FLOAT
+                            if ab_532_per_mean.mask:
+                                ab_532_per_mean = FILL_VALUE_FLOAT
                         except:
                             pass
                         try:
-                            if ab_1064_mean_feature.mask:
-                                ab_1064_mean_feature = FILL_VALUE_FLOAT
+                            if ab_1064_mean.mask:
+                                ab_1064_mean = FILL_VALUE_FLOAT
                         except:
                             pass
                         try:
-                            if nat_ice_R_threshold_mean_feature.mask:
-                                nat_ice_R_threshold_mean_feature = FILL_VALUE_FLOAT
+                            if nat_ice_R_threshold_mean.mask:
+                                nat_ice_R_threshold_mean = FILL_VALUE_FLOAT
                         except:
                             pass
 
 
-    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean_feature
+    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean
 
 
 def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, press):
@@ -1664,7 +1664,7 @@ if __name__ == "__main__":
             classify_features(data_dict_2d_mcda["Perpendicular_Detection_Flags_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
-                              data_dict_5kmx180m["homogeneous_chunks_mean_nat_ice_R_threshold"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"],
                               data_dict_5kmx180m["press"])
         
         print_elapsed_time(tic_algo)
