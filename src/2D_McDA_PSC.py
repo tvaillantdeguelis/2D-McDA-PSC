@@ -355,6 +355,11 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio, from CALIPSO L2 PSCMask V3 (PSC_Ice_Mixture_Boundary)."
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
+        key = 'Homogeneous_Chunks_Mean_NAT_Ice_Scattering_Ratio_Threshold'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"])
+        params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio averaged on homogeneous chunks."
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
         key = 'Pressure'
         params[key] = DataVar(key, data_dict_5kmx180m["press"])
         params[key].description = "Pressure from PSCMask V3.00."
