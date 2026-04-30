@@ -1,3 +1,7 @@
+**Version 2.3.0** Released 2026-04-30.
+
+* Average NAT/ice thresholds over homogeneous chunks for the classification.
+
 **Version 2.2.0** Released 2026-04-23.
 
 * Add "Likely tropospheric feature" to the classification.
