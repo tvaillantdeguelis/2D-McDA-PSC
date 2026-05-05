@@ -366,6 +366,11 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].units = "hPa"
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
+        key = 'Temperature'
+        params[key] = DataVar(key, data_dict_5kmx180m["temp"])
+        params[key].description = "Temperature from PSCMask V3.00."
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
     if True:
         key = 'Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
@@ -1555,7 +1560,7 @@ if __name__ == "__main__":
 
         # Open HDF file
         print(f"\tGranule path: {hdffile}")
-        cal_psc = hdf = SD(hdffile, SDC.READ)
+        cal_psc = SD(hdffile, SDC.READ)
 
         # Find granule section in the daily PSC file
         l1_input_filenames = cal_psc.select("L1_Input_Filenames")[:]
@@ -1578,9 +1583,10 @@ if __name__ == "__main__":
         granule_start_index = int((np.abs(profile_utc_time - granule_start_time)).argmin())
         granule_end_index = int((np.abs(profile_utc_time - granule_end_time)).argmin())
 
-        # Load PSC_Ice_Mixture_Boundary and Pressure and match 
+        # Load PSCMask V3 variables and match 
         psc_v3_ice_nat_threshold = cal_psc.select("PSC_Ice_Mixture_Boundary")[granule_start_index:granule_end_index + 1, :]
         psc_v3_pressure = cal_psc.select("Pressure")[granule_start_index:granule_end_index + 1, :]
+        psc_v3_temperature = cal_psc.select("Temperature")[granule_start_index:granule_end_index + 1, :]
         psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
         psc_v3_altitude = cal_psc.select("Altitude")[:]
 
@@ -1602,6 +1608,7 @@ if __name__ == "__main__":
         n_alt = len(data_dict_5kmx180m["Lidar_Data_Altitudes"])
         psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
         psc_v3_pressure_matched = np.full((n_prof, n_alt), np.nan)
+        psc_v3_temperature_matched = np.full((n_prof, n_alt), np.nan)
 
         # Fill only valid matches:
         # For each valid L1 profile, copy the corresponding PSCMask profile
@@ -1609,6 +1616,8 @@ if __name__ == "__main__":
         data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
         psc_v3_pressure_matched[valid] = psc_v3_pressure[indices[valid], :]
         data_dict_5kmx180m["press"] = psc_v3_pressure_matched
+        psc_v3_temperature_matched[valid] = psc_v3_temperature[indices[valid], :]
+        data_dict_5kmx180m["temp"] = psc_v3_temperature_matched
 
         print_elapsed_time(tic)
 
