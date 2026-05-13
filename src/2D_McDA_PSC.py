@@ -297,7 +297,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
         key = 'Homogeneous_Chunks_Classification'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
-        params[key].description = "1: STS, 2: NAT, 3: , 4: Ice, 5: Enhanced NAT, 6: Wave ice, -4: Likely tropospheric features"
+        params[key].description = "1: STS, 2: NAT, 3: SBS, 4: Ice, 5: Enhanced NAT, 6: Wave ice, -4: Likely tropospheric features"
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
@@ -375,6 +375,11 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key] = DataVar(key, data_dict_5kmx180m["temp"])
         params[key].description = "Temperature from PSCMask V3.00."
         params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Tropopause_Altitude_MERRA2'
+        params[key] = DataVar(key, data_dict_5kmx180m["tropopause"])
+        params[key].description = "Tropopause_Altitude_MERRA2 from PSCMask V3.00."
+        params[key].dimensions = ['Profile_ID', ]
 
     if True:
         key = 'Parallel_Attenuated_Backscatter_532'
@@ -773,7 +778,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean, temperature_mean
 
 
-def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, press):
+def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, temp, press):
 
     # Initialization
     psc_mask = np.zeros(ab_p_per_mean.shape)
@@ -784,10 +789,12 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice,
     asr_nat_enat = 2
     asr_ice_waveice = 50
     tropo_press_lim = 215 # hPa
+    temp_lim = 200 # K
 
     # Classification
     # psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
-    psc_mask[~(per_detection_flags > 0)] = 1 # STS where no enhancement in the perpendicular channel
+    psc_mask[~(per_detection_flags > 0) & (temp < temp_lim)] = 1 # STS where no enhancement in the perpendicular channel and T° < 200 K
+    psc_mask[~(per_detection_flags > 0) & (temp >= temp_lim)] = 3 # SBS where no enhancement in the perpendicular channel and T° ≥ 200 K
     psc_mask[(per_detection_flags > 0) & (asr_mean == np.nan)] = 0 # Not determinable
     psc_mask[(per_detection_flags > 0) & (asr_mean < asr_nat_ice)] = 2 # NAT
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
@@ -1604,6 +1611,7 @@ if __name__ == "__main__":
         psc_v3_pressure = cal_psc.select("Pressure")[granule_start_index:granule_end_index + 1, :]
         psc_v3_temperature = cal_psc.select("Temperature")[granule_start_index:granule_end_index + 1, :]
         psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
+        psc_v3_tropopause = cal_psc.select("Tropopause_Altitude_MERRA2")[granule_start_index:granule_end_index + 1]
         psc_v3_altitude = cal_psc.select("Altitude")[:]
 
         if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
@@ -1625,6 +1633,7 @@ if __name__ == "__main__":
         psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
         psc_v3_pressure_matched = np.full((n_prof, n_alt), np.nan)
         psc_v3_temperature_matched = np.full((n_prof, n_alt), np.nan)
+        psc_v3_tropopause_matched = np.full((n_prof,), np.nan)
 
         # Fill only valid matches:
         # For each valid L1 profile, copy the corresponding PSCMask profile
@@ -1634,6 +1643,8 @@ if __name__ == "__main__":
         data_dict_5kmx180m["press"] = psc_v3_pressure_matched
         psc_v3_temperature_matched[valid] = psc_v3_temperature[indices[valid], :]
         data_dict_5kmx180m["temp"] = psc_v3_temperature_matched
+        psc_v3_tropopause_matched[valid] = psc_v3_tropopause[indices[valid]]
+        data_dict_5kmx180m["tropopause"] = psc_v3_tropopause_matched
 
         print_elapsed_time(tic)
 
@@ -1698,6 +1709,7 @@ if __name__ == "__main__":
                               data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_temperature"],
                               data_dict_5kmx180m["press"])
         
         print_elapsed_time(tic_algo)
