@@ -360,6 +360,11 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio averaged on homogeneous chunks."
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
+        key = 'Homogeneous_Chunks_Mean_Temperature'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_temperature"])
+        params[key].description = "Temperature from PSCMask V3.00 averaged on homogeneous chunks."
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+
         key = 'Pressure'
         params[key] = DataVar(key, data_dict_5kmx180m["press"])
         params[key].description = "Pressure from PSCMask V3.00."
@@ -659,7 +664,7 @@ def mask_where_spikes(data, spikes_par, spikes_per):
     return data
 
 
-def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab_1064, sr_532, nat_ice_R_threshold, separation_type):
+def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab_1064, sr_532, nat_ice_R_threshold, temperature, separation_type):
 
     # Initialization
     mask_shape = mask_homogeneous.shape
@@ -669,6 +674,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     ab_1064_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
     sr_532_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
     nat_ice_R_threshold_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    temperature_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
 
     if separation_type == "channel":
         mask_values = np.arange(7)+2 # 2 to 8
@@ -685,6 +691,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                 ab_1064_mean = np.copy(ab_1064)
                 sr_532_mean = np.copy(sr_532)
                 nat_ice_R_threshold_mean = np.copy(nat_ice_R_threshold)
+                temperature_mean = np.copy(temperature)
             else:
                 if not seen_pixels[i, j]:
                     if mask_homogeneous[i, j] in mask_values: 
@@ -726,6 +733,10 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                         nat_ice_R_threshold_mean_feature = np.ma.mean(nat_ice_R_threshold[pattern_pixels])
                         nat_ice_R_threshold_mean[pattern_pixels] = nat_ice_R_threshold_mean_feature
 
+                        # Temperature
+                        temperature_mean_feature = np.ma.mean(temperature[pattern_pixels])
+                        temperature_mean[pattern_pixels] = temperature_mean_feature
+
                         # If masked replace by fill value
                         try:
                             if sr_532_mean.mask:
@@ -752,9 +763,14 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                                 nat_ice_R_threshold_mean = FILL_VALUE_FLOAT
                         except:
                             pass
+                        try:
+                            if temperature_mean.mask:
+                                temperature_mean = FILL_VALUE_FLOAT
+                        except:
+                            pass
 
 
-    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean
+    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean, temperature_mean
 
 
 def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, press):
@@ -1653,25 +1669,28 @@ if __name__ == "__main__":
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"], \
-        data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"] = \
+        data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_temperature"] = \
             average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
                                             data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Attenuated_Backscatter_1064"], 
                                             data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             data_dict_5kmx180m["nat_ice_R_threshold"],
+                                            data_dict_5kmx180m["temp"],
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"], \
-        _, _ = \
+        _, _, _ = \
             average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
                                             data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"], 
                                             data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             data_dict_5kmx180m["nat_ice_R_threshold"],
+                                            data_dict_5kmx180m["temp"],
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
