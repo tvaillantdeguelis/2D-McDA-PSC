@@ -1,3 +1,7 @@
+**Version 2.4.2** Released on 2026-05-16.
+
+* Updated version number in `rename_pscmask_v4_files.sh`.
+
 **Version 2.4.1** Released on 2026-05-16.
 
 * Added a post-processing Bash utility script for automated renaming of output NetCDF files to the standard CALIPSO PSC product naming convention.
