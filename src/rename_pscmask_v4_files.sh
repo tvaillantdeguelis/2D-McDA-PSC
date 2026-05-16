@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VERSION="2.4.0"
+VERSION="2.4.2"
 
-# Convert version to file pattern format: V2-4-0
+# Convert version to file pattern format: VX-X-X
 VERSION_TAG="V$(echo "$VERSION" | tr '.' '-')"
 
 ROOT_DIR="/home/vaillant/codes/projects/2D_McDA_PSC/out/data/2D_McDA_PSC.v${VERSION}"
