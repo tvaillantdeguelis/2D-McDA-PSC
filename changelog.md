@@ -1,3 +1,7 @@
+**Version 2.4.1** Released on 2026-05-16.
+
+* Added a post-processing Bash utility script for automated renaming of output NetCDF files to the standard CALIPSO PSC product naming convention.
+
 **Version 2.4.0** Released on 2026-05-16.
 
 * Harmonized variable names with previous CALIOP product versions.
