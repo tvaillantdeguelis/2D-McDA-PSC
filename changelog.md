@@ -1,45 +1,52 @@
-**Version 2.3.0** Released 2026-04-30.
+**Version 2.4.0** Released on 2026-05-16.
 
-* Average NAT/ice thresholds over homogeneous chunks for the classification.
+* Harmonized variable names with previous CALIOP product versions.
+* Improved NetCDF metadata compliance with CF conventions.
+* Computed `Homogeneous_Chunks_Mean_Temperature` and applied a 200 K threshold to distinguish SBS from STS.
+* Added `Temperature`, `HNO3_Mixing_Ratio`, and `H2O_Mixing_Ratio` to the NetCDF output files.
 
-**Version 2.2.0** Released 2026-04-23.
+**Version 2.3.0** Released on 2026-04-30.
 
-* Add "Likely tropospheric feature" to the classification.
+* Averaged NAT/ice thresholds over homogeneous chunks for classification.
 
-**Version 2.1.0** Released 2026-04-22.
+**Version 2.2.0** Released on 2026-04-23.
 
-* Determine liquid/solid based on detection in perp channel.
+* Added "Likely tropospheric feature" to the classification.
 
-**Version 2.0.0** Released 2026-04-21.
+**Version 2.1.0** Released on 2026-04-22.
 
-* Add classification function. Similar to PSCMask V3 applied to homogeneous features.
+* Determined liquid/solid phase based on detection in the perpendicular channel.
 
-**Version 1.6.0** Released 2026-03-31.
+**Version 2.0.0** Released on 2026-04-21.
 
-* Adjust algorithm parameters to improve detection of faint PSCs.
+* Added a classification function similar to PSCMask V3, applied to homogeneous features.
 
-**Version 1.5.0** Released 2026-03-12.
+**Version 1.6.0** Released on 2026-03-31.
 
-* Filter low energy shots.
+* Adjusted algorithm parameters to improve detection of faint PSCs.
 
-**Version 1.4.4** Released 2026-02-04.
+**Version 1.5.0** Released on 2026-03-12.
 
-* Move input configuration parameters to YAML file
+* Filtered low-energy shots.
 
-**Version 1.4.3** Released 2026-02-03.
+**Version 1.4.4** Released on 2026-02-04.
 
-* Fixed: Avoid log(0) by skipping fully invalid met density profiles
-* Added: global_attrs to write_netcdf()
-* Added: Git-based version identification for development
+* Moved input configuration parameters to a YAML file.
 
-**Version 1.4.2** Released 2025-12-11.
+**Version 1.4.3** Released on 2026-02-03.
 
-* Fixed: Increase number of values in FCORR to avoid error when nb_bins_shift > 20.
+* Fixed: Avoided `log(0)` by skipping fully invalid meteorological density profiles.
+* Added: `global_attrs` to `write_netcdf()`.
+* Added: Git-based version identification for development builds.
 
-**Version 1.4.1** Released 2025-12-09.
+**Version 1.4.2** Released on 2025-12-11.
 
-* Fixed: Exit process if no data between lat_min and lat_max.
+* Fixed: Increased the number of values in `FCORR` to avoid errors when `nb_bins_shift > 20`.
 
-**Version 1.4.0** Released 2025-06-13.
+**Version 1.4.1** Released on 2025-12-09.
 
-* Fist version run over the whole CALIPSO period.
+* Fixed: Exit the process if no data are found between `lat_min` and `lat_max`.
+
+**Version 1.4.0** Released on 2025-06-13.
+
+* First version run over the entire CALIPSO period.

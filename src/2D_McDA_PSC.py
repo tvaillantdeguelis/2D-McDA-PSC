@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.3.0"
+__version__ = "2.4.0"
 
 import yaml
 import sys
@@ -170,23 +170,68 @@ class DataVar():
         self.data = data
         self.fillvalue = None
         self.units = ''
+        self.standard_name = ''
         self.long_name = ''
+        self.axis = ''
         self.description = ''
         self.dimensions = []
         self.valid_range = ()
+        self.comment = 'None'
+        self.coordinates = ''
+        self.flag_values = []
+        self.flag_meanings = ''
 
 
 def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='HDF', save_development_data=False):
 
     global_attrs = {
+
+        "title": "CALIOP Level 2 Polar Stratospheric Cloud Mask Data",
+        "summary": "CALIOP-derived Level 2 product providing Polar Stratospheric Cloud (PSC) mask and associated optical properties from CALIOP L1B observations combined with ancillary MERRA-2 and MLS data.",
+        "product_version": "4.0",
+        "Conventions": "CF-1.8",
+
+        "institution": "NASA LaRC",
+        "project": "CALIPSO / CALIOP derived products",
+        "creator_name": __author__,
+        "creator_email": "thibault.vaillantdeguelis@outlook.com",
+
+        "platform": "CALIPSO",
+        "instrument": "CALIOP",
+
+        "source": f"CALIOP L1B {VERSION_CAL_LID_L1}, MERRA-2, MLS/Aura",
+
         "algorithm_name": "2D-McDA-PSC",
         "algorithm_version": get_full_version(),
 
-        "input_product": "CAL_LID_L1",
-        "input_product_version": VERSION_CAL_LID_L1,
+        "processing_level": "L2",
 
+        "history": "Created from CALIOP L1B V5.00 using 2D-McDA-PSC processing chain",
         "processing_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "author": __author__,
+
+        "geospatial_lat_min": -90.0,
+        "geospatial_lat_max": 90.0,
+        "geospatial_lon_min": -180.0,
+        "geospatial_lon_max": 180.0,
+
+        "geospatial_vertical_min": 8.0,
+        "geospatial_vertical_max": 31.0,
+        "geospatial_vertical_units": "km",
+
+        "spatial_resolution": "5 km horizontal, 180 m vertical",
+        "vertical_levels": 121,
+
+        "featureType": "trajectory",
+
+        "time_coverage_description": (
+            "Southern Hemisphere: lat > 50° S from May to October; "
+            "Northern Hemisphere: lat > 50° N from December to March"
+        ),
+
+        "references": (
+            "Vaillant de Guélis et al. (2021); "
+            "Pitts et al. (2018)"
+        )
     }
     
     # Create a dictionary of parameters to save
@@ -194,82 +239,105 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
     key = 'Profile_ID'
     params[key] = DataVar(key, data_dict_5kmx180m["Profile_ID"])
-    params[key].long_name = "Profile_ID"
-    params[key].description = "The 8th of 15 consecutive laser shots Profile ID composing the 5-km chunk in CALIOP L1 product."
-    # params[key].valid_range = (1, 228630)
     params[key].dimensions = ['Profile_ID']
+    params[key].units = 1
+    params[key].valid_range = (1, 228630)
+    params[key].long_name = "CALIOP profile identifier"
+    params[key].comment = "Unique profile identifier generated sequentially in ground processing for each laser pulse. Profile IDs are guaranteed to be unique within each L1B data file but not over multiple files. For this L2 product, the reported value corresponds to the center profile (8th of 15 consecutive profiles) within the original CALIOP L1B 5-km frame."
+    params[key].coordinates = "Latitude Longitude"
 
-    if True:
-        key = 'Profile_Time'
-        params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
-        params[key].description = "The 8th of 15 consecutive laser shots Profile Time composing the 5-km chunk in CALIOP L1 product."
-        params[key].units = "International Atomic Time (TAI), in seconds, starting from January 1, 1993"
-        # params[key].valid_range = (4.204e8, 1.072e9)
-        params[key].dimensions = ['Profile_ID']
+    key = 'Profile_Time'
+    params[key] = DataVar(key, data_dict_5kmx180m["Profile_Time"])
+    params[key].dimensions = ['Profile_ID']
+    params[key].units = "seconds since 1993-01-01 00:00:00"
+    params[key].valid_range = (4.204e8, 1.072e9)
+    params[key].long_name = "Profile time in International Atomic Time"
+    params[key].comment = ": Laser firing time for each pulse, given in International Atomic Time (TAI) (i.e., in elapsed seconds from January 1, 1993). For this L2 product, the reported value corresponds to the center profile (8th of 15 consecutive profiles) within the original CALIOP L1B 5-km frame."
+    params[key].coordinates = "Latitude Longitude"
+    params[key].standard_name = "time"
+    params[key].axis = "T"
+    
+    key = 'Profile_UTC_Time'
+    params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
+    params[key].dimensions = ['Profile_ID']
+    params[key].units = "Coordinated Universal Time (UTC), formatted as 'yymmdd.ffffffff'"
+    params[key].valid_range = (60428.0, 230701.0)
+    params[key].long_name = "Profile time in Coordinated Universal Time"
+    params[key].comment = "Laser firing time for each pulse, given in Coordinated Universal Time (UTC) and formatted as yymmdd.ffffffff, where yy is a two digit data acquisition year number (06 to 23), mm is a month number (01 to 12), dd is a day number (1 to 31), and ffffffff is the elapsed fraction of the data acquisition day. For this L2 product, the reported value corresponds to the center profile (8th of 15 consecutive profiles) within the original CALIOP L1B 5-km frame."
+    params[key].coordinates = "Latitude Longitude"
+    params[key].standard_name = "time"
+    params[key].axis = "T"
 
-    if True:
-        key = 'Profile_UTC_Time'
-        params[key] = DataVar(key, data_dict_5kmx180m["Profile_UTC_Time"])
-        params[key].description = "The 8th of 15 consecutive laser shots Profile UTC Time composing the 5-km chunk in CALIOP L1 product."
-        params[key].units = "Coordinated Universal Time (UTC), formatted as 'yymmdd.ffffffff'"
-        # params[key].valid_range = (60426.0, 261231.0)
-        params[key].dimensions = ['Profile_ID']
-
-    if True:
-        key = 'Latitude'
-        params[key] = DataVar(key, data_dict_5kmx180m["Latitude"])
-        params[key].long_name = "Latitude coordinate"
-        params[key].description = "The 8th of 15 consecutive laser shots Latitude composing the 5-km chunk in CALIOP L1 product."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "degree_north"
-        # params[key].valid_range = (-90.0, 90.0)
-        params[key].dimensions = ['Profile_ID']
-
-        key = 'Longitude'
-        params[key] = DataVar(key, data_dict_5kmx180m["Longitude"])
-        params[key].long_name = "Longitude coordinate"
-        params[key].description = "The 8th of 15 consecutive laser shots Longitude composing the 5-km chunk in CALIOP L1 product."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "degree_east"
-        # params[key].valid_range = (-90.0, 90.0)
-        params[key].dimensions = ['Profile_ID']
+    key = 'Latitude'
+    params[key] = DataVar(key, data_dict_5kmx180m["Latitude"])
+    params[key].dimensions = ['Profile_ID']
+    params[key].units = "degree_north"
+    params[key].valid_range = (-90.0, 90.0)
+    params[key].fillvalue = FILL_VALUE_FLOAT  
+    params[key].long_name = "Geodetic latitude"
+    params[key].comment = "Geodetic latitude of the laser footprint on the Earth's surface. For this L2 product, the reported value corresponds to the center profile (8th of 15 consecutive profiles) within the original CALIOP L1B 5-km frame."
+    params[key].standard_name = "latitude"
+    params[key].axis = "Y"
+    
+    key = 'Longitude'
+    params[key] = DataVar(key, data_dict_5kmx180m["Longitude"])
+    params[key].dimensions = ['Profile_ID']
+    params[key].units = "degree_east"
+    params[key].valid_range = (-180.0, 180.0)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "Longitude"
+    params[key].comment = "Longitude of the laser footprint on the Earth's surface. For this L2 product, the reported value corresponds to the center profile (8th of 15 consecutive profiles) within the original CALIOP L1B 5-km frame."
+    params[key].standard_name = "longitude"
+    params[key].axis = "X"
     
     key = 'Altitude'
     params[key] = DataVar(key, data_dict_5kmx180m["Lidar_Data_Altitudes"])
-    params[key].long_name = "Altitude coordinate"
-    params[key].description = "Altitude with 180-m resolution."
-    params[key].units = "km"
-    # params[key].valid_range = (-0.5, 30.1)
     params[key].dimensions = ['Altitude']
+    params[key].units = "km"
+    params[key].valid_range = (8.0, 31.0)
+    params[key].long_name = "Altitude above mean sea level"
+    params[key].comment = "Altitudes at which the Level 2 PSC profile products are reported; consisting of 121 levels between approximately 8.3 and 30.1 km, with an interval of approximately 180 m. The altitudes are a subset of the standard lidar Level 1 profile altitudes."
     
     key = 'Parallel_Detection_Flags_532'
     params[key] = DataVar(key, data_dict_2d_mcda["Parallel_Detection_Flags_532"])
-    params[key].long_name = "532-nm parallel detection flag mask"
-    params[key].description = "Level of detection (1 to 5) mask for the 532 nm parallel channel."
-    params[key].fillvalue = FILL_VALUE_BYTE
-    params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
-
+    params[key].units = 1
+    params[key].valid_range = (0, 5)
+    params[key].fillvalue = FILL_VALUE_BYTE
+    params[key].flag_values = [0, 1, 2, 3, 4, 5]
+    params[key].flag_meanings = "no_detection detection_level_1 detection_level_2 detection_level_3 detection_level_4 detection_level_5"
+    params[key].long_name = "532 nm parallel channel detection flags"
+    params[key].comment = "Level of detection (1 to 5) mask for the 532 nm parallel channel from 2D-McDA (Vaillant de Guélis et al., 2021)."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+    
     key = 'Perpendicular_Detection_Flags_532'
     params[key] = DataVar(key, data_dict_2d_mcda["Perpendicular_Detection_Flags_532"])
-    params[key].long_name = "532-nm perpendicular detection flag mask"
-    params[key].description = "Level of detection (1 to 5) mask for the 532 nm perpendicular channel."
-    params[key].fillvalue = FILL_VALUE_BYTE
-    params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = 1
+    params[key].valid_range = (0, 5)
+    params[key].fillvalue = FILL_VALUE_BYTE
+    params[key].flag_values = [0, 1, 2, 3, 4, 5]
+    params[key].flag_meanings = "no_detection detection_level_1 detection_level_2 detection_level_3 detection_level_4 detection_level_5"
+    params[key].long_name = "532 nm perpendicular channel detection flags"
+    params[key].comment = "Level of detection (1 to 5) mask for the 532 nm perpendicular channel from 2D-McDA (Vaillant de Guélis et al., 2021)."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Detection_Flags_1064'
     params[key] = DataVar(key, data_dict_2d_mcda["Detection_Flags_1064"])
-    params[key].long_name = "1064-nm detection flag mask"
-    params[key].description = "Level of detection (1 to 5) mask for the 1064 nm channel."
-    params[key].fillvalue = FILL_VALUE_BYTE
-    params[key].valid_range = (0, 255)
     params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = 1
+    params[key].valid_range = (0, 5)
+    params[key].fillvalue = FILL_VALUE_BYTE
+    params[key].flag_values = [0, 1, 2, 3, 4, 5]
+    params[key].flag_meanings = "no_detection detection_level_1 detection_level_2 detection_level_3 detection_level_4 detection_level_5"
+    params[key].long_name = "1064 nm channel detection flags"
+    params[key].comment = "Level of detection (1 to 5) mask for the 1064 nm channel from 2D-McDA (Vaillant de Guélis et al., 2021)."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-    if True:
+    if False:
         key = 'Composite_Detection_Flags'
         params[key] = DataVar(key, data_dict_2d_mcda["Composite_Detection_Flags"])
-        params[key].description = "Composite detection mask from the 3 detection channels."
+        params[key].comment = "Composite detection mask from the 3 detection channels."
         params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
     
@@ -290,133 +358,272 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].dimensions = ['Profile_ID', 'Altitude']
 
     if MAKE_CLASSIFICATION:
-        key = 'Homogeneous_Chunks_Mask'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
-        params[key].valid_range = (0, 255)
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-
-        key = 'Homogeneous_Chunks_Classification'
+        key = 'PSC_Composition'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
-        params[key].description = "1: STS, 2: NAT, 3: , 4: Ice, 5: Enhanced NAT, 6: Wave ice, -4: Likely tropospheric features"
-        params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = 1
+        params[key].valid_range = (-4, 6)
+        params[key].fillvalue = FILL_VALUE_BYTE
+        params[key].flag_values = [-4, 0, 1, 2, 3, 4, 5, 6]
+        params[key].flag_meanings = "likely_tropo no_detection sts nat sbs ice enhanced_nat wave_ice"
+        params[key].long_name = "Polar stratospheric cloud composition classification"
+        params[key].comment = "PSC composition reports information on the composition of the detected PSC. The composition is determined based on the retrieved lidar optical parameters in terms of attenuated total scattering ratio and perpendicular backscatter at 532 nm averaged over homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+    
+        if False:
+            key = 'Homogeneous_Chunks_Mask'
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mask"])
+            params[key].valid_range = (0, 255)
+            params[key].dimensions = ['Profile_ID', 'Altitude']
 
-        key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
-        params[key].description = "532-nm parallel attenuated backscatter signal averaged on homogeneous chunks."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+            key = 'Homogeneous_Chunks_Mean_Parallel_Attenuated_Backscatter_532'
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_par"])
+            params[key].comment = "532-nm parallel attenuated backscatter signal averaged on homogeneous chunks."
+            params[key].fillvalue = FILL_VALUE_FLOAT
+            params[key].valid_range = (0, 255)
+            params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Particulate_Parallel_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"])
-        params[key].description = "532-nm parallel attenuated backscatter particulate signal averaged on homogeneous chunks."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = "1/(km * sr)"
+        params[key].valid_range = (-0.1, 3.3)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Mean 532 nm particulate parallel attenuated backscatter over homogeneous chunks"
+        params[key].comment = "Particulate parallel attenuated backscatter at 532 nm averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-        key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
-        params[key].description = "532-nm perpendicular attenuated backscatter signal averaged on homogeneous chunks."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+        if False:
+            key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+            params[key].comment = "532-nm perpendicular attenuated backscatter signal averaged on homogeneous chunks."
+            params[key].fillvalue = FILL_VALUE_FLOAT
+            params[key].valid_range = (0, 255)
+            params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Particulate_Perpendicular_Attenuated_Backscatter_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"])
-        params[key].description = "532-nm perpendicular attenuated backscatter particulate signal averaged on homogeneous chunks."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
-
-        key = 'Homogeneous_Chunks_Mean_Attenuated_Backscatter_1064'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
-        params[key].description = "1064-nm attenuated backscatter signal averaged on homogeneous chunks."
+        params[key].units = "1/(km * sr)"
+        params[key].valid_range = (-0.08, 1.7)
         params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].long_name = "Mean 532 nm particulate perpendicular attenuated backscatter over homogeneous chunks"
+        params[key].comment = "Particulate perpendicular attenuated backscatter at 532 nm averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-        key = 'Homogeneous_Chunks_Mean_Particulate_Attenuated_Backscatter_1064'
+        if False:
+            key = 'Homogeneous_Chunks_Mean_Total_Attenuated_Backscatter_1064'
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
+            params[key].comment = "1064-nm attenuated backscatter signal averaged on homogeneous chunks."
+            params[key].fillvalue = FILL_VALUE_FLOAT
+            params[key].valid_range = (0, 255)
+            params[key].dimensions = ['Profile_ID', 'Altitude']
+
+        key = 'Homogeneous_Chunks_Mean_Particulate_Total_Attenuated_Backscatter_1064'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"])
-        params[key].description = "1064-nm attenuated backscatter particulate signal averaged on homogeneous chunks."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = "1/(km * sr)"
+        params[key].valid_range = (-0.04, 2.5)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Mean 1064 nm particulate total attenuated backscatter over homogeneous chunks"
+        params[key].comment = "Particulate total attenuated backscatter at 1064 nm averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-        key = 'Homogeneous_Chunks_Mean_Attenuated_Scattering_Ratio_532'
+        key = 'Homogeneous_Chunks_Mean_Total_Attenuated_Scattering_Ratio_532'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
-        params[key].description = "532-nm attenuated scattering ratio averaged on homogeneous chunks."
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = 1
+        params[key].valid_range = (0.0, 99.0)
         params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].valid_range = (0, 255)
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].long_name = "Mean 532 nm total attenuated scattering ratio over homogeneous chunks"
+        params[key].comment = "Total attenuated scattering ratio at 532 nm averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-        key = 'NAT_Ice_Scattering_Ratio_Threshold'
+        key = 'PSC_Ice_Mixture_Boundary'
         params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"])
-        params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio, from CALIPSO L2 PSCMask V3 (PSC_Ice_Mixture_Boundary)."
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = 1
+        params[key].valid_range = (-1.0, 10.0)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "PSC ice mixture boundary scattering ratio"
+        params[key].comment = "Value of Total Scattering Ratio at 532 nm (no units) defining the boundary between NAT mixture and ice PSCs, reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. This value is dependent on the amount of available condensable nitric acid and water in the stratosphere (see Pitts et al., 2018 for more detail)."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-        key = 'Homogeneous_Chunks_Mean_NAT_Ice_Scattering_Ratio_Threshold'
+        key = 'Homogeneous_Chunks_Mean_PSC_Ice_Mixture_Boundary'
         params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"])
-        params[key].description = "PSC NAT/ice boundary threshold on 532 nm scattering ratio averaged on homogeneous chunks."
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = 1
+        params[key].valid_range = (-1.0, 10.0)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Mean PSC ice mixture boundary scattering ratio over homogeneous chunks"
+        params[key].comment = "PSC Ice Mixture Boundary averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+        key = 'Homogeneous_Chunks_Mean_Temperature'
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_temperature"])
+        params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = "K"
+        params[key].valid_range = (-1.0, 10.0)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Mean air temperature over homogeneous chunks"
+        params[key].comment = "Air temperature averaged over detected homogeneous chunks."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'Pressure'
         params[key] = DataVar(key, data_dict_5kmx180m["press"])
-        params[key].description = "Pressure from PSCMask V3.00."
+        params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "hPa"
+        params[key].valid_range = (1.0, 1000.0)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Air pressure"
+        params[key].comment = "Atmospheric pressure reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. Pressure values are derived from the ancillary meteorological data provided by the MERRA-2."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+        
+        key = 'Temperature'
+        params[key] = DataVar(key, data_dict_5kmx180m["temp"])
         params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].units = "K"
+        params[key].valid_range = (150.0, 350.0)
+        params[key].fillvalue = FILL_VALUE_FLOAT
+        params[key].long_name = "Air temperature"
+        params[key].comment = "Temperature reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. Temperature values are interpolated from the ancillary meteorological data provided by the MERRA-2."
+        params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
-    if True:
-        key = 'Parallel_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
-        params[key].description = "532-nm parallel attenuated backscatter signal averaged at 5-km×180-m resolution."
+        key = 'Tropopause_Altitude_MERRA2'
+        params[key] = DataVar(key, data_dict_5kmx180m["tropopause"])
+        params[key].dimensions = ['Profile_ID', ]
+        params[key].units = "km"
+        params[key].valid_range = (3.0, 25.0)
         params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Perpendicular_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
-        params[key].description = "532-nm perpendicular attenuated backscatter signal averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Attenuated_Backscatter_1064'
-        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
-        params[key].description = "1064-nm attenuated backscatter signal averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+        params[key].long_name = "MERRA-2 blended tropopause altitude"
+        params[key].comment = "Mean tropopause height in kilometers above local mean sea level. Tropopause height information is based on the MERRA-2 “blended” tropopause altitudes. The MERRA-2 blended tropopause is the lower (in altitude) of the temperature-based (“thermal”) tropopause and potential vorticity (PV)-based (“dynamic”) tropopause (Bosilovich et al., 2016; Ott et al., 2016)."
+        params[key].coordinates = "Latitude Longitude Profile_Time"
 
-        key = 'Attenuated_Scattering_Ratio_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"])
-        params[key].description = "532-nm attenuated backscatter scattering ratio averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = ""
-        params[key].dimensions = ['Profile_ID', 'Altitude']
+        key = 'Pressure_HNO3'
+        params[key] = DataVar(key, data_dict_2d_mcda["Pressure_HNO3"])
+        params[key].dimensions = ['Pressure_HNO3',]
+        params[key].units = "hPa"
+        params[key].valid_range = (1.0, 500.0)
+        params[key].long_name = "Aura MLS HNO3 pressure levels"
+        params[key].comment = "Pressure levels reported for each Aura MLS HNO3 profile."
 
-    if True:
-        key = 'Particulate_Parallel_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"])
-        params[key].description = "532-nm particulate parallel attenuated backscatter signal averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Particulate_Perpendicular_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"])
-        params[key].description = "532-nm particulate perpendicular attenuated backscatter signal averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']
-    
-        key = 'Particulate_Attenuated_Backscatter_1064'
-        params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"])
-        params[key].description = "1064-nm particulate attenuated backscatter signal averaged at 5-km×180-m resolution."
-        params[key].fillvalue = FILL_VALUE_FLOAT
-        params[key].units = "km-1 sr-1"
-        params[key].dimensions = ['Profile_ID', 'Altitude']        
+        key = 'Pressure_H2O'
+        params[key] = DataVar(key, data_dict_2d_mcda["Pressure_H2O"])
+        params[key].dimensions = ['Pressure_H2O',]
+        params[key].units = "hPa"
+        params[key].valid_range = (1.0, 500.0)
+        params[key].long_name = "Aura MLS H2O pressure levels"
+        params[key].comment = "Pressure levels reported for each Aura MLS H2O profile."
 
+        key = 'HNO3_Mixing_Ratio'
+        params[key] = DataVar(key, data_dict_5kmx180m["HNO3_Mixing_Ratio"])
+        params[key].dimensions = ['Profile_ID', 'Pressure_HNO3']
+        params[key].units = 1
+        params[key].valid_range = (0.0, 2.0e-8)
+        params[key].long_name = "Aura MLS HNO3 mixing ratio"
+        params[key].comment = "Profiles of Aura MLS HNO3 (Manney et al., 2015) mixing ratios derived from the publicly available MLS/Aura Level 2 V4 HNO3(https://disc.gsfc.nasa.gov/datasets/ML2HNO3_004/summary) data product. These are reported on their standard vertical pressure grid but have been interpolated horizontally to the CALIOP profile locations along each CALIPSO orbit track."
+        params[key].coordinates = "Latitude Longitude Profile_Time Pressure_HNO3"
+
+        key = 'H2O_Mixing_Ratio'
+        params[key] = DataVar(key, data_dict_5kmx180m["H2O_Mixing_Ratio"])
+        params[key].dimensions = ['Profile_ID', 'Pressure_H2O']
+        params[key].units = 1
+        params[key].valid_range = (0.0, 2.0e-8)
+        params[key].long_name = "Aura MLS H2O mixing ratio"
+        params[key].comment = "Profiles of Aura MLS H2O (Lambert et al., 2015) mixing ratios derived from the publicly available  MLS/Aura Level 2 V4 H2O (https://disc.gsfc.nasa.gov/datasets/ML2H2O_004/summary) data product. These are reported on their standard vertical pressure grid but have been interpolated horizontally to the CALIOP profile locations along each CALIPSO orbit track"
+        params[key].coordinates = "Latitude Longitude Profile_Time Pressure_H2O"
+        
+
+    key = 'Parallel_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.1, 3.3)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm parallel attenuated backscatter"
+    params[key].comment = "Parallel attenuated backscatter at 532 nm reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The initial values of the CALIOP Level 1 parallel component of the 532-nm total attenuated backscatter averaged to 180-m vertical and 5-km horizontal resolution. Level 1 profiles of the parallel component of the attenuated backscatter are obtained by simple subtraction of the perpendicular component from the total. This variable corresponds to Parallel_Attenuated_Backscatter_532_Initial in PSC Mask V3.00."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+ 
+    key = 'Perpendicular_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.08, 1.7)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm perpendicular attenuated backscatter"
+    params[key].comment = "Perpendicular attenuated backscatter at 532 nm reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The initial values of the CALIOP Level 1 perpendicular component of the 532-nm total attenuated backscatter averaged to 180-m vertical and 5-km horizontal resolution. This variable corresponds to Perpendicular_Attenuated_Backscatter_532_Initial in PSC Mask V3.00."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+    key = 'Total_Attenuated_Backscatter_1064'
+    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.04, 2.5)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "1064 nm total attenuated backscatter"
+    params[key].comment = "Total attenuated backscatter at 1064 nm reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+    key = 'Total_Attenuated_Scattering_Ratio_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = 1
+    params[key].valid_range = (0.0, 99.0)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm total attenuated scattering ratio"
+    params[key].comment = "Ratio of the total attenuated backscatter at 532 nm to the molecular backscatter at 532 nm, no units, reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+    key = 'Particulate_Parallel_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.1, 3.3)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm particulate parallel attenuated backscatter"
+    params[key].comment = "Particulate parallel attenuated backscatter at 532 nm computed by subtracting the estimated molecular parallel attenuated backscatter at 532 nm to the parallel attenuated backscatter at 532 nm. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+    key = 'Particulate_Perpendicular_Attenuated_Backscatter_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.08, 1.7)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm particulate perpendicular attenuated backscatter"
+    params[key].comment = "Particulate perpendicular attenuated backscatter at 532 nm computed by subtracting the estimated molecular perpendicular attenuated backscatter at 532 nm to the perpendicular attenuated backscatter at 532 nm. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
+
+    key = 'Particulate_Total_Attenuated_Backscatter_1064'
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (-0.04, 2.5)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "1064 nm particulate total attenuated backscatter"
+    params[key].comment = "Particulate attenuated backscatter at 1064 nm computed by subtracting the estimated molecular attenuated backscatter at 1064 nm to the attenuated backscatter at 1064 nm. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"     
+
+    key = 'Molecular_Backscatter_532'
+    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (0.0, 0.1)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "532 nm molecular backscatter"
+    params[key].comment = "Molecular backscatter at 532 nm reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"  
+
+    key = 'Molecular_Backscatter_1064'
+    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"])
+    params[key].dimensions = ['Profile_ID', 'Altitude']
+    params[key].units = "1/(km * sr)"
+    params[key].valid_range = (0.0, 0.1)
+    params[key].fillvalue = FILL_VALUE_FLOAT
+    params[key].long_name = "1064 nm molecular backscatter"
+    params[key].comment = "Molecular backscatter at 1064 nm reported for each Level 2 profile at the 121 standard altitudes in the Altitude field. The values are reported at 180-m vertical and 5-km horizontal resolution."
+    params[key].coordinates = "Latitude Longitude Profile_Time Altitude"  
+    
     # Parameters saved for development
     if save_development_data:
         key = 'Molecular_Parallel_Attenuated_Backscatter_532'
@@ -569,27 +776,37 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         hdf_params = {}
         for key, datavar in params.items():
             hdf_params[key] = SDSData(key, datavar.data, datavar.fillvalue)
-            hdf_params[key].description = datavar.description
+            hdf_params[key].comment = datavar.description
             hdf_params[key].units = datavar.units
             hdf_params[key].dim_labels = datavar.dimensions
         write_hdf(outdata_folder+"/"+filename+".hdf", hdf_params)
     elif filetype == 'netCDF':
-        dim_keys = ['Profile_ID', 'Altitude', 'Step_532_par', 'Step_532_per', 'Step_1064']
+        dim_keys = ['Profile_ID', 'Altitude', 'Pressure_HNO3', 'Pressure_H2O', 'Step_532_par', 'Step_532_per', 'Step_1064']
         nc_params = []
         nc_dims = []
         for key, datavar in params.items():
             if key in dim_keys:
                 nc_dim = NetCDFVariable(key, datavar.data)
+                nc_dim.standard_name = datavar.standard_name
                 nc_dim.long_name = datavar.long_name
-                nc_dim.description = datavar.description
+                nc_dim.axis = datavar.axis
+                nc_dim.valid_range = datavar.valid_range
+                nc_dim.comment = datavar.comment
+                nc_dim.coordinates = datavar.coordinates
                 nc_dim.fillvalue = datavar.fillvalue # might need to check if None if error
                 nc_dim.units = datavar.units
                 nc_dim.dimensions = datavar.dimensions
                 nc_dims.append(nc_dim)
             else:
                 nc_param = NetCDFVariable(key, datavar.data)
+                nc_param.standard_name = datavar.standard_name
                 nc_param.long_name = datavar.long_name
-                nc_param.description = datavar.description
+                nc_dim.axis = datavar.axis
+                nc_param.valid_range = datavar.valid_range
+                nc_param.comment = datavar.comment
+                nc_param.coordinates = datavar.coordinates
+                nc_param.flag_values = datavar.flag_values
+                nc_param.flag_meanings = datavar.flag_meanings
                 nc_param.fillvalue = datavar.fillvalue # might need to check if None if error
                 nc_param.units = datavar.units
                 nc_param.dimensions = datavar.dimensions
@@ -654,7 +871,7 @@ def mask_where_spikes(data, spikes_par, spikes_per):
     return data
 
 
-def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab_1064, sr_532, nat_ice_R_threshold, separation_type):
+def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab_1064, sr_532, nat_ice_R_threshold, temperature, separation_type):
 
     # Initialization
     mask_shape = mask_homogeneous.shape
@@ -664,6 +881,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     ab_1064_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
     sr_532_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
     nat_ice_R_threshold_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
+    temperature_mean = np.ones(mask_shape)*FILL_VALUE_FLOAT
 
     if separation_type == "channel":
         mask_values = np.arange(7)+2 # 2 to 8
@@ -680,6 +898,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                 ab_1064_mean = np.copy(ab_1064)
                 sr_532_mean = np.copy(sr_532)
                 nat_ice_R_threshold_mean = np.copy(nat_ice_R_threshold)
+                temperature_mean = np.copy(temperature)
             else:
                 if not seen_pixels[i, j]:
                     if mask_homogeneous[i, j] in mask_values: 
@@ -721,6 +940,10 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                         nat_ice_R_threshold_mean_feature = np.ma.mean(nat_ice_R_threshold[pattern_pixels])
                         nat_ice_R_threshold_mean[pattern_pixels] = nat_ice_R_threshold_mean_feature
 
+                        # Temperature
+                        temperature_mean_feature = np.ma.mean(temperature[pattern_pixels])
+                        temperature_mean[pattern_pixels] = temperature_mean_feature
+
                         # If masked replace by fill value
                         try:
                             if sr_532_mean.mask:
@@ -747,12 +970,17 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
                                 nat_ice_R_threshold_mean = FILL_VALUE_FLOAT
                         except:
                             pass
+                        try:
+                            if temperature_mean.mask:
+                                temperature_mean = FILL_VALUE_FLOAT
+                        except:
+                            pass
 
 
-    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean
+    return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean, temperature_mean
 
 
-def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, press):
+def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, temp, press):
 
     # Initialization
     psc_mask = np.zeros(ab_p_per_mean.shape)
@@ -763,10 +991,12 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice,
     asr_nat_enat = 2
     asr_ice_waveice = 50
     tropo_press_lim = 215 # hPa
+    temp_lim = 200 # K
 
     # Classification
     # psc_mask[ ab_p_per_mean <  ab_p_per_liq_solid] = 1 # STS
-    psc_mask[~(per_detection_flags > 0)] = 1 # STS where no enhancement in the perpendicular channel
+    psc_mask[~(per_detection_flags > 0) & (temp < temp_lim)] = 1 # STS where no enhancement in the perpendicular channel and T° < 200 K
+    psc_mask[~(per_detection_flags > 0) & (temp >= temp_lim)] = 3 # SBS where no enhancement in the perpendicular channel and T° ≥ 200 K
     psc_mask[(per_detection_flags > 0) & (asr_mean == np.nan)] = 0 # Not determinable
     psc_mask[(per_detection_flags > 0) & (asr_mean < asr_nat_ice)] = 2 # NAT
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
@@ -1555,7 +1785,7 @@ if __name__ == "__main__":
 
         # Open HDF file
         print(f"\tGranule path: {hdffile}")
-        cal_psc = hdf = SD(hdffile, SDC.READ)
+        cal_psc = SD(hdffile, SDC.READ)
 
         # Find granule section in the daily PSC file
         l1_input_filenames = cal_psc.select("L1_Input_Filenames")[:]
@@ -1578,11 +1808,17 @@ if __name__ == "__main__":
         granule_start_index = int((np.abs(profile_utc_time - granule_start_time)).argmin())
         granule_end_index = int((np.abs(profile_utc_time - granule_end_time)).argmin())
 
-        # Load PSC_Ice_Mixture_Boundary and Pressure and match 
+        # Load PSCMask V3 variables and match 
         psc_v3_ice_nat_threshold = cal_psc.select("PSC_Ice_Mixture_Boundary")[granule_start_index:granule_end_index + 1, :]
         psc_v3_pressure = cal_psc.select("Pressure")[granule_start_index:granule_end_index + 1, :]
+        psc_v3_temperature = cal_psc.select("Temperature")[granule_start_index:granule_end_index + 1, :]
         psc_v3_profile_time = cal_psc.select("Profile_Time")[granule_start_index:granule_end_index + 1]
+        psc_v3_tropopause = cal_psc.select("Tropopause_Altitude_MERRA2")[granule_start_index:granule_end_index + 1]
         psc_v3_altitude = cal_psc.select("Altitude")[:]
+        data_dict_2d_mcda['Pressure_HNO3'] = cal_psc.select("Pressure_HNO3")[:]
+        data_dict_2d_mcda['Pressure_H2O'] = cal_psc.select("Pressure_H2O")[:]
+        psc_v3_hno3_mix_ratio = cal_psc.select("HNO3_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
+        psc_v3_h2o_mix_ratio = cal_psc.select("H2O_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
 
         if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
             raise ValueError("Altitude grids do not match")
@@ -1600,8 +1836,14 @@ if __name__ == "__main__":
         # Initialize output array with NaNs (missing values)
         n_prof = len(data_dict_5kmx180m["Profile_Time"])
         n_alt = len(data_dict_5kmx180m["Lidar_Data_Altitudes"])
+        n_press_hno3 = len(data_dict_2d_mcda['Pressure_HNO3'])
+        n_press_h2o = len(data_dict_2d_mcda['Pressure_H2O'])
         psc_v3_ice_nat_threshold_matched = np.full((n_prof, n_alt), np.nan)
         psc_v3_pressure_matched = np.full((n_prof, n_alt), np.nan)
+        psc_v3_temperature_matched = np.full((n_prof, n_alt), np.nan)
+        psc_v3_tropopause_matched = np.full((n_prof,), np.nan)
+        psc_v3_hno3_mix_ratio_matched = np.full((n_prof, n_press_hno3), np.nan)
+        psc_v3_h2o_mix_ratio_matched = np.full((n_prof, n_press_h2o), np.nan)
 
         # Fill only valid matches:
         # For each valid L1 profile, copy the corresponding PSCMask profile
@@ -1609,6 +1851,14 @@ if __name__ == "__main__":
         data_dict_5kmx180m["nat_ice_R_threshold"] = psc_v3_ice_nat_threshold_matched
         psc_v3_pressure_matched[valid] = psc_v3_pressure[indices[valid], :]
         data_dict_5kmx180m["press"] = psc_v3_pressure_matched
+        psc_v3_temperature_matched[valid] = psc_v3_temperature[indices[valid], :]
+        data_dict_5kmx180m["temp"] = psc_v3_temperature_matched
+        psc_v3_tropopause_matched[valid] = psc_v3_tropopause[indices[valid]]
+        data_dict_5kmx180m["tropopause"] = psc_v3_tropopause_matched
+        psc_v3_hno3_mix_ratio_matched[valid] = psc_v3_hno3_mix_ratio[indices[valid], :]
+        data_dict_5kmx180m["HNO3_Mixing_Ratio"] = psc_v3_hno3_mix_ratio_matched
+        psc_v3_h2o_mix_ratio_matched[valid] = psc_v3_h2o_mix_ratio[indices[valid], :]
+        data_dict_5kmx180m["H2O_Mixing_Ratio"] = psc_v3_h2o_mix_ratio_matched
 
         print_elapsed_time(tic)
 
@@ -1644,25 +1894,28 @@ if __name__ == "__main__":
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"], \
-        data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"] = \
+        data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"], \
+        data_dict_2d_mcda["homogeneous_chunks_mean_temperature"] = \
             average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
                                             data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Attenuated_Backscatter_1064"], 
                                             data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             data_dict_5kmx180m["nat_ice_R_threshold"],
+                                            data_dict_5kmx180m["temp"],
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"], \
         data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"], \
-        _, _ = \
+        _, _, _ = \
             average_over_homogeneous_chunks(data_dict_2d_mcda["homogeneous_chunks_mask"], 
                                             data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"], 
                                             data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"], 
                                             data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"],
                                             data_dict_5kmx180m["nat_ice_R_threshold"],
+                                            data_dict_5kmx180m["temp"],
                                             separation_type=SEPARATION_TYPE)
         
         data_dict_2d_mcda["homogeneous_chunks_classification"] = \
@@ -1670,6 +1923,7 @@ if __name__ == "__main__":
                               data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"],
+                              data_dict_2d_mcda["homogeneous_chunks_mean_temperature"],
                               data_dict_5kmx180m["press"])
         
         print_elapsed_time(tic_algo)
