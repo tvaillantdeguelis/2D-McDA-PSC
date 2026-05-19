@@ -1,3 +1,11 @@
+**Version 2.5.0** Released on 2026-05-19.
+
+* Remove '_lon_X_X' in filename when all lat > 50° processed.
+
+* Fixed: Replaced pyplot stateful calls with explicit axes methods.
+
+* Update running scripts.
+
 **Version 2.4.2** Released on 2026-05-16.
 
 * Updated version number in `rename_pscmask_v4_files.sh`.
