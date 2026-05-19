@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.4.2"
+__version__ = "2.5.0"
 
 import yaml
 import sys
@@ -182,7 +182,7 @@ class DataVar():
         self.flag_meanings = ''
 
 
-def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='HDF', save_development_data=False):
+def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='netCDF', save_development_data=False):
 
     global_attrs = {
 
@@ -765,7 +765,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].dimensions = ['Step_1064', 'Profile_ID', 'Altitude']
     
     # Filename
-    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None) and (SLICE_START_END_TYPE == 'profindex'):
+    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None):
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
@@ -1086,7 +1086,7 @@ if __name__ == "__main__":
     VERSION_CAL_LID_L1 = config["cal_lid_l1"]["version"]
     TYPE_CAL_LID_L1 = config["cal_lid_l1"]["type"]
 
-    SLICE_START_END_TYPE = config["slice"]["mode"]
+    SLICE_MODE = config["slice"]["mode"]
     SLICE_START = config["slice"]["start"]
     SLICE_END = config["slice"]["end"]
     LAT_MIN = config["slice"]["lat_min"]
@@ -1115,7 +1115,7 @@ if __name__ == "__main__":
     print("\tGRANULE_DATE =", GRANULE_DATE)
     print("\tVERSION_CAL_LID_L1 =", VERSION_CAL_LID_L1)
     print("\tTYPE_CAL_LID_L1 =", TYPE_CAL_LID_L1)
-    print("\tSLICE_START_END_TYPE =", SLICE_START_END_TYPE)
+    print("\tSLICE_START_END_TYPE =", SLICE_MODE)
     print("\tSLICE_START =", SLICE_START)
     print("\tSLICE_END =", SLICE_END)
     print("\tLAT_MIN =", LAT_MIN)
@@ -1145,7 +1145,7 @@ if __name__ == "__main__":
                           granule_date=GRANULE_DATE,
                           slice_start=SLICE_START,
                           slice_end=SLICE_END,
-                          slice_start_end_type=SLICE_START_END_TYPE,
+                          slice_start_end_type=SLICE_MODE,
                           lat_min=LAT_MIN,
                           lat_max=LAT_MAX)
 

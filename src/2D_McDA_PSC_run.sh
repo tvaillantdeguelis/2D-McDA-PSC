@@ -10,17 +10,19 @@
 
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 # CONFIGURATION
-VERSION_CAL_LID_L1="V4.51"
+VERSION_CAL_LID_L1="V5.00"
 TYPE_CAL_LID_L1="Standard"
-SLICE_START_END_TYPE="latminmax"
-SLICE_START="None"
-SLICE_END="None"
-START_DATE="2006-06-12"
-END_DATE="2023-06-30" # included
-SAVE_DEVELOPMENT_DATA="False" # if "True" save step by step data
+SLICE_MODE="latminmax"
+SLICE_START="null"
+SLICE_END="null"
+START_DATE="2008-06-01"
+END_DATE="2008-06-02" # included
+SAVE_DEVELOPMENT_DATA="false" # if "true" save step by step data
 TYPE_2D_McDA_PSC="Prototype"
 OUT_FILETYPE='netCDF' # 'HDF' or 'netCDF'
-PROCESS_UP_TO_40KM="True"
+PROCESS_UP_TO_40KM="false"
+MAKE_CLASSIFICATION="true"
+FEATURE_SEPARATION_TYPE_FOR_CLASSIFICATION="all_levels_and_channels" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
 #-----------------------------------------------------------------------
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."
@@ -50,12 +52,12 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
 
     case "$month" in
         05|06|07|08|09|10)
-            LAT_MIN="None"
+            LAT_MIN="null"
             LAT_MAX=-50
             ;;
         12|01|02|03)
             LAT_MIN=50
-            LAT_MAX="None"
+            LAT_MAX="null"
             ;;
         *)
             currentdate=$(date -I -d "$currentdate + 1 day")
@@ -95,17 +97,19 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
             -e "s|__GRANULE_DATE__|$granule_date|g" \
             -e "s|__VERSION_CAL_LID_L1__|$VERSION_CAL_LID_L1|g" \
             -e "s|__TYPE_CAL_LID_L1__|$TYPE_CAL_LID_L1|g" \
-            -e "s|__SLICE_START_END_TYPE__|$SLICE_START_END_TYPE|g" \
+            -e "s|__SLICE_MODE__|$SLICE_MODE|g" \
             -e "s|__SLICE_START__|$SLICE_START|g" \
             -e "s|__SLICE_END__|$SLICE_END|g" \
             -e "s|__LAT_MIN__|$LAT_MIN|g" \
             -e "s|__LAT_MAX__|$LAT_MAX|g" \
             -e "s|__SAVE_DEVELOPMENT_DATA__|$SAVE_DEVELOPMENT_DATA|g" \
             -e "s|__PROCESS_UP_TO_40KM__|$PROCESS_UP_TO_40KM|g" \
+            -e "s|__MAKE_CLASSIFICATION__|$MAKE_CLASSIFICATION|g" \
+            -e "s|__FEATURE_SEPARATION_TYPE_FOR_CLASSIFICATION__|$FEATURE_SEPARATION_TYPE_FOR_CLASSIFICATION|g" \
             -e "s|__TYPE_2D_McDA_PSC__|$TYPE_2D_McDA_PSC|g" \
             -e "s|__OUT_FOLDER__|$OUT_FOLDER|g" \
             -e "s|__OUT_FILETYPE__|$OUT_FILETYPE|g" \
-            configs/2D_McDA_PSC_params_template.yaml > "$params_file"
+            src/2D_McDA_PSC_params_template.yaml > "$params_file"
 
             # Run 2D-McDA
             jobname="2D-McDA-PSC_${granule_date}"
@@ -117,7 +121,7 @@ while [ "$(date -d "$currentdate" +%s)" -le "$(date -d "$END_DATE" +%s)" ]; do
                    --error="${log_dir}/${jobname}.e" \
                    --output="${log_dir}/${jobname}.o" \
                    --export=PARAMS_FILE="$params_file" \
-       2D_McDA_PSC.sbatch
+       src/2D_McDA_PSC.sbatch
         done
     fi
 

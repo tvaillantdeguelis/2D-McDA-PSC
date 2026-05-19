@@ -1,23 +1,25 @@
-granule_date: "2022-07-21T01-49-09ZN"
+granule_date: "__GRANULE_DATE__" # e.g. "2022-07-21T01-49-09ZN"
 
 cal_lid_l1:
-  version: "V5.00"
-  type: "Standard"
+  version: "__VERSION_CAL_LID_L1__" # e.g. "V5.00"
+  type: "__TYPE_CAL_LID_L1__" # "Standard"
 
 slice:
-  mode: "latminmax"
-  start: null
-  end: null
-  lat_min: 50
-  lat_max: null
+  mode: "__SLICE_MODE__" # "latminmax"
+  start: __SLICE_START__ # e.g. 1500 or null
+  end: __SLICE_END__ # e.g. 2000 or null
+  lat_min: __LAT_MIN__ # e.g. 50 or null
+  lat_max: __LAT_MAX__ # e.g. -50 or null
 
 processing:
-  save_development_data: false
-  process_up_to_40km: true
+  save_development_data: __SAVE_DEVELOPMENT_DATA__ # true or false
+  process_up_to_40km: __PROCESS_UP_TO_40KM__ # true or false
+  make_classification: __MAKE_CLASSIFICATION__ # true or false
+  feature_separation_type_for_classification: "__FEATURE_SEPARATION_TYPE_FOR_CLASSIFICATION__" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
 
 algorithm:
-  type: "Prototype"
+  type: "__TYPE_2D_McDA_PSC__" # "Prototype"
 
 output:
-  folder: "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
-  filetype: "netCDF"
+  folder: "__OUT_FOLDER__"
+  filetype: "__OUT_FILETYPE__" # "netCDF"
