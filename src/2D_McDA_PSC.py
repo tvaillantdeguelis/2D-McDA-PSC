@@ -182,7 +182,7 @@ class DataVar():
         self.flag_meanings = ''
 
 
-def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='HDF', save_development_data=False):
+def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, filetype='netCDF', save_development_data=False):
 
     global_attrs = {
 
@@ -765,7 +765,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].dimensions = ['Step_1064', 'Profile_ID', 'Altitude']
     
     # Filename
-    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None) and (SLICE_MODE == 'profindex'):
+    if (SLICE_START == 0 or SLICE_START == None) and (SLICE_END == None):
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
