@@ -61,7 +61,7 @@ elif hostname == 'argo':  # change by the name of your machine
 
 ## 5. Running the program locally on a single granule
 
-Now the parameters are read from a YAML file.
+Program parameters are configured through a YAML configuration file.
 
 ### 5.1. Create a run parameter file
 
@@ -72,19 +72,31 @@ Copy the template to a new file:
 Edit `src/2D_McDA_PSC_params_run.yaml` to set the granule you want to process:
 
 ```
-granule_date: "2011-06-25T00-11-52ZN"
-version_cal_lid_l1: "V4.51"
-type_cal_lid_l1: "Standard"
-slice_start_end_type: "latminmax"
-slice_start: null
-slice_end: -50
-lat_min: null
-lat_max: -50
-save_development_data: false
-type_2d_mcda_psc: "Prototype"
-out_folder: "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
-out_filetype: "netCDF"
-process_up_to_40km: true
+granule_date: "2010-01-18T00-19-57ZN"
+
+cal_lid_l1:
+  version: "V5.00"
+  type: "Standard"
+
+slice:
+  mode: "latminmax"
+  start: null
+  end: null
+  lat_min: 50
+  lat_max: null
+
+processing:
+  save_development_data: false
+  process_up_to_40km: false # PSC_Ice_Mixture_Boundary in PSCMask V3 only up to 30 km, classification will break if set to 'true'
+  make_classification: true
+  feature_separation_type_for_classification: "all_levels_and_channels" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
+
+algorithm:
+  type: "Prototype"
+
+output:
+  folder: "/home/vaillant/codes/projects/2D_McDA_PSC/out/data/"
+  filetype: "netCDF"
 ```
 
 You can modify these values for any granule or slice you want.
@@ -110,17 +122,19 @@ Edit the run script:
 ```
 # <><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>
 # CONFIGURATION
-VERSION_CAL_LID_L1="V4.51"
+VERSION_CAL_LID_L1="V5.00"
 TYPE_CAL_LID_L1="Standard"
-SLICE_START_END_TYPE="latminmax"
-SLICE_START="None"
-SLICE_END="None"
-START_DATE="2006-06-12"
-END_DATE="2023-06-30" # included
-SAVE_DEVELOPMENT_DATA="False" # if "True" save step by step data
+SLICE_MODE="latminmax"
+SLICE_START="null"
+SLICE_END="null"
+START_DATE="2008-01-01"
+END_DATE="2011-12-31" # included
+SAVE_DEVELOPMENT_DATA="false" # if "true" save step by step data
 TYPE_2D_McDA_PSC="Prototype"
 OUT_FILETYPE='netCDF' # 'HDF' or 'netCDF'
-PROCESS_UP_TO_40KM="True"
+PROCESS_UP_TO_40KM="false"
+MAKE_CLASSIFICATION="true"
+FEATURE_SEPARATION_TYPE_FOR_CLASSIFICATION="all_levels_and_channels" # "pixel", "channel", "best_detection_level", or "all_levels_and_channels"
 #-----------------------------------------------------------------------
 DAYNIGHT_FLAG="ZN" # "ZN", "ZD", or ""
 DATA_FOLDER_L1_HEAD="/DATA/LIENS/CALIOP/CAL_LID_L1."

@@ -5,7 +5,7 @@
 
 # Activate Python environment
 eval "$(/work_users/vaillant/mambaforge/bin/mamba shell hook --shell bash)"
-if ! mamba activate 2D_McDA_PSC; then
+if ! mamba activate 2D_McDA_PSC_2; then
     echo "Failed to activate environment" >&2
     exit 1
 fi
@@ -20,4 +20,4 @@ if [ -z "$PARAMS_FILE" ]; then
 fi
 
 # Run algorithm
-./2D_McDA_PSC.py "$PARAMS_FILE"
+./src/2D_McDA_PSC.py "$PARAMS_FILE"
