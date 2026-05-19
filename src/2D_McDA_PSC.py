@@ -980,7 +980,7 @@ def average_over_homogeneous_chunks(mask_homogeneous, ab_532_par, ab_532_per, ab
     return ab_532_par_mean, ab_532_per_mean, ab_1064_mean, sr_532_mean, nat_ice_R_threshold_mean, temperature_mean
 
 
-def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, temp, press):
+def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice, temp, alt, tropopause):
 
     # Initialization
     psc_mask = np.zeros(ab_p_per_mean.shape)
@@ -990,7 +990,7 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice,
     ab_p_per_nat_enat = 2e-5
     asr_nat_enat = 2
     asr_ice_waveice = 50
-    tropo_press_lim = 215 # hPa
+    tropo_press_lim = 215 # hPa # Criteria in PSC Mask V3 for "Likely tropospheric" flag
     temp_lim = 200 # K
 
     # Classification
@@ -1002,7 +1002,9 @@ def classify_features(per_detection_flags, asr_mean, ab_p_per_mean, asr_nat_ice,
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_ice_waveice)] = 6 # Wave ice
     psc_mask[(per_detection_flags > 0) & (asr_mean >= asr_nat_ice) & (asr_mean < asr_ice_waveice)] = 4 # Ice
     psc_mask[(per_detection_flags > 0) & (ab_p_per_mean >= ab_p_per_nat_enat) & (asr_mean >= asr_nat_enat) & (asr_mean < asr_nat_ice)] = 5 # Enhanced NAT
-    psc_mask[press > tropo_press_lim] = -4 # Likely tropospheric features
+    alt_2d = alt[np.newaxis, :]
+    tropo_2d = tropopause[:, np.newaxis]
+    psc_mask[alt_2d <= tropo_2d] = -4 # Likely tropospheric features
     
     psc_mask[asr_mean == FILL_VALUE_FLOAT] = 0 # No detection
 
@@ -1924,7 +1926,8 @@ if __name__ == "__main__":
                               data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"],
                               data_dict_2d_mcda["homogeneous_chunks_mean_temperature"],
-                              data_dict_5kmx180m["press"])
+                              data_dict_5kmx180m["Lidar_Data_Altitudes"],
+                              data_dict_5kmx180m["tropopause"])
         
         print_elapsed_time(tic_algo)
 
