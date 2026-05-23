@@ -1,3 +1,7 @@
+**Version 2.6.1** Released on 2026-05-23.
+
+* Optimized NetCDF output variable formats.
+
 **Version 2.6.0** Released on 2026-05-19.
 
 * Replaced the fixed 215 hPa threshold with the MERRA-2 tropopause to flag "Likely tropospheric features".

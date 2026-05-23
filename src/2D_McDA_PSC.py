@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.6.0"
+__version__ = "2.6.1"
 
 import yaml
 import sys
@@ -359,11 +359,11 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
     if MAKE_CLASSIFICATION:
         key = 'PSC_Composition'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_classification"].astype(np.int8))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = 1
         params[key].valid_range = (-4, 6)
-        params[key].fillvalue = FILL_VALUE_BYTE
+        params[key].fillvalue = FILL_VALUE_SHORT
         params[key].flag_values = [-4, 0, 1, 2, 3, 4, 5, 6]
         params[key].flag_meanings = "likely_tropo no_detection sts nat sbs ice enhanced_nat wave_ice"
         params[key].long_name = "Polar stratospheric cloud composition classification"
@@ -384,7 +384,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
             params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Particulate_Parallel_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_par"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "1/(km * sr)"
         params[key].valid_range = (-0.1, 3.3)
@@ -395,14 +395,14 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
         if False:
             key = 'Homogeneous_Chunks_Mean_Perpendicular_Attenuated_Backscatter_532'
-            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"])
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_532_per"].astype(np.float32))
             params[key].comment = "532-nm perpendicular attenuated backscatter signal averaged on homogeneous chunks."
             params[key].fillvalue = FILL_VALUE_FLOAT
             params[key].valid_range = (0, 255)
             params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Particulate_Perpendicular_Attenuated_Backscatter_532'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_532_per"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "1/(km * sr)"
         params[key].valid_range = (-0.08, 1.7)
@@ -413,14 +413,14 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
 
         if False:
             key = 'Homogeneous_Chunks_Mean_Total_Attenuated_Backscatter_1064'
-            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"])
+            params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_ab_1064"].astype(np.float32))
             params[key].comment = "1064-nm attenuated backscatter signal averaged on homogeneous chunks."
             params[key].fillvalue = FILL_VALUE_FLOAT
             params[key].valid_range = (0, 255)
             params[key].dimensions = ['Profile_ID', 'Altitude']
 
         key = 'Homogeneous_Chunks_Mean_Particulate_Total_Attenuated_Backscatter_1064'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_part_ab_1064"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "1/(km * sr)"
         params[key].valid_range = (-0.04, 2.5)
@@ -430,7 +430,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'Homogeneous_Chunks_Mean_Total_Attenuated_Scattering_Ratio_532'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_asr_532"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = 1
         params[key].valid_range = (0.0, 99.0)
@@ -440,7 +440,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'PSC_Ice_Mixture_Boundary'
-        params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"])
+        params[key] = DataVar(key, data_dict_5kmx180m["nat_ice_R_threshold"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = 1
         params[key].valid_range = (-1.0, 10.0)
@@ -450,7 +450,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'Homogeneous_Chunks_Mean_PSC_Ice_Mixture_Boundary'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_nat_ice_R_threshold"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = 1
         params[key].valid_range = (-1.0, 10.0)
@@ -460,7 +460,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'Homogeneous_Chunks_Mean_Temperature'
-        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_temperature"])
+        params[key] = DataVar(key, data_dict_2d_mcda["homogeneous_chunks_mean_temperature"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "K"
         params[key].valid_range = (-1.0, 10.0)
@@ -470,7 +470,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
         key = 'Pressure'
-        params[key] = DataVar(key, data_dict_5kmx180m["press"])
+        params[key] = DataVar(key, data_dict_5kmx180m["press"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "hPa"
         params[key].valid_range = (1.0, 1000.0)
@@ -480,7 +480,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
         
         key = 'Temperature'
-        params[key] = DataVar(key, data_dict_5kmx180m["temp"])
+        params[key] = DataVar(key, data_dict_5kmx180m["temp"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Altitude']
         params[key].units = "K"
         params[key].valid_range = (150.0, 350.0)
@@ -516,7 +516,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].comment = "Pressure levels reported for each Aura MLS H2O profile."
 
         key = 'HNO3_Mixing_Ratio'
-        params[key] = DataVar(key, data_dict_5kmx180m["HNO3_Mixing_Ratio"])
+        params[key] = DataVar(key, data_dict_5kmx180m["HNO3_Mixing_Ratio"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Pressure_HNO3']
         params[key].units = 1
         params[key].valid_range = (0.0, 2.0e-8)
@@ -525,7 +525,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key].coordinates = "Latitude Longitude Profile_Time Pressure_HNO3"
 
         key = 'H2O_Mixing_Ratio'
-        params[key] = DataVar(key, data_dict_5kmx180m["H2O_Mixing_Ratio"])
+        params[key] = DataVar(key, data_dict_5kmx180m["H2O_Mixing_Ratio"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Pressure_H2O']
         params[key].units = 1
         params[key].valid_range = (0.0, 2.0e-8)
@@ -535,7 +535,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         
 
     key = 'Parallel_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Parallel_Attenuated_Backscatter_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.1, 3.3)
@@ -545,7 +545,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
  
     key = 'Perpendicular_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Perpendicular_Attenuated_Backscatter_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.08, 1.7)
@@ -555,7 +555,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Total_Attenuated_Backscatter_1064'
-    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Backscatter_1064"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.04, 2.5)
@@ -565,7 +565,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Total_Attenuated_Scattering_Ratio_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Attenuated_Scattering_Ratio_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = 1
     params[key].valid_range = (0.0, 99.0)
@@ -575,7 +575,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Particulate_Parallel_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Parallel_Attenuated_Backscatter_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.1, 3.3)
@@ -585,7 +585,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Particulate_Perpendicular_Attenuated_Backscatter_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Perpendicular_Attenuated_Backscatter_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.08, 1.7)
@@ -595,7 +595,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"
 
     key = 'Particulate_Total_Attenuated_Backscatter_1064'
-    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Particulate_Attenuated_Backscatter_1064"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (-0.04, 2.5)
@@ -605,7 +605,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"     
 
     key = 'Molecular_Backscatter_532'
-    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Total_Attenuated_Backscatter_532"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (0.0, 0.1)
@@ -615,7 +615,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
     params[key].coordinates = "Latitude Longitude Profile_Time Altitude"  
 
     key = 'Molecular_Backscatter_1064'
-    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"])
+    params[key] = DataVar(key, data_dict_5kmx180m["Molecular_Attenuated_Backscatter_1064"].astype(np.float32))
     params[key].dimensions = ['Profile_ID', 'Altitude']
     params[key].units = "1/(km * sr)"
     params[key].valid_range = (0.0, 0.1)
