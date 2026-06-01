@@ -1,3 +1,7 @@
+**Version 2.6.2** Released on 2026-06-01.
+
+* Renamed 'valid_range' by 'typical_range' in the metadata.
+
 **Version 2.6.1** Released on 2026-05-23.
 
 * Optimized NetCDF output variable formats.
