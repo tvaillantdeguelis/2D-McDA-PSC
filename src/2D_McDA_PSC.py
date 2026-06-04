@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.6.2"
+__version__ = "2.6.3"
 
 import yaml
 import sys
@@ -519,7 +519,7 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         params[key] = DataVar(key, data_dict_5kmx180m["HNO3_Mixing_Ratio"].astype(np.float32))
         params[key].dimensions = ['Profile_ID', 'Pressure_HNO3']
         params[key].units = 1
-        params[key].typical_range = (0.0, 2.0e-8)
+        params[key].typical_range = (0.0, 8.0e-3)
         params[key].long_name = "Aura MLS HNO3 mixing ratio"
         params[key].comment = "Profiles of Aura MLS HNO3 (Manney et al., 2015) mixing ratios derived from the publicly available MLS/Aura Level 2 V4 HNO3(https://disc.gsfc.nasa.gov/datasets/ML2HNO3_004/summary) data product. These are reported on their standard vertical pressure grid but have been interpolated horizontally to the CALIOP profile locations along each CALIPSO orbit track."
         params[key].coordinates = "Latitude Longitude Profile_Time Pressure_HNO3"

@@ -1,3 +1,7 @@
+**Version 2.6.3** Released on 2026-06-04.
+
+* Changed typical_range for HNO3 mixing ratio.
+
 **Version 2.6.2** Released on 2026-06-01.
 
 * Renamed 'valid_range' by 'typical_range' in the metadata.
