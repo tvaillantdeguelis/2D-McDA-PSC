@@ -181,3 +181,4 @@ test/
 2D_McDA_PSC_params_run.yaml
 2D_McDA_PSC_params_tmp/
 2D_McDA_PSC_run.sh
+rename_pscmask_v4_files.sh

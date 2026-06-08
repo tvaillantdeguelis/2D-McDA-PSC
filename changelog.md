@@ -1,3 +1,7 @@
+**Version 2.7.1** Released on 2026-06-08.
+
+* Fixed: Implement get_daynightflag() in write_odl_met.py.
+
 **Version 2.7.0** Released on 2026-06-08.
 
 * Added generation of ODL metadata (.met) files.
