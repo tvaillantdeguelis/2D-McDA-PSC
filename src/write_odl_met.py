@@ -59,14 +59,16 @@ def tai93_to_datetime(tai_seconds):
         __import__("datetime").timedelta(seconds=float(tai_seconds))
 
 
-def get_daynight_flag(latitudes):
-    """
-    Placeholder.
+def get_daynightflag(nc_filename: str) -> str:
+    name = Path(nc_filename).name
+    token = name.split(".")[-2][-2:]  # récupère ZN ou ZD
 
-    Replace by actual day/night computation if desired.
-    """
-
-    return "DAY"
+    if token == "ZD":
+        return "DAY"
+    elif token == "ZN":
+        return "NIGHT"
+    else:
+        raise ValueError(f"Cannot determine DAYNIGHTFLAG from {name}")
 
 
 def build_gline(latitudes, longitudes, npts=10):
@@ -115,7 +117,7 @@ def write_odl_met(nc_filename):
         start_dt = tai93_to_datetime(profile_time[0])
         end_dt   = tai93_to_datetime(profile_time[-1])
 
-        daynight = get_daynight_flag(latitudes)
+        daynight = get_daynightflag(nc_filename)
 
         version_2d_mcda_psc = ds.getncattr("algorithm_version")
 
