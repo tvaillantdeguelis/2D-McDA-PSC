@@ -1,3 +1,7 @@
+**Version 2.7.0** Released on 2026-06-08.
+
+* Added generation of ODL metadata (.met) files.
+
 **Version 2.6.3** Released on 2026-06-04.
 
 * Changed typical_range for HNO3 mixing ratio.
