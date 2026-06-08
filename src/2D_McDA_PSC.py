@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.6.3"
+__version__ = "2.7.0"
 
 import yaml
 import sys
@@ -769,8 +769,12 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
         filename_end = '' # nothing, it is the whole file
     else:
         filename_end = f"_lon_{cal_l1.lon_min:.2f}_{cal_l1.lon_max:.2f}"
-    filename = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-').replace('v', 'V', 1)}." \
-                f"{GRANULE_DATE}{filename_end}"
+    if OUT_FILENAME == "final":
+        filename = f"CAL_LID_L2_PSCMask-Standard-V4-00.{GRANULE_DATE}"
+    else:
+        filename = f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-').replace('v', 'V', 1)}." \
+                    f"{GRANULE_DATE}{filename_end}"
+    
     
     if filetype == 'HDF':
         hdf_params = {}
@@ -812,6 +816,14 @@ def save_data(data_dict_5kmx180m, data_dict_2d_mcda, data_dict_2d_mcda_dev, file
                 nc_param.dimensions = datavar.dimensions
                 nc_params.append(nc_param)
         write_netcdf(outdata_folder+"/"+filename+".nc", nc_dims, nc_params, global_attrs=global_attrs)
+
+
+        ### Create an ODL metadata file
+        from write_odl_met import write_odl_met
+
+        write_odl_met(
+            outdata_folder + "/" + filename + ".nc"
+        )
 
 
 def separate_homogeneous_chunks(mask_composite, mask_par532, mask_per532, mask_1064, separation_type):
@@ -1103,6 +1115,7 @@ if __name__ == "__main__":
 
     OUT_FOLDER = config["output"]["folder"]
     OUT_FILETYPE = config["output"]["filetype"]
+    OUT_FILENAME = config["output"]["filename"]
 
     if MAKE_CLASSIFICATION:
         FOLDER_CAL_LID_L2_PSCMask = "/DATA/LIENS/CALIOP/"

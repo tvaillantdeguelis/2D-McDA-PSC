@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="2.4.2"
+VERSION="2.7.0"
 
 # Convert version to file pattern format: VX-X-X
 VERSION_TAG="V$(echo "$VERSION" | tr '.' '-')"
