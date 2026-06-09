@@ -23,3 +23,5 @@ algorithm:
 output:
   folder: "__OUT_FOLDER__"
   filetype: "__OUT_FILETYPE__" # "netCDF"
+  filename: "__OUT_FILENAME__" # "final": f"CAL_LID_L2_PSCMask-Standard-V4-00.{GRANULE_DATE}.nc"
+                               # "dev": f"CAL_LID_L2_2D_McDA_PSC-{TYPE_2D_McDA_PSC}-{VERSION_2D_McDA_PSC.replace('.', '-').replace('v', 'V', 1)}.{GRANULE_DATE}{filename_end}"
