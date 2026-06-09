@@ -1,3 +1,7 @@
+**Version 2.7.2** Released on 2026-06-09.
+
+* Fixed: Added __OUT_FILENAME__ to yaml template file.
+
 **Version 2.7.1** Released on 2026-06-08.
 
 * Fixed: Implement get_daynightflag() in write_odl_met.py.
