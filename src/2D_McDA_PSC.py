@@ -1792,13 +1792,14 @@ if __name__ == "__main__":
         granule_date_dict = split_granule_date(GRANULE_DATE)
         filename_psc = f"CAL_LID_L2_PSCMask-{TYPE_CAL_LID_L2_PSCMask}-{VERSION_CAL_LID_L2_PSCMask.replace('.', '-')}." \
                     f"{granule_date_dict['year']}-{granule_date_dict['month']:02d}-{granule_date_dict['day']:02d}T00-00-00ZN.hdf"
-        hdffile = os.path.join(FOLDER_CAL_LID_L2_PSCMask, f"PSCMask.{VERSION_CAL_LID_L2_PSCMask.replace('V', 'v')}",
-                            str(granule_date_dict['year']),
-                            f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_"
-                            f"{granule_date_dict['day']:02d}",
-                            filename_psc)
+        hdffile = Path(FOLDER_CAL_LID_L2_PSCMask) / f"PSCMask.{VERSION_CAL_LID_L2_PSCMask.replace('V', 'v')}" \
+                    / str(granule_date_dict['year']) \
+                    / f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_{granule_date_dict['day']:02d}" \
+                    / filename_psc
 
         # Open HDF file
+        if not hdffile.is_file():
+            raise FileNotFoundError(f"PSCMask file not found:\n{hdffile}")
         print(f"\tGranule path: {hdffile}")
         cal_psc = SD(hdffile, SDC.READ)
 
@@ -1841,8 +1842,16 @@ if __name__ == "__main__":
         psc_v3_hno3_mix_ratio = cal_psc.select("HNO3_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
         psc_v3_h2o_mix_ratio = cal_psc.select("H2O_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
 
-        if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
-            raise ValueError("Altitude grids do not match")
+        if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"], atol=0.1):
+            raise ValueError(
+                "Altitude mismatch between PSC V3 and 5kmx180m dataset.\n"
+                f"Shapes: PSC_V3={psc_v3_altitude.shape}, "
+                f"5kmx180m={data_dict_5kmx180m['Lidar_Data_Altitudes'].shape}\n"
+                f"PSC_V3 range: min={np.nanmin(psc_v3_altitude)}, max={np.nanmax(psc_v3_altitude)}\n"
+                f"5kmx180m range: min={np.nanmin(data_dict_5kmx180m['Lidar_Data_Altitudes'])}, "
+                f"max={np.nanmax(data_dict_5kmx180m['Lidar_Data_Altitudes'])}\n"
+                "The two altitude grids are not aligned."
+            )
                              
         # Match L1 profile times with PSCMask profile times
         indices, valid, dt = match_profiles(

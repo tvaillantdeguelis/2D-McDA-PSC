@@ -1,3 +1,12 @@
+
+* Made more explicit message when PSCMask file not found.
+
+* Increased tolerance to 0.1 km for altitude matching between PSCMask V3 and CALIOP L1.
+
+* Made more explicit ValueError when altitudes mismatch.
+
+* Made more explicit ValueError when granule not found in L1_Input_Filenames of PSCMask.
+
 **Version 2.7.2** Released on 2026-06-09.
 
 * Fixed: Added __OUT_FILENAME__ to yaml template file.
