@@ -1,3 +1,4 @@
+**Version 2.7.3** Released on 2026-06-11.
 
 * Made more explicit message when PSCMask file not found.
 
