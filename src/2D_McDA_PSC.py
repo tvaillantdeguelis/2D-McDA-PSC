@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.7.2"
+__version__ = "2.7.3"
 
 import yaml
 import sys
@@ -1792,13 +1792,14 @@ if __name__ == "__main__":
         granule_date_dict = split_granule_date(GRANULE_DATE)
         filename_psc = f"CAL_LID_L2_PSCMask-{TYPE_CAL_LID_L2_PSCMask}-{VERSION_CAL_LID_L2_PSCMask.replace('.', '-')}." \
                     f"{granule_date_dict['year']}-{granule_date_dict['month']:02d}-{granule_date_dict['day']:02d}T00-00-00ZN.hdf"
-        hdffile = os.path.join(FOLDER_CAL_LID_L2_PSCMask, f"PSCMask.{VERSION_CAL_LID_L2_PSCMask.replace('V', 'v')}",
-                            str(granule_date_dict['year']),
-                            f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_"
-                            f"{granule_date_dict['day']:02d}",
-                            filename_psc)
+        hdffile = Path(FOLDER_CAL_LID_L2_PSCMask) / f"PSCMask.{VERSION_CAL_LID_L2_PSCMask.replace('V', 'v')}" \
+                    / str(granule_date_dict['year']) \
+                    / f"{granule_date_dict['year']}_{granule_date_dict['month']:02d}_{granule_date_dict['day']:02d}" \
+                    / filename_psc
 
         # Open HDF file
+        if not hdffile.is_file():
+            raise FileNotFoundError(f"PSCMask file not found:\n{hdffile}")
         print(f"\tGranule path: {hdffile}")
         cal_psc = SD(hdffile, SDC.READ)
 
@@ -1816,7 +1817,13 @@ if __name__ == "__main__":
             for i_char in granule_name_char_indexes:
                 granule_name = granule_name + l1_input_filenames[i_filenames][i_char].decode('UTF-8')
             granule_names.append(granule_name)
-        granule_name_index = granule_names.index(GRANULE_DATE)
+        try:
+            granule_name_index = granule_names.index(GRANULE_DATE)
+        except ValueError:
+            raise ValueError(
+                f"Granule '{GRANULE_DATE}' not found in L1_Input_Filenames of file {hdffile}\n"
+                f"Available values are:\n{granule_names}"
+            )
         granule_start_time = cal_psc.select("L1_Input_Start_Times")[granule_name_index]
         granule_end_time = cal_psc.select("L1_Input_End_Times")[granule_name_index]
         profile_utc_time = cal_psc.select("Profile_UTC_Time")[:]
@@ -1835,8 +1842,16 @@ if __name__ == "__main__":
         psc_v3_hno3_mix_ratio = cal_psc.select("HNO3_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
         psc_v3_h2o_mix_ratio = cal_psc.select("H2O_Mixing_Ratio")[granule_start_index:granule_end_index + 1, :]
 
-        if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"]):
-            raise ValueError("Altitude grids do not match")
+        if not np.allclose(psc_v3_altitude, data_dict_5kmx180m["Lidar_Data_Altitudes"], atol=0.1):
+            raise ValueError(
+                "Altitude mismatch between PSC V3 and 5kmx180m dataset.\n"
+                f"Shapes: PSC_V3={psc_v3_altitude.shape}, "
+                f"5kmx180m={data_dict_5kmx180m['Lidar_Data_Altitudes'].shape}\n"
+                f"PSC_V3 range: min={np.nanmin(psc_v3_altitude)}, max={np.nanmax(psc_v3_altitude)}\n"
+                f"5kmx180m range: min={np.nanmin(data_dict_5kmx180m['Lidar_Data_Altitudes'])}, "
+                f"max={np.nanmax(data_dict_5kmx180m['Lidar_Data_Altitudes'])}\n"
+                "The two altitude grids are not aligned."
+            )
                              
         # Match L1 profile times with PSCMask profile times
         indices, valid, dt = match_profiles(
