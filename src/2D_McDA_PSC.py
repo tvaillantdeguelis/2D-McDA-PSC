@@ -1816,7 +1816,13 @@ if __name__ == "__main__":
             for i_char in granule_name_char_indexes:
                 granule_name = granule_name + l1_input_filenames[i_filenames][i_char].decode('UTF-8')
             granule_names.append(granule_name)
-        granule_name_index = granule_names.index(GRANULE_DATE)
+        try:
+            granule_name_index = granule_names.index(GRANULE_DATE)
+        except ValueError:
+            raise ValueError(
+                f"Granule '{GRANULE_DATE}' not found in L1_Input_Filenames of file {hdffile}\n"
+                f"Available values are:\n{granule_names}"
+            )
         granule_start_time = cal_psc.select("L1_Input_Start_Times")[granule_name_index]
         granule_end_time = cal_psc.select("L1_Input_End_Times")[granule_name_index]
         profile_utc_time = cal_psc.select("Profile_UTC_Time")[:]
