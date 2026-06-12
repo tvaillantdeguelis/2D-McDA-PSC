@@ -5,7 +5,7 @@
 
 __author__  = "Thibault Vaillant de Guélis"
 __email__   = "thibault.vaillantdeguelis@outlook.com"
-__version__ = "2.7.3"
+__version__ = "2.7.4"
 
 import yaml
 import sys
@@ -1801,7 +1801,7 @@ if __name__ == "__main__":
         if not hdffile.is_file():
             raise FileNotFoundError(f"PSCMask file not found:\n{hdffile}")
         print(f"\tGranule path: {hdffile}")
-        cal_psc = SD(hdffile, SDC.READ)
+        cal_psc = SD(str(hdffile), SDC.READ)
 
         # Find granule section in the daily PSC file
         l1_input_filenames = cal_psc.select("L1_Input_Filenames")[:]
