@@ -1,3 +1,7 @@
+**Version 2.7.4** Released on 2026-06-12.
+
+* Fixed: Converted Path to string before opening HDF file.
+
 **Version 2.7.3** Released on 2026-06-11.
 
 * Made more explicit message when PSCMask file not found.
